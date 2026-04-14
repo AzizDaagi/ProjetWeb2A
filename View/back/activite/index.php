@@ -2,9 +2,15 @@
 
 <div class="animate-fade-in">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h2>Mes Activités</h2>
+        <h2><span style="color:var(--accent);">[Admin]</span> Mes Activités</h2>
         <a href="#add-form" class="btn">Nouvelle Activité +</a>
     </div>
+
+    <?php if(isset($error) && !empty($error)): ?>
+        <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--error); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #fca5a5;">
+            <?= htmlspecialchars($error) ?>
+        </div>
+    <?php endif; ?>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
         <?php if(empty($activites)): ?>
@@ -18,22 +24,24 @@
                         <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">⏱ <?= $act['duree_minutes'] ?> min</span>
                         <span style="background: rgba(244, 63, 94, 0.2); color: var(--accent); padding: 4px 8px; border-radius: 4px;">🔥 <?= $act['calories_brulees'] ?> kcal</span>
                     </div>
-                    <a href="index.php?action=show&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="width: 100%; text-align: center; margin-bottom: 0.5rem;">Voir Détails & Exercices</a>
+                    <a href="index.php?action=admin_show&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="width: 100%; text-align: center; margin-bottom: 0.5rem;">Gérer Détails & Exercices</a>
                     <div style="display: flex; gap: 0.5rem;">
                         <a href="index.php?action=editActivite&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: #f59e0b; color: #f59e0b;">✎ Modifier</a>
-                        <a href="index.php?action=deleteActivite&id=<?= $act['id_activite'] ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette activité et tous ses exercices ?');" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: var(--accent); color: var(--accent);">🗑 Supprimer</a>
+                        <a href="index.php?action=deleteActivite&id=<?= $act['id_activite'] ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette activité et tous ses exercices ?');" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: var(--error); color: var(--error);">🗑 Supprimer</a>
                     </div>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
 
+    <!-- FORMULAIRE SANS HTML5 VAL -->
     <div class="glass-card" id="add-form" style="max-width: 600px; margin: 0 auto;">
-        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem;">Ajouter une Activité</h3>
-        <form action="index.php?action=createActivite" method="POST">
+        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem;">[Admin] Ajouter une Activité</h3>
+        <form action="index.php?action=createActivite" method="POST" class="js-validate-activite" novalidate>
             <div>
                 <label>Nom de l'activité</label>
-                <input type="text" name="nom_activite" required placeholder="ex: Séance Musculation Haut du Corps">
+                <input type="text" name="nom_activite" placeholder="ex: Séance Musculation Haut du Corps">
+                <div class="error-message nom-error">Le nom est requis.</div>
             </div>
             <div>
                 <label>Description</label>
@@ -42,11 +50,13 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div>
                     <label>Durée (minutes)</label>
-                    <input type="number" name="duree_minutes" required min="1">
+                    <input type="text" name="duree_minutes">
+                    <div class="error-message duree-error">Doit être un nombre entier positif.</div>
                 </div>
                 <div>
                     <label>Calories estimées brûlées</label>
-                    <input type="number" name="calories_brulees" required min="0">
+                    <input type="text" name="calories_brulees">
+                    <div class="error-message cal-error">Doit être un nombre entier positif.</div>
                 </div>
             </div>
             <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">Enregistrer l'activité</button>
@@ -56,5 +66,5 @@
 
 <?php 
 $content = ob_get_clean(); 
-require __DIR__ . '/../layout.php'; 
+require __DIR__ . '/../../layout.php'; 
 ?>

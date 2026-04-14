@@ -1,34 +1,49 @@
 <?php
 
-require_once __DIR__ . "/controller/ActiviteController.php";
+require_once __DIR__ . "/controller/FrontOffice/FrontController.php";
+require_once __DIR__ . "/controller/BackOffice/ActiviteController.php";
 
-$controller = new ActiviteController();
-$action = isset($_GET['action']) ? $_GET['action'] : 'index';
+$frontController = new FrontController();
+$backController = new ActiviteController();
+
+$action = isset($_GET['action']) ? $_GET['action'] : 'home';
 
 switch ($action) {
-    case 'index':
-        $controller->index();
+    // ---- FRONT OFFICE ----
+    case 'home':
+        $frontController->home();
         break;
-    case 'show':
-        $controller->show();
+    case 'activites':
+        $frontController->listActivites();
+        break;
+    case 'showExercices':
+        $frontController->showExercices();
+        break;
+
+    // ---- BACK OFFICE ----
+    case 'admin_index':
+        $backController->index();
+        break;
+    case 'admin_show':
+        $backController->show();
         break;
     case 'createActivite':
-        $controller->createActivite();
+        $backController->createActivite();
         break;
     case 'addExercice':
-        $controller->addExercice();
+        $backController->addExercice();
         break;
     case 'editActivite':
-        $controller->editActivite();
+        $backController->editActivite();
         break;
     case 'updateActivite':
-        $controller->updateActivite();
+        $backController->updateActivite();
         break;
     case 'deleteActivite':
-        $controller->deleteActivite();
+        $backController->deleteActivite();
         break;
     default:
-        $controller->index();
+        $frontController->home();
         break;
 }
 

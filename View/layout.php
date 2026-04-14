@@ -15,13 +15,10 @@
             --accent: #f43f5e;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --error: #ef4444;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: 'Outfit', sans-serif;
@@ -36,7 +33,7 @@
         }
 
         header {
-            padding: 2rem;
+            padding: 1.5rem;
             text-align: center;
             background: var(--card-glass);
             backdrop-filter: blur(10px);
@@ -45,108 +42,65 @@
         }
 
         header h1 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             background: linear-gradient(to right, var(--primary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            animation: fadeInDown 0.8s ease-out;
         }
+        
+        .navbar {
+            margin-top: 1rem;
+            display: flex; justify-content: center; gap: 2rem;
+        }
+        .navbar a {
+            color: var(--text-main);
+            text-decoration: none; font-weight: 600; transition: color 0.3s;
+        }
+        .navbar a:hover { color: var(--primary); }
+        .navbar a.admin-link { color: var(--accent); opacity: 0.8; }
+        .navbar a.admin-link:hover { opacity: 1; }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-            flex: 1;
-        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; flex: 1; width: 100%; }
 
         .glass-card {
-            background: var(--card-glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: var(--card-glass); backdrop-filter: blur(12px); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            color: #fff;
-            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-        }
-
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
+            display: inline-block; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;
+            text-decoration: none; color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            border: none; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
         }
         
         .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            box-shadow: none;
-        }
-        
-        .btn-outline:hover {
-            background: var(--primary);
-            color: #fff;
+            background: transparent; border: 1px solid var(--primary); color: var(--primary); box-shadow: none;
         }
 
         input, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            color: var(--text-main);
-            font-family: inherit;
-            transition: border-color 0.3s ease;
+            width: 100%; padding: 0.75rem; margin-bottom: 0.5rem; background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-main); font-family: inherit;
         }
 
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
+        label { display: block; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.9rem; }
 
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+        .error-message {
+            color: var(--error); font-size: 0.85rem; margin-bottom: 1rem; display: none;
         }
+        .input-error { border-color: var(--error) !important; }
 
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.8s ease-out;
-        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
     <header>
-        <h1>Smart Nutrition ⚡ FitTrack</h1>
-        <p style="color: var(--text-muted); margin-top: 0.5rem;">Gérez vos activités sportives intelligemment</p>
+        <h1>Smart Nutrition</h1>
+        <div class="navbar">
+            <a href="index.php?action=home">Accueil</a>
+            <a href="index.php?action=activites">Nos Activités</a>
+            <a href="index.php?action=admin_index" class="admin-link">🛡️ BackOffice Admin</a>
+        </div>
     </header>
 
     <main class="container">
@@ -154,7 +108,10 @@
     </main>
 
     <footer style="text-align: center; padding: 2rem; color: var(--text-muted); margin-top: auto;">
-        <p>&copy; <?php echo date('Y'); ?> Smart Nutrition. Stay Fit.</p>
+        <p>&copy; <?php echo date('Y'); ?> Smart Nutrition. Projet Web 2A.</p>
     </footer>
+
+    <!-- Script de validation côté client Vanilla JS pure (Sans HTML5 validations) -->
+    <script src="public/js/validation.js"></script>
 </body>
 </html>
