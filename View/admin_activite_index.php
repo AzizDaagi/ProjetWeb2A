@@ -22,12 +22,12 @@
                     <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem;"><?= htmlspecialchars($act['description']) ?></p>
                     <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem;">
                         <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">⏱ <?= $act['duree_minutes'] ?> min</span>
-                        <span style="background: rgba(244, 63, 94, 0.2); color: var(--accent); padding: 4px 8px; border-radius: 4px;">🔥 <?= $act['calories_brulees'] ?> kcal</span>
+                        <span style="background: rgba(244, 63, 94, 0.2); color: var(--accent); padding: 4px 8px; border-radius: 4px;">�??� <?= $act['calories_brulees'] ?> kcal</span>
                     </div>
                     <a href="index.php?action=admin_show&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="width: 100%; text-align: center; margin-bottom: 0.5rem;">Gérer Détails & Exercices</a>
                     <div style="display: flex; gap: 0.5rem;">
-                        <a href="index.php?action=editActivite&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: #f59e0b; color: #f59e0b;">✎ Modifier</a>
-                        <a href="index.php?action=deleteActivite&id=<?= $act['id_activite'] ?>" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette activité et tous ses exercices ?');" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: var(--error); color: var(--error);">🗑 Supprimer</a>
+                        <a href="index.php?action=editActivite&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: #f59e0b; color: #f59e0b;">�?? Modifier</a>
+                        <a href="index.php?action=deleteActivite&id=<?= $act['id_activite'] ?>" onclick="return confirm('�?tes-vous sûr de vouloir supprimer cette activité et tous ses exercices ?');" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: var(--error); color: var(--error);">�??? Supprimer</a>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -66,5 +66,5 @@
 
 <?php 
 $content = ob_get_clean(); 
-require __DIR__ . '/../../layout.php'; 
+require __DIR__ . '/layout.php'; 
 ?>

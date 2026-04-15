@@ -61,5 +61,70 @@ class Activite {
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+    public function getDashboardStats() {
+        $stats = [];
+        
+        // Total Activities
+        $stmt = $this->conn->query("SELECT COUNT(*) AS total FROM activite");
+        $stats['total_activities'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+        
+        // Total Exercises
+        $stmt = $this->conn->query("SELECT COUNT(*) AS total FROM exercice");
+        $stats['total_exercises'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+        
+        // Total Calories (sum of all activities)
+        $stmt = $this->conn->query("SELECT SUM(calories_brulees) AS total FROM activite");
+        $stats['total_calories'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+        
+        // Average Duration
+        $stmt = $this->conn->query("SELECT AVG(duree_minutes) AS avg_duration FROM activite");
+        $stats['avg_duration'] = round($stmt->fetch(PDO::FETCH_ASSOC)['avg_duration'] ?? 0, 1);
+        
+        // Most Popular Activity (by number of exercises)
+        $queryPop = "SELECT a.nom_activite, COUNT(e.id_exercice) as exercise_count 
+                     FROM activite a 
+                     LEFT JOIN exercice e ON a.id_activite = e.id_activite 
+                     GROUP BY a.id_activite 
+                     ORDER BY exercise_count DESC LIMIT 1";
+        $stmt = $this->conn->query($queryPop);
+        $pop = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stats['popular_activity'] = $pop ? $pop['nom_activite'] : 'N/A';
+        
+        // Most Targeted Muscle
+        $queryMuscle = "SELECT muscle_principal, COUNT(*) as count 
+                        FROM exercice 
+                        GROUP BY muscle_principal 
+                        ORDER BY count DESC LIMIT 1";
+        $stmt = $this->conn->query($queryMuscle);
+        $muscle = $stmt->fetch(PDO::FETCH_ASSOC);
+        $stats['most_targeted_muscle'] = $muscle ? $muscle['muscle_principal'] : 'N/A';
+        
+        return $stats;
+    }
+
+    public function getChartExercisesPerActivity() {
+        $query = "SELECT a.nom_activite, COUNT(e.id_exercice) as count 
+                  FROM activite a 
+                  LEFT JOIN exercice e ON a.id_activite = e.id_activite 
+                  GROUP BY a.id_activite";
+        $stmt = $this->conn->query($query);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getChartMuscleDistribution() {
+        $query = "SELECT muscle_principal, COUNT(*) as count 
+                  FROM exercice 
+                  GROUP BY muscle_principal";
+        $stmt = $this->conn->query($query);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getChartCaloriesPerActivity() {
+        $query = "SELECT nom_activite, calories_brulees 
+                  FROM activite";
+        $stmt = $this->conn->query($query);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
