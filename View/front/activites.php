@@ -1,8 +1,35 @@
 <?php ob_start(); ?>
 
+<?php
+    $quotes = [
+        "The only bad workout is the one you didn’t do.",
+        "No pain, no gain.",
+        "Push yourself because no one else is going to do it for you.",
+        "Success starts with self-discipline.",
+        "Don’t stop when you’re tired. Stop when you’re done.",
+        "Your body can stand almost anything. It’s your mind you have to convince.",
+        "Small progress is still progress.",
+        "Wake up. Work out. Get stronger.",
+        "Muscles are built, not wished for.",
+        "Stronger than yesterday.",
+        "Pain is temporary, pride is forever.",
+        "Be stronger than your strongest excuse.",
+        "Lift heavy. Live strong.",
+        "Champions train, losers complain.",
+        "Discipline is doing it even when you don’t feel like it.",
+        "Motivation gets you started. Discipline keeps you going.",
+        "Your future body is built by what you do today.",
+        "Excuses don’t burn calories.",
+        "Consistency is more important than intensity."
+    ];
+    $randomQuote = $quotes[array_rand($quotes)];
+?>
 <div class="animate-fade-in">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
         <h2>Catalogue des Activités Sportives</h2>
+        <div style="font-style: italic; color: var(--accent); padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid var(--accent); max-width: 400px; text-align: right; font-size: 0.95rem;">
+            « <?= htmlspecialchars($randomQuote) ?> »
+        </div>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">

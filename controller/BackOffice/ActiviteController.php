@@ -13,7 +13,7 @@ class ActiviteController {
 
     public function show() {
         if (!isset($_GET['id'])) {
-            header('Location: index.php?action=admin_index');
+            header('Location: index.php?action=admin_dashboard');
             exit;
         }
 
@@ -22,7 +22,7 @@ class ActiviteController {
         $activite = $activiteModel->getById($id);
 
         if (!$activite) {
-            header('Location: index.php?action=admin_index');
+            header('Location: index.php?action=admin_dashboard');
             exit;
         }
 
@@ -58,14 +58,15 @@ class ActiviteController {
             $activiteModel->calories_brulees = (int) $_POST['calories_brulees'];
             $activiteModel->create();
             
-            header('Location: index.php?action=admin_index');
+            header('Location: index.php?action=admin_dashboard');
             exit;
         }
     }
 
     public function addExercice() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_activite'])) {
-            if (empty(trim($_POST['nom_exercice'])) || empty(trim($_POST['series'])) || empty(trim($_POST['repetitions']))) {
+            if (empty(trim($_POST['nom_exercice'])) || empty(trim($_POST['series'])) || empty(trim($_POST['repetitions'])) || 
+                empty(trim($_POST['muscle_principal'])) || empty(trim($_POST['niveau_difficulte'])) || empty(trim($_POST['calories_estimees']))) {
                 header("Location: index.php?action=admin_show&id=" . $_POST['id_activite'] . "&error=fields");
                 exit;
             }
@@ -74,6 +75,10 @@ class ActiviteController {
             $exerciceModel->nom_exercice = htmlspecialchars(trim($_POST['nom_exercice']));
             $exerciceModel->series = (int) $_POST['series'];
             $exerciceModel->repetitions = (int) $_POST['repetitions'];
+            $exerciceModel->muscle_principal = htmlspecialchars(trim($_POST['muscle_principal']));
+            $exerciceModel->muscle_secondaire = htmlspecialchars(trim($_POST['muscle_secondaire'] ?? ''));
+            $exerciceModel->niveau_difficulte = htmlspecialchars(trim($_POST['niveau_difficulte']));
+            $exerciceModel->calories_estimees = (int) $_POST['calories_estimees'];
             $exerciceModel->id_activite = (int) $_POST['id_activite'];
             $exerciceModel->create();
             
@@ -82,9 +87,69 @@ class ActiviteController {
         }
     }
 
+    public function editExercice() {
+        if (!isset($_GET['id'])) {
+            header('Location: index.php?action=admin_dashboard');
+            exit;
+        }
+        $id = (int)$_GET['id'];
+        $exerciceModel = new Exercice();
+        $exercice = $exerciceModel->getById($id);
+
+        if (!$exercice) {
+            header('Location: index.php?action=admin_dashboard');
+            exit;
+        }
+
+        require_once __DIR__ . '/../../View/back/activite/editExercice.php';
+    }
+
+    public function updateExercice() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_exercice'])) {
+            if (empty(trim($_POST['nom_exercice'])) || empty(trim($_POST['series'])) || empty(trim($_POST['repetitions'])) || 
+                empty(trim($_POST['muscle_principal'])) || empty(trim($_POST['niveau_difficulte'])) || empty(trim($_POST['calories_estimees']))) {
+                header("Location: index.php?action=editExercice&id=" . $_POST['id_exercice'] . "&error=fields");
+                exit;
+            }
+
+            $exerciceModel = new Exercice();
+            $exerciceModel->id_exercice = (int) $_POST['id_exercice'];
+            $exerciceModel->nom_exercice = htmlspecialchars(trim($_POST['nom_exercice']));
+            $exerciceModel->series = (int) $_POST['series'];
+            $exerciceModel->repetitions = (int) $_POST['repetitions'];
+            $exerciceModel->muscle_principal = htmlspecialchars(trim($_POST['muscle_principal']));
+            $exerciceModel->muscle_secondaire = htmlspecialchars(trim($_POST['muscle_secondaire'] ?? ''));
+            $exerciceModel->niveau_difficulte = htmlspecialchars(trim($_POST['niveau_difficulte']));
+            $exerciceModel->calories_estimees = (int) $_POST['calories_estimees'];
+            $exerciceModel->update();
+            
+            if (isset($_POST['id_activite'])) {
+                header("Location: index.php?action=admin_show&id=" . $_POST['id_activite']);
+            } else {
+                header('Location: index.php?action=admin_dashboard');
+            }
+            exit;
+        }
+    }
+
+    public function deleteExercice() {
+        if (isset($_GET['id'])) {
+            $id = (int) $_GET['id'];
+            $exerciceModel = new Exercice();
+            $exercice = $exerciceModel->getById($id);
+            if ($exercice) {
+                $exerciceModel->delete($id);
+                header("Location: index.php?action=admin_show&id=" . $exercice['id_activite']);
+                exit;
+            }
+        }
+        header('Location: index.php?action=admin_dashboard');
+        exit;
+    }
+
     public function editActivite() {
         if (!isset($_GET['id'])) {
-            header('Location: index.php?action=admin_index');
+            header('Location: index.php?action=admin_dashboard');
             exit;
         }
         $id = $_GET['id'];
@@ -92,7 +157,7 @@ class ActiviteController {
         $activite = $activiteModel->getById($id);
 
         if (!$activite) {
-            header('Location: index.php?action=admin_index');
+            header('Location: index.php?action=admin_dashboard');
             exit;
         }
 
@@ -115,7 +180,7 @@ class ActiviteController {
             $activiteModel->calories_brulees = (int) $_POST['calories_brulees'];
             $activiteModel->update();
             
-            header('Location: index.php?action=admin_index');
+            header('Location: index.php?action=admin_dashboard');
             exit;
         }
     }
@@ -126,7 +191,7 @@ class ActiviteController {
             $activiteModel = new Activite();
             $activiteModel->delete($id);
         }
-        header('Location: index.php?action=admin_index');
+        header('Location: index.php?action=admin_dashboard');
         exit;
     }
 }

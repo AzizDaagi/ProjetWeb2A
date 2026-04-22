@@ -27,21 +27,63 @@
         <?php if(empty($exercices)): ?>
             <p style="color: var(--text-muted); font-style: italic;">Aucun exercice renseigné par l'administrateur.</p>
         <?php else: ?>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="margin-bottom: 1.5rem;">
+                <label for="muscleFilter" style="color: var(--text-muted); margin-right: 1rem;">Filtrer par muscle :</label>
+                <select id="muscleFilter" style="padding: 0.5rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border); max-width: 200px;">
+                    <option value="">Tous les muscles</option>
+                    <?php
+                        $muscles = [];
+                        foreach($exercices as $ex) {
+                            if(!in_array($ex['muscle_principal'], $muscles)) {
+                                $muscles[] = $ex['muscle_principal'];
+                            }
+                        }
+                        foreach($muscles as $m) echo "<option value=\"".htmlspecialchars($m)."\">".htmlspecialchars($m)."</option>";
+                    ?>
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem;" id="exercicesList">
                 <?php foreach($exercices as $ex): ?>
-                    <div class="glass-card" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem;">
+                    <div class="glass-card exercice-item" data-muscle="<?= htmlspecialchars($ex['muscle_principal']) ?>" style="display: flex; justify-content: space-between; align-items: stretch; padding: 1rem 1.5rem;">
                         <div>
-                            <h4 style="font-size: 1.1rem; margin-bottom: 0.25rem;"><?= htmlspecialchars($ex['nom_exercice']) ?></h4>
-                            <div style="color: var(--primary); font-weight: 600;">
-                                <?= $ex['series'] ?> séries × <?= $ex['repetitions'] ?> répétitions
+                            <h4 style="font-size: 1.2rem; margin-bottom: 0.5rem; color: #fff;">
+                                <?= htmlspecialchars($ex['nom_exercice']) ?> 
+                                <span style="font-size: 0.8rem; background: <?= $ex['niveau_difficulte'] == 'Avancé' ? 'var(--error)' : ($ex['niveau_difficulte'] == 'Intermédiaire' ? '#fbbf24' : '#34d399') ?>; color: #000; padding: 2px 6px; border-radius: 4px; margin-left: 8px;">
+                                    <?= htmlspecialchars($ex['niveau_difficulte']) ?>
+                                </span>
+                            </h4>
+                            <div style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                                <span style="background: rgba(56, 189, 248, 0.2); border: 1px solid var(--primary); padding: 2px 8px; border-radius: 12px; color: var(--primary);">
+                                    💪 <?= htmlspecialchars($ex['muscle_principal']) ?>
+                                </span>
+                                <?php if(!empty($ex['muscle_secondaire'])): ?>
+                                    <span style="background: rgba(148, 163, 184, 0.2); border: 1px solid var(--text-muted); padding: 2px 8px; border-radius: 12px; margin-left: 5px;">
+                                        <?= htmlspecialchars($ex['muscle_secondaire']) ?>
+                                    </span>
+                                <?php endif; ?>
                             </div>
-                        </div>
-                        <div style="background: rgba(56, 189, 248, 0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary);">
-                            💪
+                            <div style="color: var(--primary); font-weight: 600;">
+                                <?= $ex['series'] ?> séries × <?= $ex['repetitions'] ?> rép. | <span style="color: #fbbf24;">🔥 <?= $ex['calories_estimees'] ?> kcal</span>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
+
+            <script>
+                document.getElementById('muscleFilter').addEventListener('change', function() {
+                    const selectedMuscle = this.value;
+                    const items = document.querySelectorAll('.exercice-item');
+                    items.forEach(item => {
+                        if(selectedMuscle === "" || item.dataset.muscle === selectedMuscle) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            </script>
         <?php endif; ?>
     </div>
 </div>
