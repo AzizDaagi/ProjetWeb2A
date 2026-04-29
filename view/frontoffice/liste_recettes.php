@@ -1,28 +1,30 @@
 <?php
-$pageTitle = 'Nos Recettes';
+$pageTitle = 'Smart Nutrition | Produits';
 require_once __DIR__ . '/../../controler/RecetteController.php';
 require_once __DIR__ . '/../../controler/AlimentController.php';
 
-$controller = new RecetteController();
+$controller        = new RecetteController();
 $alimentController = new AlimentController();
 try {
     $recettes = $controller->listRecettes();
-    $aliments = $alimentController->listAliments();
+    $aliments  = $alimentController->listAliments();
 } catch (Exception $e) {
     $recettes = [];
-    $aliments = [];
+    $aliments  = [];
 }
 
 require_once __DIR__ . '/../template_only/layouts/header.php';
 ?>
 
+<!-- ===== HERO : orbit diagram from template_only/front/home.php ===== -->
 <div class="hero-wrapper">
+    <!-- Animated orbit ring -->
     <div class="cycle-diagram">
         <svg class="orbit-ring" viewBox="0 0 400 400">
             <circle cx="200" cy="200" r="140" class="ring-track" />
             <circle cx="200" cy="200" r="140" class="ring-glow" />
         </svg>
-        
+
         <div class="node node-1" title="Sustainability">
             <div class="node-icon"><i class="fa-solid fa-leaf"></i></div>
             <span class="node-label">Sustainability</span>
@@ -46,97 +48,173 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
         </div>
     </div>
 
+    <!-- Hero text -->
     <div class="hero-content">
         <h1>Smart Nutrition</h1>
-        <p class="subtitle-text">Sustainable & Intelligent Food System</p>
+        <p class="subtitle-text">Sustainable &amp; Intelligent Food System</p>
         <p class="description-text">
-            Bienvenue sur votre assistant nutritionnel personnel.<br>
-            Analysez, suivez et optimisez votre alimentation en temps réel.
+            Welcome to your product catalog area.<br>
+            Browse approved items or submit one for review.
         </p>
     </div>
 </div>
 
-<div class="container user-dashboard" style="margin-top: -40px; position: relative; z-index: 10;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
-        <h1 style="margin: 0;"><i class="fa-solid fa-utensils"></i> Liste des Recettes</h1>
-        <div>
-            <a href="/projetwebmalek/view/backoffice/manage_recettes.php" class="btn" style="background: #007bff; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-right: 10px;">
-                <i class="fa-solid fa-plus"></i> Créer recettes
+<div class="catalog-divider"></div>
+
+<!-- ===== RECETTES CATALOG ===== -->
+<div class="catalog-section">
+    <div class="catalog-header">
+        <div class="catalog-header-left">
+            <p class="catalog-eyebrow">Catalog approuvé</p>
+            <h2><i class="fa-solid fa-book-open"></i> Nos Recettes</h2>
+        </div>
+        <div class="catalog-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="searchFrontRecettes" placeholder="Rechercher une recette..." style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width:200px; font-family:inherit; font-size:14px;">
+            <a href="/projetwebmalek/view/backoffice/manage_recettes.php"
+               class="catalog-btn catalog-btn-primary">
+                <i class="fa-solid fa-plus"></i> Créer recette
             </a>
-            <a href="/projetwebmalek/view/backoffice/manage_aliments.php" class="btn" style="background: #28a745; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-                <i class="fa-solid fa-plus"></i> Nouveau aliments
+            <a href="/projetwebmalek/view/backoffice/manage_aliments.php"
+               class="catalog-btn catalog-btn-blue">
+                <i class="fa-solid fa-apple-whole"></i> Gérer aliments
+            </a>
+            <a href="/projetwebmalek/view/backoffice/index.php"
+               class="catalog-btn catalog-btn-green">
+                <i class="fa-solid fa-user-shield"></i> Admin
             </a>
         </div>
     </div>
 
-    <div class="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+    <div class="product-grid">
         <?php if (!empty($recettes)): ?>
             <?php foreach ($recettes as $r): ?>
-                <a href="details_recette.php?id=<?= $r['id'] ?>" style="text-decoration: none; color: inherit; display: block;">
-                <div class="card" style="background: var(--card-bg, white); border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                    <?php if (!empty($r['image_url'])): ?>
-                    <div style="width: 100%; height: 200px; border-radius: 8px; margin-bottom: 15px; overflow: hidden; background: #e9ecef;">
-                        <img src="<?= htmlspecialchars((string) $r['image_url']) ?>" alt="Image de <?= htmlspecialchars((string) $r['nom']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                <a href="details_recette.php?id=<?= $r['id'] ?>" class="product-card recette-card" data-nom="<?= htmlspecialchars(strtolower((string)$r['nom'])) ?>">
+                    <div class="product-card-img">
+                        <?php if (!empty($r['image_url'])): ?>
+                            <img src="<?= htmlspecialchars((string)$r['image_url']) ?>"
+                                 alt="<?= htmlspecialchars((string)$r['nom']) ?>">
+                        <?php else: ?>
+                            <div class="product-card-img-placeholder">
+                                <i class="fa-solid fa-utensils"></i>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
-                    <h3 style="margin-top: 0; color: var(--text-color, #333);"><?= htmlspecialchars((string) $r['nom']) ?></h3>
-                    
-                    <div style="margin: 15px 0;">
-                        <span style="display: inline-block; background: #e9ecef; color: #495057; padding: 4px 10px; border-radius: 15px; font-size: 14px; font-weight: bold; margin-right: 10px;">
-                            <i class="fa-solid fa-clock"></i> <?= htmlspecialchars((string) $r['temps_preparation']) ?>
-                        </span>
-                        <span style="display: inline-block; background: #fff3cd; color: #856404; padding: 4px 10px; border-radius: 15px; font-size: 14px; font-weight: bold;">
-                            <i class="fa-solid fa-chart-bar"></i> <?= htmlspecialchars((string) $r['niveau_difficulte']) ?>
-                        </span>
+                    <div class="product-card-body">
+                        <div class="product-card-title-row">
+                            <h3 class="product-card-title"><?= htmlspecialchars((string)$r['nom']) ?></h3>
+                            <span class="product-card-badge badge-orange">
+                                <i class="fa-solid fa-clock"></i>
+                                <?= htmlspecialchars((string)$r['temps_preparation']) ?>
+                            </span>
+                        </div>
+                        <p class="product-card-desc">
+                            <?= htmlspecialchars((string)($r['description'] ?? $r['niveau_difficulte'] ?? '')) ?>
+                        </p>
                     </div>
-
-                    <span style="display: inline-block; margin-top: 10px; background: #28a745; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-                        Voir les détails <i class="fa-solid fa-arrow-right"></i>
-                    </span>
-                </div>
                 </a>
             <?php endforeach; ?>
         <?php else: ?>
-            <p style="grid-column: 1 / -1; text-align: center; font-size: 18px; color: #777;">Aucune recette n'a été ajoutée pour le moment. Soyez le premier !</p>
-        <?php endif; ?>
-    </div>
-
-    <!-- Section Aliments -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 60px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
-        <h1 style="margin: 0;"><i class="fa-solid fa-apple-whole"></i> Nos Aliments de Qualité</h1>
-    </div>
-
-    <div class="cards-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-        <?php if (!empty($aliments)): ?>
-            <?php foreach ($aliments as $a): ?>
-                <a href="details_aliment.php?id=<?= $a['id'] ?>" style="text-decoration: none; color: inherit; display: block;">
-                <div class="card" style="background: var(--card-bg, white); border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s;">
-                    <?php if (!empty($a['image_url'])): ?>
-                    <div style="width: 100%; height: 200px; border-radius: 8px; margin-bottom: 15px; overflow: hidden; background: #e9ecef;">
-                        <img src="<?= htmlspecialchars((string) $a['image_url']) ?>" alt="Image de <?= htmlspecialchars((string) $a['nom']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    <?php endif; ?>
-                    <h3 style="margin-top: 0; color: var(--text-color, #333);"><?= htmlspecialchars((string) $a['nom']) ?></h3>
-                    
-                    <div style="margin: 15px 0;">
-                        <span style="display: inline-block; background: #e9ecef; color: #495057; padding: 4px 10px; border-radius: 15px; font-size: 14px; font-weight: bold; margin-right: 10px;">
-                            <i class="fa-solid fa-fire"></i> <?= htmlspecialchars((string) $a['calories']) ?> kcal
-                        </span>
-                        <span style="display: inline-block; background: #d4edda; color: #155724; padding: 4px 10px; border-radius: 15px; font-size: 14px; font-weight: bold;">
-                            <i class="fa-solid fa-tag"></i> <?= htmlspecialchars((string) $a['type']) ?>
-                        </span>
-                    </div>
-
-                    <span style="display: inline-block; margin-top: 10px; background: #007bff; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">
-                        Voir les détails <i class="fa-solid fa-arrow-right"></i>
-                    </span>
-                </div>
-                </a>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <p style="grid-column: 1 / -1; text-align: center; font-size: 18px; color: #777;">Aucun aliment n'a été ajouté pour le moment. Soyez le premier !</p>
+            <p style="grid-column:1/-1;text-align:center;color:rgba(236,240,241,0.5);padding:40px 0;">
+                <i class="fa-solid fa-utensils" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4;"></i>
+                Aucune recette pour le moment. Soyez le premier !
+            </p>
         <?php endif; ?>
     </div>
 </div>
+
+<div class="catalog-divider" style="max-width:1200px;margin:0 auto;"></div>
+
+<!-- ===== ALIMENTS CATALOG ===== -->
+<div class="catalog-section" style="padding-top:36px;">
+    <div class="catalog-header">
+        <div class="catalog-header-left">
+            <p class="catalog-eyebrow">Qualité certifiée</p>
+            <h2><i class="fa-solid fa-apple-whole"></i> Nos Aliments</h2>
+        </div>
+        <div class="catalog-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="searchFrontAliments" placeholder="Rechercher un aliment..." style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width:200px; font-family:inherit; font-size:14px;">
+            <a href="/projetwebmalek/view/backoffice/manage_aliments.php"
+               class="catalog-btn catalog-btn-primary">
+                <i class="fa-solid fa-plus"></i> Ajouter aliment
+            </a>
+        </div>
+    </div>
+
+    <div class="product-grid">
+        <?php if (!empty($aliments)): ?>
+            <?php foreach ($aliments as $a): ?>
+                <a href="details_aliment.php?id=<?= $a['id'] ?>" class="product-card aliment-card" data-nom="<?= htmlspecialchars(strtolower((string)$a['nom'])) ?>">
+                    <div class="product-card-img">
+                        <?php if (!empty($a['image_url'])): ?>
+                            <img src="<?= htmlspecialchars((string)$a['image_url']) ?>"
+                                 alt="<?= htmlspecialchars((string)$a['nom']) ?>">
+                        <?php else: ?>
+                            <div class="product-card-img-placeholder">
+                                <i class="fa-solid fa-leaf"></i>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="product-card-body">
+                        <div class="product-card-title-row">
+                            <h3 class="product-card-title"><?= htmlspecialchars((string)$a['nom']) ?></h3>
+                            <span class="product-card-badge badge-green">
+                                <i class="fa-solid fa-fire"></i>
+                                <?= htmlspecialchars((string)$a['calories']) ?> kcal
+                            </span>
+                        </div>
+                        <p class="product-card-desc">
+                            <?= htmlspecialchars((string)($a['description'] ?? $a['type'] ?? '')) ?>
+                        </p>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p style="grid-column:1/-1;text-align:center;color:rgba(236,240,241,0.5);padding:40px 0;">
+                <i class="fa-solid fa-apple-whole" style="font-size:32px;display:block;margin-bottom:12px;opacity:.4;"></i>
+                Aucun aliment pour le moment. Soyez le premier !
+            </p>
+        <?php endif; ?>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // --- Recherche Recettes ---
+    const searchFrontRecettes = document.getElementById("searchFrontRecettes");
+    const recettesCards = document.querySelectorAll(".recette-card");
+    
+    if (searchFrontRecettes) {
+        searchFrontRecettes.addEventListener("input", function(e) {
+            const term = e.target.value.toLowerCase();
+            recettesCards.forEach(card => {
+                const nom = card.getAttribute("data-nom");
+                if (nom && nom.includes(term)) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    }
+
+    // --- Recherche Aliments ---
+    const searchFrontAliments = document.getElementById("searchFrontAliments");
+    const alimentsCards = document.querySelectorAll(".aliment-card");
+    
+    if (searchFrontAliments) {
+        searchFrontAliments.addEventListener("input", function(e) {
+            const term = e.target.value.toLowerCase();
+            alimentsCards.forEach(card => {
+                const nom = card.getAttribute("data-nom");
+                if (nom && nom.includes(term)) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../template_only/layouts/footer.php'; ?>

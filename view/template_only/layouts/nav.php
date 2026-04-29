@@ -12,50 +12,35 @@
     </div>
 
     <ul class="navbar-menu">
-        <li><a href="/projetwebmalek/index.php?action=profile" class="nav-link">
-            <i class="fa-solid fa-user"></i> User
+        <li><a href="/projetwebmalek/view/frontoffice/liste_recettes.php" class="nav-link">
+            <i class="fa-solid fa-house"></i> Home
         </a></li>
-        <li><a href="/projetwebmalek/index.php?action=tracking-management" class="nav-link">
-            <i class="fa-solid fa-chart-line"></i> Activite sportif
+        <li><a href="/projetwebmalek/view/backoffice/manage_aliments.php" class="nav-link">
+            <i class="fa-solid fa-plus"></i> Submit Product
         </a></li>
         <li><a href="/projetwebmalek/view/frontoffice/liste_recettes.php" class="nav-link">
-            <i class="fa-solid fa-book-open"></i> Recette alimentation
-        </a></li>
-        <li><a href="/projetwebmalek/index.php?action=foods-management" class="nav-link">
-            <i class="fa-solid fa-apple-whole"></i> Ecommerce
-        </a></li>
-        <li><a href="/projetwebmalek/index.php?action=recommendations-management" class="nav-link">
-            <i class="fa-solid fa-users"></i> Communaute
-        </a></li>
-        <li><a href="/projetwebmalek/index.php?action=planner-management" class="nav-link">
-            <i class="fa-solid fa-calendar-check"></i> Planning
+            <i class="fa-solid fa-book-open"></i> My Orders
         </a></li>
         <?php if (($_SESSION['user_role'] ?? 'user') === 'admin'): ?>
-        <li><a href="/projetwebmalek/view/backoffice/index.php" class="nav-link" style="color: #ffc107;">
-            <i class="fa-solid fa-user-shield"></i> Admin Backoffice
+        <li><a href="/projetwebmalek/view/backoffice/manage_aliments.php" class="nav-link">
+            <i class="fa-solid fa-apple-whole"></i> Admin Products
         </a></li>
-        <li><a href="/projetwebmalek/index.php?action=roles-list" class="nav-link">
-            <i class="fa-solid fa-user-tag"></i> Roles
+        <li><a href="/projetwebmalek/view/backoffice/index.php" class="nav-link">
+            <i class="fa-solid fa-user-shield"></i> Admin Orders
+        </a></li>
+        <li><a href="/projetwebmalek/view/backoffice/manage_recommandations.php" class="nav-link">
+            <i class="fa-solid fa-hourglass-half"></i> Pending
         </a></li>
         <?php endif; ?>
     </ul>
 
     <div class="navbar-footer">
-        <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-            <i class="fa-solid fa-moon"></i> Sombre
+        <button type="button" id="themeToggle" class="nav-link theme-toggle"
+                aria-label="Toggle dark/light mode" aria-pressed="false">
+            <i class="fa-solid fa-moon"></i> Dark
         </button>
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <p class="user-info">Connecte: <strong><?= htmlspecialchars($_SESSION['user_name'] ?? 'User') ?></strong></p>
-            <a href="/projetwebmalek/index.php?action=logout" class="nav-link logout">
-                <i class="fa-solid fa-sign-out-alt"></i> Deconnexion
-            </a>
-        <?php else: ?>
-            <a href="/projetwebmalek/index.php?action=login" class="nav-link">
-                <i class="fa-solid fa-lock"></i> Connexion
-            </a>
-            <a href="/projetwebmalek/index.php?action=register" class="nav-link register">
-                <i class="fa-solid fa-user-plus"></i> Inscription
-            </a>
-        <?php endif; ?>
+        <span class="nav-workspace-badge">
+            <i class="fa-solid fa-layer-group"></i> Product management workspace
+        </span>
     </div>
 </nav>

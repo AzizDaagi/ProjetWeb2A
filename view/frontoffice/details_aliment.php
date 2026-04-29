@@ -12,52 +12,76 @@ if (isset($_GET['id'])) {
 require_once __DIR__ . '/../template_only/layouts/header.php';
 ?>
 
-<div class="container user-dashboard" style="padding-top: 40px;">
+
+<div class="submit-page-wrapper" style="max-width:820px;">
+
+    <!-- Back button -->
+    <a href="liste_recettes.php" class="submit-back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
+    </a>
+
     <?php if ($aliment): ?>
-        <div style="background: var(--card-bg, white); border-radius: 12px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 800px; margin: 0 auto;">
-            
-            <a href="liste_recettes.php" style="margin-bottom: 25px; display: inline-block; background: #6c757d; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold;">
-                <i class="fa-solid fa-arrow-left"></i> Retour à la liste
-            </a>
-            
-            <h1 style="font-size: 42px; margin-bottom: 10px; color: var(--text-color, #333);"><?= htmlspecialchars((string) $aliment['nom']) ?></h1>
-            
-            <?php if (!empty($aliment['image_url'])): ?>
-            <div style="width: 100%; max-height: 400px; border-radius: 12px; overflow: hidden; margin: 25px 0; background: #e9ecef;">
-                <img src="<?= htmlspecialchars((string) $aliment['image_url']) ?>" alt="Image de <?= htmlspecialchars((string) $aliment['nom']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+    <!-- Detail Card -->
+    <div class="submit-form-card" style="padding:36px 32px;">
+
+        <!-- Image -->
+        <?php if (!empty($aliment['image_url'])): ?>
+        <div style="width:100%;height:300px;border-radius:10px;overflow:hidden;margin-bottom:28px;background:rgba(30,39,46,1);">
+            <img src="<?= htmlspecialchars((string)$aliment['image_url']) ?>"
+                 alt="<?= htmlspecialchars((string)$aliment['nom']) ?>"
+                 style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        <?php endif; ?>
+
+        <!-- Title + badge row -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+            <h1 style="margin:0;font-size:32px;font-weight:800;"><?= htmlspecialchars((string)$aliment['nom']) ?></h1>
+            <span class="product-card-badge badge-green" style="font-size:14px;padding:6px 14px;">
+                <i class="fa-solid fa-fire"></i>
+                <?= htmlspecialchars((string)$aliment['calories']) ?> kcal
+            </span>
+        </div>
+
+        <!-- Type badge -->
+        <div style="margin-bottom:28px;">
+            <span class="product-card-badge badge-blue" style="font-size:13px;padding:6px 16px;">
+                <i class="fa-solid fa-tag"></i> <?= htmlspecialchars((string)$aliment['type']) ?>
+            </span>
+        </div>
+
+        <!-- Macros grid -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">
+            <div style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.25);border-radius:10px;padding:16px;text-align:center;">
+                <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Protéines</p>
+                <strong style="font-size:22px;color:#3498db;"><?= htmlspecialchars((string)$aliment['proteines']) ?></strong>
+                <span style="font-size:12px;color:rgba(236,240,241,0.5);"> g</span>
             </div>
-            <?php endif; ?>
-            
-            <div style="margin-bottom: 30px;">
-                <h3 style="color: var(--text-color, #333);"><i class="fa-solid fa-fire" style="color: #dc3545;"></i> Apport Énergétique</h3>
-                <p style="font-size: 18px; color: var(--text-color, #555);">Calories : <strong><?= htmlspecialchars((string) $aliment['calories']) ?> kcal</strong> pour 100g.</p>
+            <div style="background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.25);border-radius:10px;padding:16px;text-align:center;">
+                <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Glucides</p>
+                <strong style="font-size:22px;color:#2ecc71;"><?= htmlspecialchars((string)$aliment['glucides']) ?></strong>
+                <span style="font-size:12px;color:rgba(236,240,241,0.5);"> g</span>
             </div>
-            
-            <div style="margin-bottom: 30px;">
-                <h3 style="color: var(--text-color, #333);"><i class="fa-solid fa-tag" style="color: #28a745;"></i> Catégorie</h3>
-                <p style="font-size: 18px; color: var(--text-color, #555); font-weight: bold; background: #d4edda; color: #155724; display: inline-block; padding: 10px 20px; border-radius: 8px;">
-                    <?= htmlspecialchars((string) $aliment['type']) ?>
-                </p>
-            </div>
-            
-            <div>
-                <h3 style="color: var(--text-color, #333);"><i class="fa-solid fa-flask" style="color: #17a2b8;"></i> Macronutriments (pour 100g)</h3>
-                <div style="font-size: 16px; line-height: 1.6; color: var(--text-color, #555); background: var(--bg-color, #f8f9fa); padding: 25px; border-radius: 8px; border-left: 5px solid #17a2b8;">
-                    <ul style="list-style-type: none; padding: 0; margin: 0;">
-                        <li style="margin-bottom: 10px;"><strong>Protéines :</strong> <?= htmlspecialchars((string) $aliment['proteines']) ?> g</li>
-                        <li style="margin-bottom: 10px;"><strong>Glucides :</strong> <?= htmlspecialchars((string) $aliment['glucides']) ?> g</li>
-                        <li style="margin-bottom: 0;"><strong>Lipides :</strong> <?= htmlspecialchars((string) $aliment['lipides']) ?> g</li>
-                    </ul>
-                </div>
+            <div style="background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.25);border-radius:10px;padding:16px;text-align:center;">
+                <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Lipides</p>
+                <strong style="font-size:22px;color:#f39c12;"><?= htmlspecialchars((string)$aliment['lipides']) ?></strong>
+                <span style="font-size:12px;color:rgba(236,240,241,0.5);"> g</span>
             </div>
         </div>
+
+        <p style="font-size:12px;color:rgba(236,240,241,0.35);text-align:center;margin:0;">
+            Valeurs pour 100g de produit
+        </p>
+    </div>
+
     <?php else: ?>
-        <div style="text-align: center; padding: 50px;">
-            <h2 style="color: #dc3545;">Aliment introuvable.</h2>
-            <p>Cet aliment n'existe pas ou a été supprimé.</p>
-            <a href="liste_recettes.php" class="btn" style="background: #6c757d; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px;">Retourner à la liste</a>
-        </div>
+    <div class="submit-form-card" style="text-align:center;padding:60px 30px;">
+        <i class="fa-solid fa-circle-exclamation" style="font-size:40px;color:#e74c3c;display:block;margin-bottom:16px;"></i>
+        <h2 style="margin:0 0 10px;">Aliment introuvable</h2>
+        <p style="color:rgba(236,240,241,0.5);margin-bottom:24px;">Cet aliment n'existe pas ou a été supprimé.</p>
+        <a href="liste_recettes.php" class="submit-back-btn" style="margin-bottom:0;">Retour au catalogue</a>
+    </div>
     <?php endif; ?>
 </div>
+
 
 <?php require_once __DIR__ . '/../template_only/layouts/footer.php'; ?>
