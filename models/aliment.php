@@ -31,6 +31,33 @@ class Aliment
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function searchByTypeAndName($query, $type, $limit = 5)
+    {
+        $query = trim((string) $query);
+        $type = trim((string) $type);
+        $limit = max(1, (int) $limit);
+
+        if ($query === '' || $type === '') {
+            return [];
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT id, nom, type, calories, unite, proteines, glucides, lipides
+             FROM aliments
+             WHERE nom LIKE :query
+             AND type = :type
+             ORDER BY nom ASC
+             LIMIT {$limit}"
+        );
+
+        $stmt->execute([
+            ':query' => '%' . $query . '%',
+            ':type' => $type,
+        ]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function create($data)
     {
         $stmt = $this->pdo->prepare("

@@ -1,11 +1,15 @@
 <nav class="navbar">
 
     <div class="navbar-brand">
-        <a href="index.php?controller=aliment&action=index" class="brand-link">
+        <a
+            href="index.php?controller=suivi&action=index"
+            class="brand-link"
+            style="background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important;">
             <img
-                src="../backOffice/style/logo.png"
+                src="/projet-web-25-26/public/backoffice/images/smart-nutrition-logo.png"
                 alt="Smart Nutrition"
                 class="brand-logo navbar-preview-logo"
+                style="background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important;"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
 
             <span class="brand-fallback">
@@ -16,7 +20,7 @@
 
     <ul class="navbar-menu">
         <li>
-            <a href="index.php?controller=aliment&action=index" class="nav-link">
+            <a href="index.php?controller=suivi&action=index" class="nav-link">
                 <i class="fa-solid fa-fire"></i> Suivi Nutritionnel
             </a>
         </li>

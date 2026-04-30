@@ -3,6 +3,7 @@
 class Suivi
 {
     private $pdo;
+    private $lastError;
 
     public function __construct($pdo)
     {
@@ -11,20 +12,39 @@ class Suivi
 
     public function ajouter($data)
     {
-        $alimentId = $data['aliment_id'] ?? null;
-        $quantite = $data['quantite'] ?? 0;
-        $type = $data['type'] ?? null;
-        $date = trim($data['date_consommation'] ?? date('Y-m-d'));
+        $mealItem = $this->prepareMealItem($data);
 
-        if (!$alimentId) {
+        if ($mealItem === false) {
             return false;
         }
 
-        $stmt = $this->pdo->prepare("SELECT calories, type, unite FROM aliments WHERE id = ?");
+        return $this->insertMealItem($mealItem);
+    }
+
+    public function prepareMealItem($data)
+    {
+        $this->lastError = null;
+        $alimentId = $data['aliment_id'] ?? null;
+        $quantite = $data['quantite'] ?? 0;
+        $type = $data['type'] ?? null;
+        $date = trim((string) ($data['date_consommation'] ?? date('Y-m-d')));
+
+        if (!$alimentId) {
+            $this->lastError = "Veuillez selectionner un aliment valide.";
+            return false;
+        }
+
+        if (!$this->isValidConsumptionDate($date)) {
+            $this->lastError = "Date de consommation invalide.";
+            return false;
+        }
+
+        $stmt = $this->pdo->prepare("SELECT nom, calories, type, unite FROM aliments WHERE id = ?");
         $stmt->execute([(int) $alimentId]);
         $aliment = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$aliment) {
+            $this->lastError = "L'aliment selectionne est introuvable.";
             return false;
         }
 
@@ -35,42 +55,103 @@ class Suivi
         }
 
         if (!in_array($type, $typesAutorises, true)) {
+            $this->lastError = "Type de repas invalide.";
             return false;
         }
 
-        $baseCalories = (float) $aliment['calories'];
-        $unite = $aliment['unite'] ?? 'g';
         $quantite = (float) $quantite;
-        $dateObject = DateTime::createFromFormat('Y-m-d', $date);
-        $dateErrors = DateTime::getLastErrors();
-        $hasDateErrors = is_array($dateErrors)
-            && (($dateErrors['warning_count'] ?? 0) > 0 || ($dateErrors['error_count'] ?? 0) > 0);
-
-        if (
-            !$dateObject ||
-            $dateObject->format('Y-m-d') !== $date ||
-            $hasDateErrors ||
-            $date > date('Y-m-d')
-        ) {
-            return false;
-        }
-
-        $calories_calculees = $unite === 'piece'
+        $baseCalories = (float) ($aliment['calories'] ?? 0);
+        $unite = $aliment['unite'] ?? 'g';
+        $caloriesCalculees = $unite === 'piece'
             ? $baseCalories * $quantite
             : ($baseCalories * $quantite) / 100;
 
+        return [
+            'aliment_id' => (int) $alimentId,
+            'quantite' => $quantite,
+            'calories' => $caloriesCalculees,
+            'calories_calculees' => $caloriesCalculees,
+            'type' => $type,
+            'date_consommation' => $date,
+            'nom' => $aliment['nom'] ?? 'Aliment',
+            'unite' => $unite,
+        ];
+    }
+
+    public function validerRepas(array $items, $date)
+    {
+        $this->lastError = null;
+        $date = trim((string) $date);
+
+        if (empty($items)) {
+            $this->lastError = "Aucun aliment n'a ete ajoute a ce repas.";
+            return false;
+        }
+
+        if (!$this->isValidConsumptionDate($date)) {
+            $this->lastError = "Date de consommation invalide.";
+            return false;
+        }
+
+        $objectifId = $this->getObjectifIdByDate($date);
+
+        if ($objectifId === null) {
+            $this->lastError = "Aucun objectif n'existe pour cette date. Genere d'abord un plan nutritionnel avant de valider ce repas.";
+            return false;
+        }
+
         $stmt = $this->pdo->prepare(
-            "INSERT INTO repas_consomme (aliment_id, quantite, calories_calculees, type, date_consommation)
-             VALUES (?, ?, ?, ?, ?)"
+            "INSERT INTO repas_consomme (aliment_id, quantite, calories_calculees, type, date_consommation, objectif_id)
+             VALUES (?, ?, ?, ?, ?, ?)"
         );
 
-        return $stmt->execute([
-            (int) $alimentId,
-            $quantite,
-            $calories_calculees,
-            $type,
-            $date,
-        ]);
+        try {
+            $this->pdo->beginTransaction();
+
+            foreach ($items as $item) {
+                $mealItem = $this->prepareMealItem([
+                    'aliment_id' => $item['aliment_id'] ?? null,
+                    'quantite' => $item['quantite'] ?? 0,
+                    'type' => $item['type'] ?? null,
+                    'date_consommation' => $date,
+                ]);
+
+                if ($mealItem === false) {
+                    throw new RuntimeException($this->lastError ?: "Impossible de preparer un aliment du repas.");
+                }
+
+                $isInserted = $stmt->execute([
+                    (int) $mealItem['aliment_id'],
+                    (float) $mealItem['quantite'],
+                    (float) $mealItem['calories_calculees'],
+                    $mealItem['type'],
+                    $date,
+                    $objectifId,
+                ]);
+
+                if (!$isInserted) {
+                    throw new RuntimeException("Impossible d'enregistrer un aliment du repas.");
+                }
+            }
+
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $exception) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            if ($this->lastError === null) {
+                $this->lastError = $exception->getMessage() ?: "Impossible d'enregistrer ce repas pour le moment.";
+            }
+
+            return false;
+        }
+    }
+
+    public function getLastError()
+    {
+        return $this->lastError;
     }
 
     public function getTodayTotal()
@@ -196,14 +277,68 @@ class Suivi
         ];
     }
 
-    public function getHistory()
+    public function getHistory(array $filters = [])
     {
-        $stmt = $this->pdo->query(
-            "SELECT date_consommation, SUM(calories_calculees) as total
-             FROM repas_consomme
-             GROUP BY date_consommation
-             ORDER BY date_consommation DESC"
+        $whereClauses = [];
+        $whereParams = [];
+        $havingClause = '';
+
+        $whereClauses[] = "DATE(o.date_creation) <= CURDATE()";
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $whereClauses[] = "DATE(o.date_creation) BETWEEN ? AND ?";
+            $whereParams[] = $filters['start_date'];
+            $whereParams[] = $filters['end_date'];
+        } else {
+            $whereClauses[] = "DATE(o.date_creation) BETWEEN
+                (
+                    SELECT DATE_SUB(MAX(DATE(date_creation)), INTERVAL 6 DAY)
+                    FROM objectif
+                )
+                AND
+                (
+                    CURDATE()
+                )";
+        }
+
+        if (!empty($filters['status'])) {
+            if ($filters['status'] === 'aucune') {
+                $havingClause = "HAVING COUNT(r.id) = 0";
+            } elseif ($filters['status'] === 'depasse') {
+                $havingClause = "HAVING COUNT(r.id) > 0 AND COALESCE(SUM(r.calories_calculees), 0) > o.calories_cible";
+            } elseif ($filters['status'] === 'sous') {
+                $havingClause = "HAVING COUNT(r.id) > 0 AND COALESCE(SUM(r.calories_calculees), 0) < o.calories_cible";
+            } elseif ($filters['status'] === 'ok') {
+                $havingClause = "HAVING COUNT(r.id) > 0 AND COALESCE(SUM(r.calories_calculees), 0) = o.calories_cible";
+            }
+        }
+
+        $whereSql = '';
+
+        if (!empty($whereClauses)) {
+            $whereSql = 'WHERE ' . implode(' AND ', $whereClauses);
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT
+                DATE(o.date_creation) AS date_consommation,
+                o.id AS objectif_id,
+                COALESCE(SUM(r.calories_calculees), 0) AS total_calories,
+                o.calories_cible AS objectif,
+                CASE
+                    WHEN COUNT(r.id) = 0 THEN 'aucune'
+                    WHEN COALESCE(SUM(r.calories_calculees), 0) > o.calories_cible THEN 'depasse'
+                    WHEN COALESCE(SUM(r.calories_calculees), 0) < o.calories_cible THEN 'sous'
+                    ELSE 'ok'
+                END AS statut
+             FROM objectif o
+             LEFT JOIN repas_consomme r ON r.objectif_id = o.id
+             $whereSql
+             GROUP BY o.id, DATE(o.date_creation), o.calories_cible
+             $havingClause
+             ORDER BY DATE(o.date_creation) DESC, o.id DESC"
         );
+        $stmt->execute($whereParams);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -211,12 +346,32 @@ class Suivi
     public function getLast30Days()
     {
         $stmt = $this->pdo->query("
-            SELECT date_consommation, SUM(calories_calculees) as total
-            FROM repas_consomme
+            SELECT
+                r.date_consommation,
+                SUM(r.calories_calculees) as total,
+                COALESCE(MAX(o.calories_cible), 2000) AS objectif
+            FROM repas_consomme r
+            LEFT JOIN objectif o ON r.objectif_id = o.id
             WHERE date_consommation >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
-            GROUP BY date_consommation
-            ORDER BY date_consommation ASC
+            GROUP BY r.date_consommation
+            ORDER BY r.date_consommation ASC
         ");
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getCaloriesParJour()
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT
+                DATE(date_consommation) AS jour,
+                COALESCE(SUM(calories_calculees), 0) AS total
+            FROM repas_consomme
+            WHERE date_consommation >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            GROUP BY DATE(date_consommation)
+            ORDER BY jour ASC
+        ");
+        $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -224,10 +379,14 @@ class Suivi
     public function getWeeklyStats()
     {
         $stmt = $this->pdo->query("
-            SELECT date_consommation, SUM(calories_calculees) as total
-            FROM repas_consomme
-            WHERE date_consommation >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-            GROUP BY date_consommation
+            SELECT
+                r.date_consommation,
+                SUM(r.calories_calculees) as total,
+                COALESCE(MAX(o.calories_cible), 2000) AS objectif
+            FROM repas_consomme r
+            LEFT JOIN objectif o ON r.objectif_id = o.id
+            WHERE r.date_consommation >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            GROUP BY r.date_consommation
         ");
         $days = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -238,13 +397,12 @@ class Suivi
             $avg = $sum / count($days);
         }
 
-        $objStmt = $this->pdo->query("SELECT calories_cible FROM objectif ORDER BY id DESC LIMIT 1");
-        $objectif = $objStmt->fetch(PDO::FETCH_ASSOC)['calories_cible'] ?? 2000;
-
         $success = 0;
 
         foreach ($days as $day) {
-            if ($day['total'] <= $objectif) {
+            $objectif = (float) ($day['objectif'] ?? 2000);
+
+            if ((float) $day['total'] <= $objectif) {
                 $success++;
             }
         }
@@ -301,19 +459,6 @@ class Suivi
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getHistoryByDate($date)
-    {
-        $stmt = $this->pdo->prepare("
-            SELECT date_consommation, SUM(calories_calculees) as total
-            FROM repas_consomme
-            WHERE date_consommation = ?
-            GROUP BY date_consommation
-        ");
-        $stmt->execute([$date]);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     public function update($data)
     {
         $id = $data['id'] ?? null;
@@ -357,5 +502,63 @@ class Suivi
         ");
 
         return $stmt->execute([(int) $id]);
+    }
+
+    private function insertMealItem(array $mealItem)
+    {
+        $objectifId = $this->getObjectifIdByDate($mealItem['date_consommation'] ?? '');
+
+        if ($objectifId === null) {
+            $this->lastError = "Aucun objectif n'existe pour cette date. Genere d'abord un plan nutritionnel avant d'ajouter un repas.";
+            return false;
+        }
+
+        $stmt = $this->pdo->prepare(
+            "INSERT INTO repas_consomme (aliment_id, quantite, calories_calculees, type, date_consommation, objectif_id)
+             VALUES (?, ?, ?, ?, ?, ?)"
+        );
+
+        $isInserted = $stmt->execute([
+            (int) ($mealItem['aliment_id'] ?? 0),
+            (float) ($mealItem['quantite'] ?? 0),
+            (float) ($mealItem['calories_calculees'] ?? 0),
+            $mealItem['type'] ?? null,
+            $mealItem['date_consommation'] ?? date('Y-m-d'),
+            $objectifId,
+        ]);
+
+        if (!$isInserted) {
+            $this->lastError = "Impossible d'ajouter cette consommation pour le moment.";
+        }
+
+        return $isInserted;
+    }
+
+    private function isValidConsumptionDate($date)
+    {
+        $dateObject = DateTime::createFromFormat('Y-m-d', $date);
+        $dateErrors = DateTime::getLastErrors();
+        $hasDateErrors = is_array($dateErrors)
+            && (($dateErrors['warning_count'] ?? 0) > 0 || ($dateErrors['error_count'] ?? 0) > 0);
+
+        return $dateObject
+            && $dateObject->format('Y-m-d') === $date
+            && !$hasDateErrors;
+    }
+
+    private function getObjectifIdByDate($date)
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT id
+            FROM objectif
+            WHERE DATE(date_creation) = ?
+            ORDER BY date_creation DESC, id DESC
+            LIMIT 1
+        ");
+        $stmt->execute([(string) $date]);
+
+        $objectifId = $stmt->fetchColumn();
+
+        return $objectifId !== false ? (int) $objectifId : null;
     }
 }

@@ -126,7 +126,7 @@
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="index.php?controller=aliment&action=update" novalidate>
+            <form method="POST" action="index.php?controller=suivi&action=update" novalidate>
                 <input type="hidden" name="id" value="<?= htmlspecialchars($entry['id']) ?>">
 
                 <div class="form-group">
@@ -149,7 +149,7 @@
                         <i class="fa-solid fa-floppy-disk"></i> Enregistrer
                     </button>
 
-                    <a class="btn btn-secondary" href="index.php?controller=aliment&action=index&mode=detail&date=<?= urlencode($entry['date_consommation']) ?>">
+                    <a class="btn btn-secondary" href="index.php?controller=suivi&action=index&mode=detail&date=<?= urlencode($entry['date_consommation']) ?>">
                         <i class="fa-solid fa-arrow-left"></i> Annuler
                     </a>
                 </div>

@@ -34,6 +34,13 @@ ALTER TABLE objectif
 ALTER TABLE objectif
     ADD COLUMN objectif_type ENUM('maintien', 'prise_muscle') NOT NULL DEFAULT 'maintien' AFTER calories_cible;
 
+ALTER TABLE objectif
+    ADD COLUMN poids FLOAT NULL DEFAULT NULL AFTER objectif_type,
+    ADD COLUMN taille FLOAT NULL DEFAULT NULL AFTER poids,
+    ADD COLUMN age INT NULL DEFAULT NULL AFTER taille,
+    ADD COLUMN sexe ENUM('homme', 'femme') NOT NULL DEFAULT 'homme' AFTER age,
+    ADD COLUMN activite ENUM('sedentary', 'light', 'moderate', 'active', 'very_active', 'extra_active') NOT NULL DEFAULT 'moderate' AFTER sexe;
+
 -- Optionnel : cle etrangere si vous souhaitez renforcer l'integrite
 -- ALTER TABLE repas_consomme
 --     ADD CONSTRAINT fk_repas_utilisateur FOREIGN KEY (user_id) REFERENCES utilisateur(id);

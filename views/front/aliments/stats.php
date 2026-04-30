@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evolution des calories consommees par rapport a l'objectif</title>
+    <title>Plan calorique sur 7 jours</title>
     <link rel="stylesheet" href="views/front/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -31,11 +31,42 @@
             margin-bottom: 18px;
         }
 
+        .stats-subtitle {
+            max-width: 760px;
+            margin: 0 auto 24px;
+            text-align: center;
+            color: var(--kpi-label);
+        }
+
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 14px;
             margin-top: 24px;
+        }
+
+        .chart-card-head {
+            margin-bottom: 18px;
+        }
+
+        .chart-card-title {
+            margin: 0 0 6px;
+            font-size: 1.05rem;
+            color: #f8fafc;
+        }
+
+        .chart-card-copy {
+            margin: 0;
+            color: var(--kpi-label);
+        }
+
+        body.theme-light .stats-subtitle,
+        body.theme-light .chart-card-copy {
+            color: #475569;
+        }
+
+        body.theme-light .chart-card-title {
+            color: #0f172a;
         }
 
         .kpi-card,
@@ -266,7 +297,10 @@
 
     <div class="main-content">
         <div class="container stats-container">
-            <h1 class="stats-title">Evolution des calories consommees par rapport a l'objectif</h1>
+            <h1 class="stats-title">Plan calorique sur 7 jours</h1>
+            <p class="stats-subtitle">
+                Les barres affichent les calories consommees chaque jour et la ligne suit l'objectif quotidien du plan actif. La journee d'aujourd'hui est mise en avant.
+            </p>
 
             <div class="kpi-grid">
                 <div class="kpi-card">
@@ -291,6 +325,10 @@
             </div>
 
             <div class="card stats-card">
+                <div class="chart-card-head">
+                    <h2 class="chart-card-title">Calories consommees vs objectif</h2>
+                    <p class="chart-card-copy">Affichage complet des 7 jours du plan, meme lorsqu'aucun repas n'est encore enregistre.</p>
+                </div>
                 <div class="chart-area">
                     <canvas id="calorieChart" style="max-width:100%; height:400px;"></canvas>
                 </div>
@@ -346,7 +384,8 @@
     </div>
 
     <script>
-        const data = <?= json_encode($data30 ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+        const chartData = <?= json_encode($chartData ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;
+        const todayDate = <?= json_encode(date('Y-m-d')) ?>;
         const chartCanvas = document.getElementById('calorieChart');
         const goalGaugeCanvas = document.getElementById('goalGauge');
         const kpiOk = document.getElementById('kpi-ok');
@@ -449,46 +488,72 @@
         }
 
         if (chartCanvas && typeof Chart !== 'undefined') {
-            const labels = data.map(function (day) {
-                return day.date_consommation;
+            const rawLabels = chartData.map(function (day) {
+                return String(day.jour || '');
             });
 
-            const calories = data.map(function (day) {
-                return Number(day.total);
+            const labels = rawLabels.map(function (day) {
+                const parts = day.split('-');
+
+                if (parts.length !== 3) {
+                    return day;
+                }
+
+                return parts[2] + '/' + parts[1];
             });
 
-            const objectif = <?= !empty($objectif['calories_cible']) ? (float) $objectif['calories_cible'] : 2000 ?>;
-            const objectifLine = labels.map(function () {
-                return objectif;
+            const consomme = chartData.map(function (day) {
+                return Number(day.consomme || 0);
             });
 
-            const pointColors = calories.map(function (calorie) {
-                return calorie <= objectif ? '#22c55e' : '#ef4444';
+            const objectifLine = chartData.map(function (day) {
+                return day.objectif === null ? null : Number(day.objectif);
             });
+
+            const barColors = rawLabels.map(function (label) {
+                return label === todayDate ? '#4CAF50' : '#378ADD';
+            });
+
+            const barBorderColors = rawLabels.map(function (label) {
+                return label === todayDate ? '#3f9142' : '#2f74ba';
+            });
+
+            const visibleValues = consomme.concat(objectifLine.filter(function (value) {
+                return value !== null;
+            }));
+            const suggestedMin = visibleValues.length > 0
+                ? Math.max(0, Math.min.apply(null, visibleValues) - 200)
+                : 1200;
+            const suggestedMax = visibleValues.length > 0
+                ? Math.max(2200, Math.max.apply(null, visibleValues) + 250)
+                : 2200;
 
             new Chart(chartCanvas, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Calories',
-                            data: calories,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.16)',
-                            pointBackgroundColor: pointColors,
-                            pointBorderColor: pointColors,
-                            pointHoverRadius: 6,
-                            pointRadius: 4,
-                            tension: 0.3,
-                            fill: false
+                            type: 'bar',
+                            label: 'Calories consommees',
+                            data: consomme,
+                            backgroundColor: barColors,
+                            borderColor: barBorderColors,
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            maxBarThickness: 42
                         },
                         {
+                            type: 'line',
                             label: 'Objectif',
                             data: objectifLine,
-                            borderColor: '#22c55e',
-                            borderDash: [5, 5],
-                            pointRadius: 0,
+                            borderColor: '#D85A30',
+                            backgroundColor: '#D85A30',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            spanGaps: true,
                             fill: false
                         }
                     ]
@@ -496,10 +561,33 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: {
                         legend: {
                             labels: {
-                                color: '#94a3b8'
+                                color: '#94a3b8',
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#f8fafc',
+                            bodyColor: '#e2e8f0',
+                            borderColor: 'rgba(148, 163, 184, 0.2)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.raw;
+
+                                    if (value === null || typeof value === 'undefined') {
+                                        return ' ' + context.dataset.label + ' : -';
+                                    }
+
+                                    return ' ' + context.dataset.label + ' : ' + Number(value).toFixed(0) + ' kcal';
+                                }
                             }
                         }
                     },
@@ -513,8 +601,14 @@
                             }
                         },
                         y: {
+                            beginAtZero: false,
+                            suggestedMin: suggestedMin,
+                            suggestedMax: suggestedMax,
                             ticks: {
-                                color: '#94a3b8'
+                                color: '#94a3b8',
+                                callback: function (value) {
+                                    return value + ' kcal';
+                                }
                             },
                             grid: {
                                 color: 'rgba(148, 163, 184, 0.12)'

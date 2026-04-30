@@ -15,30 +15,21 @@ class StatsService
         // Keep the userId signature so this service can evolve cleanly to multi-user support.
         $sql = "
             SELECT
-                COALESCE(SUM(CASE WHEN daily.total > objective.objectif THEN 1 ELSE 0 END), 0) AS jours_over,
-                COALESCE(SUM(CASE WHEN daily.total <= objective.objectif THEN 1 ELSE 0 END), 0) AS jours_ok,
+                COALESCE(SUM(CASE WHEN daily.total > daily.objectif THEN 1 ELSE 0 END), 0) AS jours_over,
+                COALESCE(SUM(CASE WHEN daily.total <= daily.objectif THEN 1 ELSE 0 END), 0) AS jours_ok,
                 COALESCE(ROUND(AVG(daily.total)), 0) AS moyenne,
                 COALESCE(MAX(daily.total), 0) AS pic,
-                COALESCE(MAX(objective.objectif), 2000) AS objectif
+                COALESCE(MAX(daily.objectif), 2000) AS objectif
             FROM (
                 SELECT
-                    date_consommation,
-                    SUM(calories_calculees) AS total
+                    r.date_consommation,
+                    SUM(r.calories_calculees) AS total,
+                    COALESCE(MAX(o.calories_cible), 2000) AS objectif
                 FROM repas_consomme r
+                LEFT JOIN objectif o ON r.objectif_id = o.id
                 WHERE r.date_consommation >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-                GROUP BY date_consommation
+                GROUP BY r.date_consommation
             ) AS daily
-            CROSS JOIN (
-                SELECT COALESCE(
-                    (
-                        SELECT calories_cible
-                        FROM objectif
-                        ORDER BY date_creation DESC, id DESC
-                        LIMIT 1
-                    ),
-                    2000
-                ) AS objectif
-            ) AS objective
         ";
 
         $stmt = $this->pdo->prepare($sql);
@@ -61,27 +52,18 @@ class StatsService
             SELECT
                 daily.date_consommation,
                 daily.total,
-                objective.objectif
+                daily.objectif
             FROM (
                 SELECT
-                    date_consommation,
-                    SUM(calories_calculees) AS total
-                FROM repas_consomme
-                WHERE date_consommation >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                  AND date_consommation <= CURDATE()
-                GROUP BY date_consommation
+                    r.date_consommation,
+                    SUM(r.calories_calculees) AS total,
+                    COALESCE(MAX(o.calories_cible), 2000) AS objectif
+                FROM repas_consomme r
+                LEFT JOIN objectif o ON r.objectif_id = o.id
+                WHERE r.date_consommation >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                  AND r.date_consommation <= CURDATE()
+                GROUP BY r.date_consommation
             ) AS daily
-            CROSS JOIN (
-                SELECT COALESCE(
-                    (
-                        SELECT calories_cible
-                        FROM objectif
-                        ORDER BY date_creation DESC, id DESC
-                        LIMIT 1
-                    ),
-                    2000
-                ) AS objectif
-            ) AS objective
         ";
 
         $stmt = $this->pdo->query($sql);

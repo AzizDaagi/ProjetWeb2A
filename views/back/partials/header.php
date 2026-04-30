@@ -23,13 +23,8 @@ $assetBase = $basePath . '/public/backoffice';
         <strong><?= htmlspecialchars((string) $pageTitle) ?></strong>
     </div>
 
-    <div class="admin-search-wrap">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Rechercher une section" aria-label="Rechercher une section">
-    </div>
-
     <div class="admin-top-actions">
-        <a href="index.php?controller=aliment&action=index" class="admin-chip-link">
+        <a href="index.php?controller=suivi&action=index" class="admin-chip-link">
             <i class="fa-solid fa-arrow-left"></i>
             Retour au suivi
         </a>

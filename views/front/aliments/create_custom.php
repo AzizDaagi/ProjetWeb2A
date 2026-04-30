@@ -115,7 +115,7 @@
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="index.php?controller=aliment&action=storeCustom" novalidate>
+            <form method="POST" action="index.php?controller=suivi&action=storeCustom" novalidate>
                 <div class="form-group">
                     <label>Nom</label>
                     <input type="text" name="nom" placeholder="Nom" value="<?= htmlspecialchars((string) ($customForm['nom'] ?? '')) ?>">
@@ -160,7 +160,7 @@
 
                 <div class="actions">
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
-                    <a href="index.php?controller=aliment&action=index" class="btn btn-secondary">
+                    <a href="index.php?controller=suivi&action=index" class="btn btn-secondary">
                         Annuler
                     </a>
                 </div>

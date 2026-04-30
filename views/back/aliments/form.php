@@ -1,9 +1,9 @@
 <?php
 $aliment = $aliment ?? [];
 $isEdit = !empty($aliment['id']);
-$formAction = $isEdit ? 'update' : 'store';
+$formAction = $isEdit ? 'suiviUpdate' : 'suiviStore';
 ?>
-<form method="POST" action="index.php?controller=adminAliment&action=<?= $formAction ?>" class="admin-form" novalidate>
+<form method="POST" action="index.php?controller=backoffice&action=<?= $formAction ?>" class="admin-form" novalidate>
     <?php if ($isEdit): ?>
         <input type="hidden" name="id" value="<?= htmlspecialchars((string) $aliment['id']) ?>">
     <?php endif; ?>
@@ -59,7 +59,7 @@ $formAction = $isEdit ? 'update' : 'store';
             <?= $isEdit ? 'Enregistrer les modifications' : 'Ajouter l\'aliment' ?>
         </button>
 
-        <a href="index.php?controller=adminAliment&action=index" class="admin-btn admin-btn-secondary">
+        <a href="index.php?controller=backoffice&action=suivi" class="admin-btn admin-btn-secondary">
             Annuler
         </a>
     </div>

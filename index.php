@@ -7,19 +7,18 @@ error_reporting(E_ALL);
 $pdo = new PDO("mysql:host=localhost;dbname=smart_nutrition", "root", "");
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$controllerName = $_GET['controller'] ?? 'aliment';
+$controllerName = $_GET['controller'] ?? 'suivi';
 $action = $_GET['action'] ?? 'index';
 
 $routes = [
-    'aliment' => 'alimentctrl',
+    'suivi' => 'suivictrl',
     'objectif' => 'objectifctrl',
-    'adminAliment' => 'adminAlimentCtrl',
     'backoffice' => 'BackofficeCtrl',
     'stats' => 'statsCtrl'
 ];
 
 if (!array_key_exists($controllerName, $routes)) {
-    $controllerName = 'aliment';
+    $controllerName = 'suivi';
 }
 
 $controllerClass = $routes[$controllerName];

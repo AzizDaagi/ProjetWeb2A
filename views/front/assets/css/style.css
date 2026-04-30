@@ -34,6 +34,89 @@ body.theme-light {
     --accent: #c97a00;
     background: radial-gradient(circle at 50% 50%, rgba(243, 247, 251, 1) 0%, rgba(222, 232, 244, 1) 100%);
 }
+
+.label-with-tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.label-with-tooltip .tooltip {
+    visibility: hidden;
+    opacity: 0;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333333;
+    color: #ffffff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    text-align: center;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.label-with-tooltip .tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: #333333 transparent transparent transparent;
+}
+
+.label-with-tooltip:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+
+.info-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #4CAF50;
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+.summary-item small .info-icon {
+    margin-left: 5px;
+}
+
+@media (max-width: 640px) {
+    .label-with-tooltip .tooltip {
+        left: 0;
+        transform: none;
+        white-space: normal;
+        width: min(220px, calc(100vw - 48px));
+    }
+
+    .label-with-tooltip .tooltip::after {
+        left: 18px;
+        transform: none;
+    }
+}
+
 .main-content {
     position: relative;
     z-index: 10;
@@ -527,7 +610,7 @@ button:focus-visible,
     top: 0;
     left: 0;
     width: 100%;
-    padding: 10px 16px;
+    padding: 10px 18px;
     background: linear-gradient(90deg, rgba(30, 39, 46, 0.96), rgba(20, 28, 38, 0.92));
     border-bottom: 2px solid var(--secondary);
     z-index: 1000;
@@ -536,29 +619,45 @@ button:focus-visible,
     -webkit-backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: nowrap;
 }
 
-.navbar-brand a {
+.navbar-brand {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand a,
+.brand-link {
     margin: 0;
-    font-size: 20px;
+    padding: 0;
+    font-size: 18px;
     color: var(--text-main);
     display: inline-flex;
     align-items: center;
     gap: 8px;
     text-decoration: none;
     font-weight: 700;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
 }
 
 .brand-logo {
     display: block;
-    width: 150px;
-    max-width: 100%;
-    height: auto;
+    width: auto;
+    max-width: none;
+    height: 68px;
     object-fit: contain;
     filter: drop-shadow(0 0 10px rgba(46, 204, 113, 0.18));
     opacity: 1;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .brand-fallback {
@@ -576,11 +675,11 @@ button:focus-visible,
     margin: 0;
     padding: 0;
     display: flex;
-    flex: 1 1 auto;
-    flex-wrap: wrap;
+    flex: 1 1 0;
+    min-width: 0;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .navbar-menu li {
@@ -592,14 +691,15 @@ button:focus-visible,
     width: auto;
     align-items: center;
     gap: 6px;
-    padding: 8px 11px;
+    padding: 8px 13px;
     color: rgba(236, 240, 241, 0.85);
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 999px;
     font-size: 14px;
     font-weight: 600;
     border: 1px solid transparent;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .nav-link:hover {
@@ -666,10 +766,10 @@ button:focus-visible,
 }
 
 .navbar-footer {
-    margin-left: auto;
+    flex: 0 0 auto;
+    margin-left: 0;
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
     gap: 8px;
 }
 
@@ -710,18 +810,40 @@ body.theme-light input::placeholder {
 }
 
 body.theme-light .navbar {
-    background: linear-gradient(90deg, rgba(248, 252, 255, 0.96), rgba(233, 243, 252, 0.92));
-    border-bottom-color: rgba(43, 108, 176, 0.45);
-    box-shadow: 0 6px 16px rgba(34, 76, 124, 0.16);
+    background: linear-gradient(90deg, rgba(190, 207, 224, 0.98), rgba(164, 188, 213, 0.96));
+    border-bottom-color: rgba(43, 108, 176, 0.58);
+    box-shadow: 0 8px 20px rgba(34, 76, 124, 0.22);
+}
+
+body.theme-light .navbar-brand a {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+body.theme-light .brand-link,
+body.theme-light .navbar-brand,
+body.theme-light .navbar-brand a,
+body.theme-light .navbar-preview-logo,
+body.theme-light .brand-logo {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+}
+
+body.theme-light .brand-logo {
+    filter: none;
 }
 
 body.theme-light .nav-link {
-    color: rgba(31, 42, 54, 0.9);
+    color: rgba(22, 38, 54, 0.95);
 }
 
 body.theme-light .nav-link:hover {
-    background: rgba(43, 108, 176, 0.13);
-    border-color: rgba(43, 108, 176, 0.35);
+    background: rgba(43, 108, 176, 0.18);
+    border-color: rgba(43, 108, 176, 0.42);
 }
 
 body.theme-light .user-info {
@@ -752,7 +874,8 @@ body.theme-light .theme-toggle {
 @media (max-width: 768px) {
     .navbar {
         padding: 8px 12px;
-        gap: 8px;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .navbar-brand a {
@@ -760,14 +883,15 @@ body.theme-light .theme-toggle {
     }
 
     .brand-logo {
-        width: 130px;
+        height: 54px;
     }
 
     .navbar-menu {
         order: 3;
         flex-basis: 100%;
         justify-content: flex-start;
-        gap: 4px;
+        gap: 6px;
+        flex-wrap: wrap;
     }
 
     .nav-link {
@@ -778,7 +902,7 @@ body.theme-light .theme-toggle {
     .navbar-footer {
         margin-left: 0;
         order: 2;
-        width: 100%;
+        width: auto;
     }
 
     .theme-toggle-floating-wrap {

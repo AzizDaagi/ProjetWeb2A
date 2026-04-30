@@ -7,11 +7,11 @@ unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
 <div class="admin-page">
     <div class="admin-page-head admin-page-head-inline">
         <div>
-            <h1><i class="fa-solid fa-apple-whole icon"></i> Gestion des aliments</h1>
-            <p class="subtitle">Catalogue des aliments disponibles dans l'application nutritionnelle.</p>
+            <h1><i class="fa-solid fa-apple-whole icon"></i> Suivi nutritionnel</h1>
+            <p class="subtitle">Gestion du catalogue des aliments utilises dans le suivi nutritionnel.</p>
         </div>
 
-        <a href="index.php?controller=adminAliment&action=create" class="admin-btn admin-btn-primary">
+        <a href="index.php?controller=backoffice&action=suiviCreate" class="admin-btn admin-btn-primary">
             <i class="fa-solid fa-plus"></i>
             Ajouter un aliment
         </a>
@@ -52,12 +52,12 @@ unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
                             <td><span class="admin-badge"><?= htmlspecialchars((string) ($aliment['type'] ?? '-')) ?></span></td>
                             <td>
                                 <div class="admin-action-group">
-                                    <a href="index.php?controller=adminAliment&action=edit&id=<?= urlencode((string) $aliment['id']) ?>" class="admin-btn admin-btn-secondary admin-btn-sm">
+                                    <a href="index.php?controller=backoffice&action=suiviEdit&id=<?= urlencode((string) $aliment['id']) ?>" class="admin-btn admin-btn-secondary admin-btn-sm">
                                         <i class="fa-solid fa-pen"></i>
                                         Modifier
                                     </a>
 
-                                    <a href="index.php?controller=adminAliment&action=delete&id=<?= urlencode((string) $aliment['id']) ?>" class="admin-btn admin-btn-danger admin-btn-sm" onclick="return confirm('Supprimer cet aliment ?')">
+                                    <a href="index.php?controller=backoffice&action=suiviDelete&id=<?= urlencode((string) $aliment['id']) ?>" class="admin-btn admin-btn-danger admin-btn-sm" onclick="return confirm('Supprimer cet aliment ?')">
                                         <i class="fa-solid fa-trash"></i>
                                         Supprimer
                                     </a>
