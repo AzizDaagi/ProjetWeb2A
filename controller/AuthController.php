@@ -269,13 +269,37 @@ class AuthController
 
     public function login()
     {
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
+        $email = trim((string) ($_POST['email'] ?? ''));
+        $password = (string) ($_POST['password'] ?? '');
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
+            $this->showLogin('E-mail ou mot de passe invalide.');
+            return;
+        }
 
         $user = $this->userModel->findByEmail($email);
 
-        if (!$user || !password_verify($password, $user['password'])) {
-            echo "Erreur login";
+        if (!$user) {
+            $this->showLogin('E-mail ou mot de passe incorrect.');
+            return;
+        }
+
+        $storedPassword = (string) ($user['password'] ?? '');
+        $passwordIsValid = password_verify($password, $storedPassword);
+
+        // Backward compatibility for legacy accounts that still store plain-text passwords.
+        if (!$passwordIsValid && hash_equals($storedPassword, $password)) {
+            $passwordIsValid = true;
+
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            if ($hashedPassword !== false) {
+                $this->userModel->updatePasswordById($user['id'], $hashedPassword);
+                $user['password'] = $hashedPassword;
+            }
+        }
+
+        if (!$passwordIsValid) {
+            $this->showLogin('E-mail ou mot de passe incorrect.');
             return;
         }
 
