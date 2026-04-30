@@ -156,7 +156,8 @@
             </form>
         </div>
     </div>
-    <script src="/projet-web-25-26/public/assets/template_only_template/assets/js/script.js"></script>
+    <?php require __DIR__ . '/../partials/chatbot_widget.php'; ?>
+    <script src="/projet-web-25-26/views/front/assets/js/theme.js"></script>
 </body>
 
 </html>

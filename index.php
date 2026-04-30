@@ -10,11 +10,16 @@ $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $controllerName = $_GET['controller'] ?? 'suivi';
 $action = $_GET['action'] ?? 'index';
 
+if (!isset($_GET['controller']) && in_array($action, ['chatbot', 'clear_chat', 'clearChat'], true)) {
+    $controllerName = 'chatbot';
+}
+
 $routes = [
     'suivi' => 'suivictrl',
     'objectif' => 'objectifctrl',
     'backoffice' => 'BackofficeCtrl',
-    'stats' => 'statsCtrl'
+    'stats' => 'statsCtrl',
+    'chatbot' => 'chatbotctrl'
 ];
 
 if (!array_key_exists($controllerName, $routes)) {

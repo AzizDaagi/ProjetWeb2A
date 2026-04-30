@@ -1,13 +1,14 @@
 <?php
 
 require_once __DIR__ . '/../models/aliment.php';
+require_once __DIR__ . '/../models/ReportMailer.php';
 require_once __DIR__ . '/../models/suivi.php';
-require_once __DIR__ . '/../helpers/report_mail.php';
 
 class alimentctrl
 {
 
     private $alimentModel;
+    private $reportMailer;
     private $suiviModel;
     private $allowedTypes = ['proteine', 'glucide', 'lipide'];
     private $allowedUnits = ['g', 'piece'];
@@ -15,6 +16,7 @@ class alimentctrl
     public function __construct($pdo)
     {
         $this->alimentModel = new Aliment($pdo);
+        $this->reportMailer = new ReportMailer();
         $this->suiviModel = new Suivi($pdo);
     }
 
@@ -298,7 +300,7 @@ class alimentctrl
     public function sendReport()
     {
         $stats = $this->suiviModel->getWeeklyStats();
-        $result = sendWeeklyReport($stats);
+        $result = $this->reportMailer->sendWeeklyReport($stats);
 
         if (!empty($result['success'])) {
             $_SESSION['objectif_success'] = "Email envoye";

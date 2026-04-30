@@ -19,8 +19,7 @@ body {
     background-size: cover;
     color: var(--text-main);
     opacity: 0;
-    transform: translateY(8px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition: opacity 0.4s ease;
     min-height: 100vh;
     overflow-x: hidden; /* Prevent horizontal scroll from effects */
 }
@@ -306,7 +305,6 @@ body.theme-light {
 
 body.is-ready {
     opacity: 1;
-    transform: translateY(0);
 }
 
 .container {

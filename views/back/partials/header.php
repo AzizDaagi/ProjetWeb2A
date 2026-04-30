@@ -5,7 +5,7 @@ $adminRole = $adminRole ?? 'Administrateur';
 $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $basePath = rtrim(dirname($scriptName), '/');
 $basePath = $basePath === '.' ? '' : $basePath;
-$assetBase = $basePath . '/public/backoffice';
+$assetBase = $basePath . '/views/back/assets';
 ?>
 <!DOCTYPE html>
 <html lang="fr">

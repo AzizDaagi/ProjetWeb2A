@@ -1,8 +1,8 @@
 <?php
 
 require_once __DIR__ . '/../models/objectif.php';
+require_once __DIR__ . '/../models/ObjectifCalculatorService.php';
 require_once __DIR__ . '/../models/suivi.php';
-require_once __DIR__ . '/../services/ObjectifCalculatorService.php';
 
 class objectifctrl
 {
