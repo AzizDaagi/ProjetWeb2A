@@ -10,6 +10,7 @@ class AuthController
 
     private $userModel;
     private $appConfig;
+    private $mailConfig;
 
     public function __construct()
     {
@@ -17,6 +18,8 @@ class AuthController
         $this->userModel = new User($pdo);
         $configFile = __DIR__ . '/../model/config.php';
         $this->appConfig = file_exists($configFile) ? include $configFile : [];
+        $mailConfigFile = __DIR__ . '/../model/mail.php';
+        $this->mailConfig = file_exists($mailConfigFile) ? include $mailConfigFile : [];
     }
 
     private function redirect($action)
@@ -101,22 +104,10 @@ class AuthController
 
     private function sendBrevoEmail($to, $subject, $htmlContent)
     {
-        // Set these environment variables locally or in your deployment secrets.
-        // Do NOT commit real API or SMTP keys into the repository.
-        // Expected env vars: BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME
-        $envApiKey = trim((string) getenv('BREVO_API_KEY'));
-        $envFromEmail = trim((string) getenv('BREVO_FROM_EMAIL'));
-        $envFromName = trim((string) getenv('BREVO_FROM_NAME'));
-
-        $apiKey = $envApiKey;
-        $fromEmail = $envFromEmail;
-        $fromName = $envFromName;
+        $fromEmail = trim((string) ($this->mailConfig['from_email'] ?? getenv('BREVO_FROM_EMAIL')));
+        $fromName = trim((string) ($this->mailConfig['from_name'] ?? getenv('BREVO_FROM_NAME')));
         if ($fromName === '') {
             $fromName = 'Smart Nutrition';
-        }
-
-        if ($apiKey === '') {
-            return ['success' => false, 'error' => 'Cle API Brevo manquante.'];
         }
 
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
@@ -124,9 +115,24 @@ class AuthController
         }
 
         if (!filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
-            return ['success' => false, 'error' => 'Email expediteur invalide.'];
+            return ['success' => false, 'error' => 'Email expediteur invalide. Configurez BREVO_FROM_EMAIL avec une adresse verifiee dans Brevo.'];
         }
 
+        $smtpPassword = trim((string) ($this->mailConfig['password'] ?? ''));
+        if ($smtpPassword !== '') {
+            return $this->sendBrevoEmailViaSmtp($to, $subject, $htmlContent, $fromEmail, $fromName);
+        }
+
+        $apiKey = trim((string) getenv('BREVO_API_KEY'));
+        if ($apiKey === '') {
+            return ['success' => false, 'error' => 'Aucune configuration d\'envoi Brevo active.'];
+        }
+
+        return $this->sendBrevoEmailViaApi($to, $subject, $htmlContent, $fromEmail, $fromName, $apiKey);
+    }
+
+    private function sendBrevoEmailViaApi($to, $subject, $htmlContent, $fromEmail, $fromName, $apiKey)
+    {
         if (!function_exists('curl_init')) {
             return ['success' => false, 'error' => 'cURL indisponible.'];
         }
@@ -177,6 +183,221 @@ class AuthController
         }
 
         return ['success' => false, 'error' => 'API Brevo ' . $httpCode . ': ' . (string) $response];
+    }
+
+    private function sendBrevoEmailViaSmtp($to, $subject, $htmlContent, $fromEmail, $fromName)
+    {
+        $host = trim((string) ($this->mailConfig['host'] ?? 'smtp-relay.brevo.com'));
+        $port = (int) ($this->mailConfig['port'] ?? 587);
+        $username = trim((string) ($this->mailConfig['username'] ?? ''));
+        $password = trim((string) ($this->mailConfig['password'] ?? ''));
+        $secure = strtolower(trim((string) ($this->mailConfig['secure'] ?? 'tls')));
+        $timeout = (int) ($this->mailConfig['timeout'] ?? 30);
+
+        if ($timeout < 1) {
+            $timeout = 30;
+        }
+
+        if ($username === '') {
+            $username = $fromEmail;
+        }
+
+        if ($host === '' || $port < 1 || $username === '' || $password === '') {
+            return ['success' => false, 'error' => 'Configuration SMTP Brevo incomplete.'];
+        }
+
+        $transport = ($secure === 'ssl' || $port === 465) ? 'ssl' : 'tcp';
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true,
+            ],
+        ]);
+
+        $socket = @stream_socket_client(
+            $transport . '://' . $host . ':' . $port,
+            $errorNumber,
+            $errorMessage,
+            $timeout,
+            STREAM_CLIENT_CONNECT,
+            $context
+        );
+
+        if (!$socket) {
+            return ['success' => false, 'error' => 'Connexion SMTP impossible: ' . $errorMessage . ' (' . $errorNumber . ')'];
+        }
+
+        stream_set_timeout($socket, $timeout);
+
+        $welcome = $this->readSmtpResponse($socket);
+        if (!$this->isExpectedSmtpResponse($welcome, [220])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'SMTP accueil inattendu: ' . trim((string) $welcome)];
+        }
+
+        $helloHost = parse_url($this->appConfig['app_url'] ?? '', PHP_URL_HOST) ?: 'localhost';
+
+        $response = $this->sendSmtpCommand($socket, 'EHLO ' . $helloHost, [250]);
+        if (!$this->isExpectedSmtpResponse($response, [250])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'EHLO refuse: ' . trim((string) $response)];
+        }
+
+        if ($secure === 'tls' && $transport === 'tcp') {
+            $response = $this->sendSmtpCommand($socket, 'STARTTLS', [220]);
+            if (!$this->isExpectedSmtpResponse($response, [220])) {
+                fclose($socket);
+                return ['success' => false, 'error' => 'STARTTLS refuse: ' . trim((string) $response)];
+            }
+
+            $cryptoEnabled = @stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            if ($cryptoEnabled !== true) {
+                fclose($socket);
+                return ['success' => false, 'error' => 'Activation TLS impossible sur la connexion SMTP.'];
+            }
+
+            $response = $this->sendSmtpCommand($socket, 'EHLO ' . $helloHost, [250]);
+            if (!$this->isExpectedSmtpResponse($response, [250])) {
+                fclose($socket);
+                return ['success' => false, 'error' => 'EHLO apres TLS refuse: ' . trim((string) $response)];
+            }
+        }
+
+        $response = $this->sendSmtpCommand($socket, 'AUTH LOGIN', [334]);
+        if (!$this->isExpectedSmtpResponse($response, [334])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'AUTH LOGIN refuse: ' . trim((string) $response)];
+        }
+
+        $response = $this->sendSmtpCommand($socket, base64_encode($username), [334]);
+        if (!$this->isExpectedSmtpResponse($response, [334])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Identifiant SMTP refuse. Utilisez le SMTP login affiche dans Brevo > Settings > SMTP & API: ' . trim((string) $response)];
+        }
+
+        $response = $this->sendSmtpCommand($socket, base64_encode($password), [235]);
+        if (!$this->isExpectedSmtpResponse($response, [235])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Mot de passe SMTP refuse. Verifiez la cle SMTP et le SMTP login Brevo configure dans BREVO_SMTP_USERNAME: ' . trim((string) $response)];
+        }
+
+        $response = $this->sendSmtpCommand($socket, 'MAIL FROM:<' . $fromEmail . '>', [250]);
+        if (!$this->isExpectedSmtpResponse($response, [250])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Expediteur refuse: ' . trim((string) $response)];
+        }
+
+        $response = $this->sendSmtpCommand($socket, 'RCPT TO:<' . $to . '>', [250, 251]);
+        if (!$this->isExpectedSmtpResponse($response, [250, 251])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Destinataire refuse: ' . trim((string) $response)];
+        }
+
+        $response = $this->sendSmtpCommand($socket, 'DATA', [354]);
+        if (!$this->isExpectedSmtpResponse($response, [354])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'SMTP DATA refuse: ' . trim((string) $response)];
+        }
+
+        $message = $this->buildMimeMessage($to, $subject, $htmlContent, $fromEmail, $fromName);
+        fwrite($socket, $message . "\r\n.\r\n");
+        $response = $this->readSmtpResponse($socket);
+        if (!$this->isExpectedSmtpResponse($response, [250])) {
+            fclose($socket);
+            return ['success' => false, 'error' => 'Envoi du message refuse: ' . trim((string) $response)];
+        }
+
+        $this->sendSmtpCommand($socket, 'QUIT', [221]);
+        fclose($socket);
+
+        return ['success' => true, 'error' => ''];
+    }
+
+    private function buildMimeMessage($to, $subject, $htmlContent, $fromEmail, $fromName)
+    {
+        $boundary = 'smart-nutrition-' . bin2hex(random_bytes(12));
+        $plainText = $this->htmlToText($htmlContent);
+        $encodedHtml = chunk_split(base64_encode($htmlContent), 76, "\r\n");
+        $encodedText = chunk_split(base64_encode($plainText), 76, "\r\n");
+
+        $headers = [
+            'Date: ' . date(DATE_RFC2822),
+            'To: <' . $to . '>',
+            'From: ' . $this->encodeMimeHeader($fromName) . ' <' . $fromEmail . '>',
+            'Reply-To: <' . $fromEmail . '>',
+            'Subject: ' . $this->encodeMimeHeader($subject),
+            'MIME-Version: 1.0',
+            'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+        ];
+
+        $body = [
+            '--' . $boundary,
+            'Content-Type: text/plain; charset=UTF-8',
+            'Content-Transfer-Encoding: base64',
+            '',
+            $encodedText,
+            '--' . $boundary,
+            'Content-Type: text/html; charset=UTF-8',
+            'Content-Transfer-Encoding: base64',
+            '',
+            $encodedHtml,
+            '--' . $boundary . '--',
+        ];
+
+        return str_replace("\r\n.", "\r\n..", implode("\r\n", $headers) . "\r\n\r\n" . implode("\r\n", $body));
+    }
+
+    private function htmlToText($htmlContent)
+    {
+        $text = preg_replace('/<br\s*\/?>/i', "\n", $htmlContent);
+        $text = preg_replace('/<\/p>/i', "\n\n", (string) $text);
+        $text = strip_tags((string) $text);
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = preg_replace("/\n{3,}/", "\n\n", $text);
+
+        return trim((string) $text);
+    }
+
+    private function encodeMimeHeader($value)
+    {
+        return '=?UTF-8?B?' . base64_encode((string) $value) . '?=';
+    }
+
+    private function sendSmtpCommand($socket, $command, array $expectedCodes)
+    {
+        fwrite($socket, $command . "\r\n");
+        $response = $this->readSmtpResponse($socket);
+
+        if (!$this->isExpectedSmtpResponse($response, $expectedCodes)) {
+            return $response;
+        }
+
+        return $response;
+    }
+
+    private function readSmtpResponse($socket)
+    {
+        $response = '';
+
+        while (($line = fgets($socket, 515)) !== false) {
+            $response .= $line;
+
+            if (preg_match('/^\d{3}\s/', $line) === 1) {
+                break;
+            }
+        }
+
+        return $response;
+    }
+
+    private function isExpectedSmtpResponse($response, array $expectedCodes)
+    {
+        if (!is_string($response) || strlen($response) < 3) {
+            return false;
+        }
+
+        $code = (int) substr($response, 0, 3);
+        return in_array($code, $expectedCodes, true);
     }
 
     private function isLoggedIn()
