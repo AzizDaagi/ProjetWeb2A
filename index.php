@@ -14,12 +14,17 @@ if (!isset($_GET['controller']) && in_array($action, ['chatbot', 'clear_chat', '
     $controllerName = 'chatbot';
 }
 
+if (!isset($_GET['controller']) && $action === 'test_reminder') {
+    $controllerName = 'reminder';
+}
+
 $routes = [
     'suivi' => 'suivictrl',
     'objectif' => 'objectifctrl',
     'backoffice' => 'BackofficeCtrl',
     'stats' => 'statsCtrl',
-    'chatbot' => 'chatbotctrl'
+    'chatbot' => 'chatbotctrl',
+    'reminder' => 'ReminderController'
 ];
 
 if (!array_key_exists($controllerName, $routes)) {

@@ -48,3 +48,10 @@ ALTER TABLE objectif
 -- Utilisateur de test pour verifier l'application rapidement
 INSERT INTO utilisateur (nom, age, poids, taille, objectif_calories)
 VALUES ('Utilisateur Test', 30, 70, 175, 2000);
+
+-- Logs des rappels quotidiens pour éviter les doublons
+CREATE TABLE IF NOT EXISTS reminder_logs (
+    user_id INT NOT NULL,
+    sent_date DATE NOT NULL,
+    PRIMARY KEY (user_id, sent_date)
+);
