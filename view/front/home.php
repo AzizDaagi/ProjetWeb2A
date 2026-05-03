@@ -65,4 +65,57 @@
         <h2 id="homeTopicTitle">Durabilite</h2>
         <p id="homeTopicText">Faites des choix alimentaires durables en privilegient les produits locaux, de saison et en limitant le gaspillage.</p>
     </div>
+
+    <section
+        id="homeWeatherCard"
+        class="home-weather-card is-loading"
+        data-weather-card="true"
+        data-weather-endpoint="/smart_nutrition/index.php?action=weather-sport"
+        aria-live="polite"
+    >
+        <div class="home-weather-head">
+            <div>
+                <p class="home-weather-eyebrow">Meteo sportive</p>
+                <h2>Verifier si c'est le bon moment pour faire du sport</h2>
+            </div>
+            <span class="home-weather-badge" id="homeWeatherBadge">Chargement...</span>
+        </div>
+
+        <div class="home-weather-body">
+            <div class="home-weather-main">
+                <div class="home-weather-icon" id="homeWeatherIcon">
+                    <i class="fa-solid fa-cloud-sun"></i>
+                </div>
+                <div>
+                    <p class="home-weather-location" id="homeWeatherLocation">Localisation en cours...</p>
+                    <p class="home-weather-temp" id="homeWeatherTemp">--.-°C</p>
+                    <p class="home-weather-condition" id="homeWeatherCondition">Recherche de la meteo actuelle...</p>
+                </div>
+            </div>
+
+            <div class="home-weather-stats">
+                <div class="home-weather-stat">
+                    <span>Ressenti</span>
+                    <strong id="homeWeatherFeelsLike">--.-°C</strong>
+                </div>
+                <div class="home-weather-stat">
+                    <span>Humidite</span>
+                    <strong id="homeWeatherHumidity">--%</strong>
+                </div>
+                <div class="home-weather-stat">
+                    <span>Vent</span>
+                    <strong id="homeWeatherWind">-- km/h</strong>
+                </div>
+                <div class="home-weather-stat">
+                    <span>Mise a jour</span>
+                    <strong id="homeWeatherUpdated">--:--</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="home-weather-advice">
+            <h3 id="homeWeatherTitle">Analyse en cours</h3>
+            <p id="homeWeatherAdvice">Nous recuperons la meteo actuelle pour vous dire si une sortie sportive est recommandee.</p>
+        </div>
+    </section>
 </div>
