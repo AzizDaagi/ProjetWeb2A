@@ -35,6 +35,7 @@ class Database
         if (!self::$schemaChecked) {
             self::ensureUserRoleColumn();
             self::ensureUserProfileColumns();
+            self::ensureUserResetColumns();
             self::ensureUserFaceColumns();
             self::$schemaChecked = true;
         }
@@ -87,6 +88,23 @@ class Database
         ];
 
         foreach ($faceColumns as $column) {
+            $stmt = self::$connection->prepare('SHOW COLUMNS FROM users LIKE :column_name');
+            $stmt->execute(['column_name' => $column['name']]);
+
+            if (!$stmt->fetch()) {
+                self::$connection->exec("ALTER TABLE users ADD COLUMN `{$column['name']}` {$column['definition']}");
+            }
+        }
+    }
+
+    private static function ensureUserResetColumns()
+    {
+        $resetColumns = [
+            ['name' => 'password_reset_token', 'definition' => 'VARCHAR(255) NULL AFTER `password`'],
+            ['name' => 'password_reset_expires', 'definition' => 'DATETIME NULL AFTER `password_reset_token`'],
+        ];
+
+        foreach ($resetColumns as $column) {
             $stmt = self::$connection->prepare('SHOW COLUMNS FROM users LIKE :column_name');
             $stmt->execute(['column_name' => $column['name']]);
 

@@ -1,3 +1,5 @@
+<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
+
 <div class="container">
     <h1>Inscription</h1>
     <p class="subtitle">Creez votre compte (e-mail + mot de passe), puis completez vos donnees apres connexion</p>

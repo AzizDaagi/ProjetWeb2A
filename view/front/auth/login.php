@@ -1,3 +1,5 @@
+<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
+
 <div class="container">
     <h1>Connexion</h1>
     <p class="subtitle">Accedez a votre espace Smart Nutrition</p>
