@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     runInitSafely(initFormSubmitLock, 'form-lock');
     runInitSafely(initFaceAuth, 'face-auth');
     runInitSafely(initHomeTopicButtons, 'home-topics');
+    runInitSafely(initHomeWeatherCard, 'home-weather');
+    runInitSafely(initVoiceControl, 'voice-control');
     runInitSafely(initAdminModuleButtons, 'admin-modules');
     runInitSafely(initAdminUsersList, 'admin-users');
     runInitSafely(initBackgroundParallax, 'background-parallax');
@@ -652,6 +654,798 @@ function initHomeTopicButtons() {
 
             descriptionCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
+    });
+}
+
+function initHomeWeatherCard() {
+    var card = document.querySelector('[data-weather-card="true"]');
+    if (!card) {
+        return;
+    }
+
+    var endpoint = card.getAttribute('data-weather-endpoint') || '';
+    if (!endpoint) {
+        return;
+    }
+
+    var badgeEl = document.getElementById('homeWeatherBadge');
+    var iconEl = document.getElementById('homeWeatherIcon');
+    var locationEl = document.getElementById('homeWeatherLocation');
+    var tempEl = document.getElementById('homeWeatherTemp');
+    var conditionEl = document.getElementById('homeWeatherCondition');
+    var feelsLikeEl = document.getElementById('homeWeatherFeelsLike');
+    var humidityEl = document.getElementById('homeWeatherHumidity');
+    var windEl = document.getElementById('homeWeatherWind');
+    var updatedEl = document.getElementById('homeWeatherUpdated');
+    var titleEl = document.getElementById('homeWeatherTitle');
+    var adviceEl = document.getElementById('homeWeatherAdvice');
+
+    function setState(status, title, advice) {
+        card.classList.remove('is-loading', 'is-good', 'is-caution', 'is-bad', 'is-error');
+        card.classList.add('is-' + status);
+
+        if (badgeEl) {
+            if (status === 'good') {
+                badgeEl.textContent = 'Sport conseille';
+            } else if (status === 'caution') {
+                badgeEl.textContent = 'Avec prudence';
+            } else if (status === 'bad') {
+                badgeEl.textContent = 'A eviter';
+            } else if (status === 'error') {
+                badgeEl.textContent = 'Indisponible';
+            } else {
+                badgeEl.textContent = 'Chargement...';
+            }
+        }
+
+        if (titleEl && title) {
+            titleEl.textContent = title;
+        }
+
+        if (adviceEl && advice) {
+            adviceEl.textContent = advice;
+        }
+    }
+
+    function updateWeatherCard(weather, usedFallback) {
+        if (locationEl) {
+            locationEl.textContent = usedFallback
+                ? weather.location + ' (position par defaut)'
+                : weather.location;
+        }
+
+        if (tempEl) {
+            tempEl.textContent = weather.temperature_c.toFixed(1) + '°C';
+        }
+
+        if (conditionEl) {
+            conditionEl.textContent = weather.condition;
+        }
+
+        if (feelsLikeEl) {
+            feelsLikeEl.textContent = weather.feels_like_c.toFixed(1) + '°C';
+        }
+
+        if (humidityEl) {
+            humidityEl.textContent = weather.humidity + '%';
+        }
+
+        if (windEl) {
+            windEl.textContent = weather.wind_kmh.toFixed(1) + ' km/h';
+        }
+
+        if (updatedEl) {
+            updatedEl.textContent = weather.updated_at;
+        }
+
+        if (iconEl) {
+            iconEl.innerHTML = '<i class="' + weather.icon_class + '"></i>';
+        }
+
+        setState(weather.sport_status, weather.sport_title, weather.sport_advice);
+    }
+
+    function showError(message) {
+        if (locationEl) {
+            locationEl.textContent = 'Meteo indisponible';
+        }
+
+        if (conditionEl) {
+            conditionEl.textContent = message;
+        }
+
+        setState('error', 'Impossible de charger la meteo', message);
+    }
+
+    async function fetchWeather(lat, lon, usedFallback) {
+        var url = endpoint;
+        if (typeof lat === 'number' && typeof lon === 'number') {
+            url += '&lat=' + encodeURIComponent(lat) + '&lon=' + encodeURIComponent(lon);
+        }
+
+        try {
+            var response = await fetch(url, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            var data = null;
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
+
+            if (!response.ok || !data || data.success !== true || !data.weather) {
+                showError(data && data.message ? data.message : 'La reponse meteo est indisponible pour le moment.');
+                return;
+            }
+
+            updateWeatherCard(data.weather, usedFallback);
+        } catch (error) {
+            console.error('Weather fetch failed:', error);
+            showError('Impossible de contacter le service meteo pour le moment.');
+        }
+    }
+
+    if (!navigator.geolocation || typeof navigator.geolocation.getCurrentPosition !== 'function') {
+        fetchWeather(null, null, true);
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function (position) {
+            fetchWeather(position.coords.latitude, position.coords.longitude, false);
+        },
+        function () {
+            fetchWeather(null, null, true);
+        },
+        {
+            enableHighAccuracy: false,
+            timeout: 7000,
+            maximumAge: 900000
+        }
+    );
+}
+
+function initVoiceControl() {
+    var toggleButton = document.getElementById('voiceToggleBtn');
+    var statusLabel = document.getElementById('voiceStatusLabel');
+    var statusBadge = document.getElementById('voiceStatusBadge');
+    var transcriptEl = document.getElementById('voiceTranscript');
+    var lastActionEl = document.getElementById('voiceLastAction');
+    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!toggleButton || !statusLabel || !statusBadge || !transcriptEl || !lastActionEl) {
+        return;
+    }
+
+    if (!SpeechRecognition) {
+        statusLabel.textContent = 'Non pris en charge';
+        statusBadge.textContent = 'Indisponible';
+        statusBadge.classList.add('is-error');
+        transcriptEl.textContent = 'La reconnaissance vocale n est pas disponible dans ce navigateur.';
+        toggleButton.disabled = true;
+        return;
+    }
+
+    var recognition = new SpeechRecognition();
+    var isListening = false;
+    var shouldRestart = false;
+    var manualStop = false;
+    var restartTimer = null;
+    var storageKey = 'smartNutritionTheme';
+    var routeMap = [
+        { action: 'home', aliases: ['accueil', 'home', 'page accueil'] },
+        { action: 'profile', aliases: ['profil', 'profile', 'mon profil'] },
+        { action: 'login', aliases: ['connexion', 'se connecter', 'login'] },
+        { action: 'register', aliases: ['inscription', 'creer compte', 's inscrire'] },
+        { action: 'forgot', aliases: ['mot de passe oublie', 'oubli mot de passe'] },
+        { action: 'admin-dashboard', aliases: ['dashboard', 'tableau de bord', 'admin dashboard'] },
+        { action: 'users-list', aliases: ['utilisateurs', 'liste utilisateurs', 'gestion utilisateurs'] },
+        { action: 'auth-management', aliases: ['authentification', 'module authentification'] },
+        { action: 'recipes-management', aliases: ['recettes', 'recette alimentation'] },
+        { action: 'foods-management', aliases: ['ecommerce', 'boutique', 'produits'] },
+        { action: 'recommendations-management', aliases: ['communaute', 'community'] },
+        { action: 'tracking-management', aliases: ['activite sportif', 'activite sportive', 'sport'] },
+        { action: 'planner-management', aliases: ['planning', 'agenda'] },
+        { action: 'logout', aliases: ['deconnexion', 'se deconnecter', 'logout'] }
+    ];
+
+    recognition.lang = 'fr-FR';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    function normalizeVoiceText(value) {
+        var text = (value || '').toLowerCase();
+        if (typeof text.normalize === 'function') {
+            text = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        text = text
+            .replace(/[\.,;:!?\/\\()\[\]"]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        return text;
+    }
+
+    function setVoiceState(label, badge, transcript, action, isError) {
+        statusLabel.textContent = label;
+        statusBadge.textContent = badge;
+        statusBadge.classList.toggle('is-listening', isListening);
+        statusBadge.classList.toggle('is-error', !!isError);
+        toggleButton.classList.toggle('is-listening', isListening);
+        toggleButton.setAttribute('aria-pressed', isListening ? 'true' : 'false');
+
+        if (transcript) {
+            transcriptEl.textContent = transcript;
+        }
+
+        if (action) {
+            lastActionEl.textContent = action;
+        }
+    }
+
+    function buildActionUrl(action) {
+        return '/smart_nutrition/index.php?action=' + encodeURIComponent(action);
+    }
+
+    function setTheme(theme) {
+        if (typeof applyTheme === 'function') {
+            applyTheme(theme, storageKey);
+            setVoiceState('Actif', 'Ok', 'Commande executee.', 'Theme ' + (theme === 'dark' ? 'sombre active.' : 'clair active.'), false);
+            return true;
+        }
+
+        return false;
+    }
+
+    function isVisibleElement(element) {
+        if (!element) {
+            return false;
+        }
+
+        if (element.disabled) {
+            return false;
+        }
+
+        if (element.offsetParent !== null) {
+            return true;
+        }
+
+        return window.getComputedStyle(element).position === 'fixed';
+    }
+
+    function getElementVoiceLabel(element) {
+        var label = '';
+
+        if (element.getAttribute('aria-label')) {
+            label = element.getAttribute('aria-label');
+        } else if (element.value && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA')) {
+            label = element.value;
+        } else {
+            label = element.textContent || '';
+        }
+
+        if (!label && element.placeholder) {
+            label = element.placeholder;
+        }
+
+        return normalizeVoiceText(label);
+    }
+
+    function flashElement(element) {
+        if (!element) {
+            return;
+        }
+
+        element.classList.add('gesture-hover');
+        setTimeout(function () {
+            element.classList.remove('gesture-hover');
+        }, 900);
+    }
+
+    function findBestInteractiveElement(query) {
+        var normalizedQuery = normalizeVoiceText(query);
+        if (!normalizedQuery) {
+            return null;
+        }
+
+        var selectors = 'a, button, .btn, [role="button"], input[type="submit"], input[type="button"], input[type="reset"]';
+        var elements = Array.prototype.slice.call(document.querySelectorAll(selectors)).filter(isVisibleElement);
+        var exactMatch = null;
+        var partialMatch = null;
+
+        elements.some(function (element) {
+            var label = getElementVoiceLabel(element);
+            if (!label) {
+                return false;
+            }
+
+            if (label === normalizedQuery) {
+                exactMatch = element;
+                return true;
+            }
+
+            if (!partialMatch && (label.indexOf(normalizedQuery) !== -1 || normalizedQuery.indexOf(label) !== -1)) {
+                partialMatch = element;
+            }
+
+            return false;
+        });
+
+        return exactMatch || partialMatch;
+    }
+
+    function clickInteractiveElement(query) {
+        var target = findBestInteractiveElement(query);
+        if (!target) {
+            return false;
+        }
+
+        flashElement(target);
+        target.click();
+        setVoiceState('Actif', 'Ok', 'Commande executee.', 'Clic sur: ' + query + '.', false);
+        return true;
+    }
+
+    function findField(query) {
+        var normalizedQuery = normalizeVoiceText(query);
+        if (!normalizedQuery) {
+            return null;
+        }
+
+        var labels = Array.prototype.slice.call(document.querySelectorAll('label'));
+        for (var i = 0; i < labels.length; i++) {
+            var labelText = normalizeVoiceText(labels[i].textContent || '');
+            if (!labelText || (labelText.indexOf(normalizedQuery) === -1 && normalizedQuery.indexOf(labelText) === -1)) {
+                continue;
+            }
+
+            var fieldId = labels[i].getAttribute('for');
+            if (fieldId) {
+                var targetField = document.getElementById(fieldId);
+                if (targetField && isVisibleElement(targetField)) {
+                    return targetField;
+                }
+            }
+
+            var nestedField = labels[i].querySelector('input, textarea, select');
+            if (nestedField && isVisibleElement(nestedField)) {
+                return nestedField;
+            }
+        }
+
+        var fields = Array.prototype.slice.call(document.querySelectorAll('input, textarea, select')).filter(isVisibleElement);
+        var exactMatch = null;
+        var partialMatch = null;
+
+        fields.some(function (field) {
+            var descriptors = [
+                field.name || '',
+                field.id || '',
+                field.placeholder || '',
+                field.getAttribute('aria-label') || ''
+            ].join(' ');
+            var normalizedDescriptor = normalizeVoiceText(descriptors);
+
+            if (!normalizedDescriptor) {
+                return false;
+            }
+
+            if (normalizedDescriptor === normalizedQuery) {
+                exactMatch = field;
+                return true;
+            }
+
+            if (!partialMatch && (normalizedDescriptor.indexOf(normalizedQuery) !== -1 || normalizedQuery.indexOf(normalizedDescriptor) !== -1)) {
+                partialMatch = field;
+            }
+
+            return false;
+        });
+
+        return exactMatch || partialMatch;
+    }
+
+    function focusField(query) {
+        var field = findField(query);
+        if (!field) {
+            return false;
+        }
+
+        field.focus();
+        flashElement(field);
+        setVoiceState('Actif', 'Ok', 'Commande executee.', 'Champ active: ' + query + '.', false);
+        return true;
+    }
+
+    function writeInFocusedField(text) {
+        var field = document.activeElement;
+        if (!field || ['INPUT', 'TEXTAREA'].indexOf(field.tagName) === -1) {
+            setVoiceState('Actif', 'Alerte', 'Aucun champ texte actif.', 'Dites par exemple: selectionne email.', true);
+            return true;
+        }
+
+        if ((field.type || '').toLowerCase() === 'password') {
+            setVoiceState('Actif', 'Alerte', 'La saisie vocale du mot de passe est desactivee.', 'Utilisez le clavier pour les champs sensibles.', true);
+            return true;
+        }
+
+        field.value = text;
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        setVoiceState('Actif', 'Ok', 'Texte saisi.', 'Contenu ecrit dans le champ actif.', false);
+        return true;
+    }
+
+    function clearFocusedField() {
+        var field = document.activeElement;
+        if (!field || ['INPUT', 'TEXTAREA'].indexOf(field.tagName) === -1) {
+            return false;
+        }
+
+        if ((field.type || '').toLowerCase() === 'password') {
+            return false;
+        }
+
+        field.value = '';
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        setVoiceState('Actif', 'Ok', 'Champ efface.', 'Le champ actif a ete vide.', false);
+        return true;
+    }
+
+    function submitClosestForm() {
+        var form = document.activeElement ? document.activeElement.closest('form') : null;
+        if (!form) {
+            var visibleForms = Array.prototype.slice.call(document.querySelectorAll('form')).filter(isVisibleElement);
+            form = visibleForms[0] || null;
+        }
+
+        if (!form) {
+            return false;
+        }
+
+        var submitButton = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (submitButton && !submitButton.disabled) {
+            flashElement(submitButton);
+            submitButton.click();
+        } else {
+            form.requestSubmit ? form.requestSubmit() : form.submit();
+        }
+
+        setVoiceState('Actif', 'Ok', 'Formulaire envoye.', 'Validation du formulaire lancee.', false);
+        return true;
+    }
+
+    function fillSearch(text) {
+        var searchField = document.querySelector('input[type="search"], input[id*="search"], input[name*="search"], input[placeholder*="Recherche"], input[placeholder*="recherche"]');
+        if (!searchField || !isVisibleElement(searchField)) {
+            return false;
+        }
+
+        searchField.focus();
+        searchField.value = text;
+        searchField.dispatchEvent(new Event('input', { bubbles: true }));
+        searchField.dispatchEvent(new Event('change', { bubbles: true }));
+        setVoiceState('Actif', 'Ok', 'Recherche mise a jour.', 'Recherche de: ' + text + '.', false);
+        return true;
+    }
+
+    function navigateToRoute(target) {
+        var normalizedTarget = normalizeVoiceText(target);
+        var chosenRoute = null;
+
+        routeMap.some(function (route) {
+            return route.aliases.some(function (alias) {
+                var normalizedAlias = normalizeVoiceText(alias);
+                if (normalizedAlias === normalizedTarget || normalizedAlias.indexOf(normalizedTarget) !== -1 || normalizedTarget.indexOf(normalizedAlias) !== -1) {
+                    chosenRoute = route;
+                    return true;
+                }
+
+                return false;
+            });
+        });
+
+        if (!chosenRoute) {
+            return false;
+        }
+
+        setVoiceState('Actif', 'Ok', 'Navigation en cours.', 'Ouverture de: ' + target + '.', false);
+        window.location.href = buildActionUrl(chosenRoute.action);
+        return true;
+    }
+
+    function openOrClickTarget(target) {
+        if (navigateToRoute(target)) {
+            return true;
+        }
+
+        if (clickInteractiveElement(target)) {
+            return true;
+        }
+
+        if (focusField(target)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function showVoiceHelp() {
+        setVoiceState(
+            'Actif',
+            'Aide',
+            'Commandes: ouvre profil, clique deconnexion, descendre, monter, mode sombre, selectionne email, ecrire test, envoyer formulaire.',
+            'Aide vocale affichee.',
+            false
+        );
+        return true;
+    }
+
+    function handleVoiceCommand(command) {
+        var normalizedCommand = normalizeVoiceText(command);
+        var target = '';
+
+        if (!normalizedCommand) {
+            return;
+        }
+
+        if (normalizedCommand === 'aide' || normalizedCommand === 'aide vocale' || normalizedCommand === 'commandes vocales') {
+            showVoiceHelp();
+            return;
+        }
+
+        if (normalizedCommand === 'arreter' || normalizedCommand === 'arreter ecoute' || normalizedCommand === 'arreter l ecoute' || normalizedCommand === 'stop ecoute') {
+            stopListening(true);
+            setVoiceState('Inactif', 'Stop', 'Ecoute arretee.', 'Le controle vocal a ete coupe.', false);
+            return;
+        }
+
+        if (normalizedCommand === 'descendre' || normalizedCommand === 'scroll bas' || normalizedCommand === 'aller en bas') {
+            window.scrollBy({ top: window.innerHeight * 0.75, behavior: 'smooth' });
+            setVoiceState('Actif', 'Ok', 'Defilement vers le bas.', 'Page descendue.', false);
+            return;
+        }
+
+        if (normalizedCommand === 'monter' || normalizedCommand === 'scroll haut' || normalizedCommand === 'aller en haut') {
+            window.scrollBy({ top: -window.innerHeight * 0.75, behavior: 'smooth' });
+            setVoiceState('Actif', 'Ok', 'Defilement vers le haut.', 'Page remontee.', false);
+            return;
+        }
+
+        if (normalizedCommand === 'retour' || normalizedCommand === 'page precedente') {
+            setVoiceState('Actif', 'Ok', 'Retour a la page precedente.', 'Historique navigateur utilise.', false);
+            window.history.back();
+            return;
+        }
+
+        if (normalizedCommand === 'actualiser' || normalizedCommand === 'rafraichir') {
+            setVoiceState('Actif', 'Ok', 'Actualisation de la page.', 'Rechargement en cours.', false);
+            window.location.reload();
+            return;
+        }
+
+        if (normalizedCommand.indexOf('mode sombre') !== -1) {
+            if (setTheme('dark')) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('mode clair') !== -1 || normalizedCommand.indexOf('mode claire') !== -1) {
+            if (setTheme('light')) {
+                return;
+            }
+        }
+
+        if (normalizedCommand === 'envoyer formulaire' || normalizedCommand === 'valider formulaire' || normalizedCommand === 'soumettre formulaire') {
+            if (submitClosestForm()) {
+                return;
+            }
+        }
+
+        if (normalizedCommand === 'effacer champ' || normalizedCommand === 'vider champ') {
+            if (clearFocusedField()) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('chercher ') === 0) {
+            target = normalizedCommand.substring('chercher '.length).trim();
+            if (fillSearch(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('rechercher ') === 0) {
+            target = normalizedCommand.substring('rechercher '.length).trim();
+            if (fillSearch(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('selectionne ') === 0) {
+            target = normalizedCommand.substring('selectionne '.length).trim();
+            if (focusField(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('selectionner ') === 0) {
+            target = normalizedCommand.substring('selectionner '.length).trim();
+            if (focusField(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('champ ') === 0) {
+            target = normalizedCommand.substring('champ '.length).trim();
+            if (focusField(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('ecrire ') === 0) {
+            target = command.substring(command.toLowerCase().indexOf('ecrire ') + 'ecrire '.length).trim();
+            if (writeInFocusedField(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('saisir ') === 0) {
+            target = command.substring(command.toLowerCase().indexOf('saisir ') + 'saisir '.length).trim();
+            if (writeInFocusedField(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('cliquer ') === 0) {
+            target = normalizedCommand.substring('cliquer '.length).trim();
+            if (clickInteractiveElement(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('ouvre ') === 0) {
+            target = normalizedCommand.substring('ouvre '.length).trim();
+            if (openOrClickTarget(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('ouvrir ') === 0) {
+            target = normalizedCommand.substring('ouvrir '.length).trim();
+            if (openOrClickTarget(target)) {
+                return;
+            }
+        }
+
+        if (normalizedCommand.indexOf('aller a ') === 0) {
+            target = normalizedCommand.substring('aller a '.length).trim();
+            if (openOrClickTarget(target)) {
+                return;
+            }
+        }
+
+        if (openOrClickTarget(normalizedCommand)) {
+            return;
+        }
+
+        setVoiceState('Actif', 'Alerte', 'Commande non reconnue.', 'Essayez: ouvre accueil, cliquer connexion, mode sombre, descendre.', true);
+    }
+
+    function startListening() {
+        if (isListening) {
+            return;
+        }
+
+        manualStop = false;
+        shouldRestart = true;
+        if (restartTimer) {
+            clearTimeout(restartTimer);
+            restartTimer = null;
+        }
+
+        try {
+            recognition.start();
+        } catch (error) {
+            setVoiceState('Erreur', 'Erreur', 'Impossible de demarrer le micro.', 'Le navigateur a refuse le lancement de l ecoute.', true);
+        }
+    }
+
+    function stopListening(isManual) {
+        shouldRestart = false;
+        manualStop = !!isManual;
+        if (restartTimer) {
+            clearTimeout(restartTimer);
+            restartTimer = null;
+        }
+
+        try {
+            recognition.stop();
+        } catch (error) {
+        }
+    }
+
+    recognition.onstart = function () {
+        isListening = true;
+        setVoiceState('Ecoute active', 'Ecoute', 'Je vous ecoute. Dites une commande.', 'Exemples: ouvre profil, cliquer deconnexion, mode sombre.', false);
+    };
+
+    recognition.onend = function () {
+        isListening = false;
+        if (shouldRestart && !manualStop) {
+            restartTimer = setTimeout(function () {
+                startListening();
+            }, 300);
+            return;
+        }
+
+        setVoiceState('Inactif', 'Pret', 'Cliquez sur le micro puis dites une commande.', 'Le controle vocal est en veille.', false);
+        manualStop = false;
+    };
+
+    recognition.onerror = function (event) {
+        isListening = false;
+
+        if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            shouldRestart = false;
+            setVoiceState('Refuse', 'Bloque', 'L acces au microphone a ete refuse.', 'Autorisez le microphone dans le navigateur pour utiliser la voix.', true);
+            return;
+        }
+
+        if (event.error === 'no-speech') {
+            setVoiceState('Ecoute active', 'Ecoute', 'Aucune parole detectee. Reessayez.', 'Le micro reste actif.', false);
+            return;
+        }
+
+        if (event.error === 'audio-capture') {
+            shouldRestart = false;
+            setVoiceState('Erreur', 'Micro', 'Aucun microphone detecte.', 'Branchez ou activez un micro.', true);
+            return;
+        }
+
+        setVoiceState('Erreur', 'Erreur', 'Erreur de reconnaissance vocale.', 'Code: ' + event.error + '.', true);
+    };
+
+    recognition.onresult = function (event) {
+        var interimTranscript = '';
+        var finalTranscript = '';
+
+        for (var i = event.resultIndex; i < event.results.length; i++) {
+            var transcript = event.results[i][0].transcript || '';
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript + ' ';
+            }
+        }
+
+        if (interimTranscript.trim() !== '') {
+            transcriptEl.textContent = 'J entends: ' + interimTranscript.trim();
+        }
+
+        if (finalTranscript.trim() !== '') {
+            var cleanCommand = finalTranscript.trim();
+            transcriptEl.textContent = 'Commande: ' + cleanCommand;
+            handleVoiceCommand(cleanCommand);
+        }
+    };
+
+    toggleButton.addEventListener('click', function () {
+        if (isListening) {
+            stopListening(true);
+            return;
+        }
+
+        startListening();
     });
 }
 

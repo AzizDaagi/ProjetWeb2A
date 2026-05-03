@@ -25,6 +25,7 @@ if (file_exists($envFile)) {
 require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
+require_once __DIR__ . '/controller/WeatherController.php';
 
 if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
     $pdo = Database::getConnection();
@@ -114,6 +115,10 @@ if ($action === 'home') {
 } elseif ($action === 'clear-face-descriptor') {
     $user = new UserController();
     $user->clearFaceDescriptor();
+
+} elseif ($action === 'weather-sport') {
+    $weather = new WeatherController();
+    $weather->currentSportWeather();
 
 } elseif ($action === 'logout') {
     $user = new UserController();
