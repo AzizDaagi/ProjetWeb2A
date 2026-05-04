@@ -30,9 +30,17 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
 
 <div class="submit-page-wrapper" style="max-width:900px;">
 
-    <a href="liste_recettes.php" class="submit-back-btn">
-        <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
-    </a>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+        <a href="liste_recettes.php" class="submit-back-btn" style="margin-bottom:0;">
+            <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
+        </a>
+        <a href="export_pdf.php?type=statistiques" target="_blank"
+           style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;
+                  background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);
+                  color:#3498db;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
+            <i class="fa-solid fa-file-pdf"></i> Exporter en PDF
+        </a>
+    </div>
 
     <?php if (!$stats): ?>
     <div class="submit-form-card" style="text-align:center;padding:70px 30px;">

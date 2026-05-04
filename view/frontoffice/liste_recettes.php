@@ -82,6 +82,11 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
                class="catalog-btn catalog-btn-green">
                 <i class="fa-solid fa-user-shield"></i> Admin
             </a>
+            <a href="export_pdf.php?type=liste" target="_blank"
+               class="catalog-btn"
+               style="background:rgba(231,76,60,0.15);border-color:rgba(231,76,60,0.4);color:#e74c3c;">
+                <i class="fa-solid fa-file-pdf"></i> Export PDF
+            </a>
         </div>
     </div>
 

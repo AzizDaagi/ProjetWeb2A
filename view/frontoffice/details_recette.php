@@ -146,6 +146,12 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
                       text-decoration:none;display:inline-flex;">
                 <i class="fa-solid fa-arrow-up-right-dots"></i> Optimiser cette recette
             </a>
+            <a href="export_pdf.php?type=recette&id=<?= $recette['id'] ?>" target="_blank"
+               style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;
+                      background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);
+                      color:#e74c3c;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
+                <i class="fa-solid fa-file-pdf"></i> Exporter PDF
+            </a>
             <a href="/projetwebmalek/view/backoffice/manage_recettes.php"
                class="catalog-btn catalog-btn-blue" style="display:inline-flex;">
                 <i class="fa-solid fa-pen"></i> Modifier cette recette
