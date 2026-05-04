@@ -1,23 +1,37 @@
 <?php
+ob_start();
 $pageTitle = 'Smart Nutrition | Optimiser la Recette';
 require_once __DIR__ . '/../../controler/RecetteController.php';
 
 $controller = new RecetteController();
-$recette = null;
-$result  = null;
-$objectif = $_POST['objectif'] ?? $_GET['objectif'] ?? 'equilibre_global';
+$recette  = null;
+$result   = null;
 
-$id_recette = $_GET['id'] ?? $_POST['id_recette'] ?? null;
+// Lire l'objectif (GET ou POST)
+$objectif   = $_POST['objectif'] ?? $_GET['objectif'] ?? 'equilibre_global';
+$id_recette = isset($_POST['id_recette']) ? (int)$_POST['id_recette'] : (isset($_GET['id']) ? (int)$_GET['id'] : 0);
 
-// --- Appliquer l'optimisation (admin) ---
+// -------------------------------------------------------
+// ÉTAPE 1 : Appliquer l'optimisation si demandé (POST)
+// -------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['appliquer'])) {
     $nouvellesQuantites = $_POST['nouvelles_quantites'] ?? [];
-    $id_recette = (int)$_POST['id_recette'];
-    if (!empty($nouvellesQuantites) && $id_recette) {
-        $controller->appliquerOptimisation($id_recette, $nouvellesQuantites);
-        header("Location: details_recette.php?id=$id_recette&optimised=1");
-        exit;
+    // Cast explicite des clés (id_aliment) en int et des valeurs (quantite) en float
+    $nouvellesQuantitesCastes = [];
+    foreach ($nouvellesQuantites as $al_id => $qte) {
+        $al_id_int = (int)$al_id;
+        $qte_float = (float)$qte;
+        if ($al_id_int > 0) {
+            $nouvellesQuantitesCastes[$al_id_int] = $qte_float;
+        }
     }
+    if (!empty($nouvellesQuantitesCastes) && $id_recette > 0) {
+        $controller->appliquerOptimisation((int)$id_recette, $nouvellesQuantitesCastes);
+    }
+    // Redirection inconditionnelle après la sauvegarde
+    ob_end_clean();
+    header("Location: details_recette.php?id={$id_recette}&optimised=1");
+    exit;
 }
 
 // --- Charger la recette et lancer l'optimisation ---
@@ -276,7 +290,7 @@ function macroBadge($pct, $min, $max) {
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
 
         <!-- Appliquer (enregistre en DB) -->
-        <form method="POST" action="optimiser_recette.php" style="display:inline;">
+        <form method="POST" action="save_optimisation.php" style="display:inline;">
             <input type="hidden" name="id_recette" value="<?= $id_recette ?>">
             <input type="hidden" name="objectif" value="<?= htmlspecialchars($objectif) ?>">
             <?php foreach ($result['nouvelles_quantites'] as $al_id => $qte): ?>

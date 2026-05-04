@@ -173,7 +173,7 @@ class RecetteController {
         ];
 
         foreach ($aliments as $aliment) {
-            $qte = (float)($aliment['quantite'] ?? 0);
+            $qte = (float)($aliment['quantite'] ?: 0);
             
             $totaux['calories'] += ((float)$aliment['calories'] * $qte) / 100;
             $totaux['proteines'] += ((float)$aliment['proteines'] * $qte) / 100;
@@ -333,14 +333,16 @@ class RecetteController {
         if (empty($aliments)) return false;
 
         // === 1. Calcul de l'état actuel ===
+        // Note: PDO retourne "" (chaîne vide) pour les FLOAT NULL, pas null
+        // On utilise ?: pour couvrir null, "" et 0
         $avant = ['calories'=>0,'proteines'=>0,'glucides'=>0,'lipides'=>0,'fibres'=>0];
         foreach ($aliments as $a) {
-            $q = (float)($a['quantite'] ?? 0);
+            $q = (float)($a['quantite'] ?: 0);
             $avant['calories']  += ($a['calories']  * $q) / 100;
             $avant['proteines'] += ($a['proteines'] * $q) / 100;
             $avant['glucides']  += ($a['glucides']  * $q) / 100;
             $avant['lipides']   += ($a['lipides']   * $q) / 100;
-            $avant['fibres']    += (($a['fibres'] ?? 0) * $q) / 100;
+            $avant['fibres']    += (($a['fibres'] ?: 0) * $q) / 100;
         }
 
         // === 2. Analyse des écarts ===
@@ -367,7 +369,8 @@ class RecetteController {
 
         foreach ($aliments as $a) {
             $id = $a['id'];
-            $q  = (float)($a['quantite'] ?? 100);
+            // Si la quantite est vide/null/0, on utilise 100g par défaut pour l'optimisation
+            $q  = (float)($a['quantite'] ?: 100);
 
             $protPer100 = (float)$a['proteines'];
             $glucPer100 = (float)$a['glucides'];
@@ -453,9 +456,14 @@ class RecetteController {
      * Applique une version optimisée en mettant à jour les quantités dans la DB.
      */
     public function appliquerOptimisation($id_recette, $nouvelles_quantites) {
+        $id_recette = (int)$id_recette;
         $stmt = $this->db->prepare("UPDATE recette_aliment SET quantite = :qte WHERE id_recette = :id_recette AND id_aliment = :id_aliment");
         foreach ($nouvelles_quantites as $id_aliment => $qte) {
-            $stmt->execute(['qte' => $qte, 'id_recette' => $id_recette, 'id_aliment' => $id_aliment]);
+            $stmt->execute([
+                'qte'        => (float)$qte,
+                'id_recette' => $id_recette,
+                'id_aliment' => (int)$id_aliment
+            ]);
         }
     }
 

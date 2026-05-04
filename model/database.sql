@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS aliments (
 CREATE TABLE IF NOT EXISTS recette_aliment (
     id_recette INT NOT NULL,
     id_aliment INT NOT NULL,
-    quantite VARCHAR(100) DEFAULT NULL,
+    quantite FLOAT DEFAULT 0,
     PRIMARY KEY (id_recette, id_aliment),
     FOREIGN KEY (id_recette) REFERENCES recettes(id) ON DELETE CASCADE,
     FOREIGN KEY (id_aliment) REFERENCES aliments(id) ON DELETE CASCADE
