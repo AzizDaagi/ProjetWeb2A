@@ -6,16 +6,18 @@ class Aliment {
     private $proteines;
     private $glucides;
     private $lipides;
+    private $fibres;
     private $type;
     private $image_url;
 
-    public function __construct($id = null, $nom = null, $calories = null, $proteines = 0.0, $glucides = 0.0, $lipides = 0.0, $type = null, $image_url = null) {
+    public function __construct($id = null, $nom = null, $calories = null, $proteines = 0.0, $glucides = 0.0, $lipides = 0.0, $fibres = 0.0, $type = null, $image_url = null) {
         $this->id = $id;
         $this->nom = $nom;
         $this->calories = $calories;
         $this->proteines = $proteines;
         $this->glucides = $glucides;
         $this->lipides = $lipides;
+        $this->fibres = $fibres;
         $this->type = $type;
         $this->image_url = $image_url;
     }
@@ -27,6 +29,7 @@ class Aliment {
     public function getProteines() { return $this->proteines; }
     public function getGlucides() { return $this->glucides; }
     public function getLipides() { return $this->lipides; }
+    public function getFibres() { return $this->fibres; }
     public function getType() { return $this->type; }
     public function getImageUrl() { return $this->image_url; }
 
@@ -36,6 +39,7 @@ class Aliment {
     public function setProteines($proteines) { $this->proteines = $proteines; }
     public function setGlucides($glucides) { $this->glucides = $glucides; }
     public function setLipides($lipides) { $this->lipides = $lipides; }
+    public function setFibres($fibres) { $this->fibres = $fibres; }
     public function setType($type) { $this->type = $type; }
     public function setImageUrl($image_url) { $this->image_url = $image_url; }
 }

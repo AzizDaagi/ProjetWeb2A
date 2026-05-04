@@ -6,9 +6,20 @@ require_once __DIR__ . '/../../controler/AlimentController.php';
 $controller      = new RecetteController();
 $alimentController = new AlimentController();
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $aliments_ids = isset($_POST['aliments']) ? $_POST['aliments'] : [];
+        $quantites_raw = isset($_POST['quantites']) ? $_POST['quantites'] : [];
+        
+        $aliments_quantites = [];
+        foreach ($aliments_ids as $id) {
+            $aliments_quantites[$id] = isset($quantites_raw[$id]) ? $quantites_raw[$id] : 0;
+        }
+
         $image_url = $_POST['existing_image_url'] ?? null;
 
         // Handle File Upload
@@ -27,13 +38,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['action'] === 'add') {
             $controller->addRecette(
                 $_POST['nom'], $_POST['description'], $_POST['temps_preparation'],
-                $_POST['niveau_difficulte'], $image_url, $aliments_ids
+                $_POST['niveau_difficulte'], $image_url, $aliments_quantites
             );
+            $warnings = $controller->checkEquilibreNutritionnel($aliments_quantites);
+            if (!empty($warnings)) {
+                $_SESSION['flash_warnings'] = $warnings;
+            }
         } elseif ($_POST['action'] === 'update') {
             $controller->updateRecette(
                 $_POST['id'], $_POST['nom'], $_POST['description'], $_POST['temps_preparation'],
-                $_POST['niveau_difficulte'], $image_url, $aliments_ids
+                $_POST['niveau_difficulte'], $image_url, $aliments_quantites
             );
+            $warnings = $controller->checkEquilibreNutritionnel($aliments_quantites);
+            if (!empty($warnings)) {
+                $_SESSION['flash_warnings'] = $warnings;
+            }
         } elseif ($_POST['action'] === 'delete') {
             $controller->deleteRecette($_POST['id']);
         }
@@ -42,13 +61,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$flashWarnings = [];
+if (isset($_SESSION['flash_warnings'])) {
+    $flashWarnings = $_SESSION['flash_warnings'];
+    unset($_SESSION['flash_warnings']);
+}
+
 $recettes = $controller->listRecettes();
 $tous_aliments = $alimentController->listAliments();
 
 $recettes_aliments_map = [];
+$recettes_aliments_quantites_map = [];
 foreach ($recettes as $r) {
     $assoc = $controller->getAlimentsByRecette($r['id']);
     $recettes_aliments_map[$r['id']] = array_map(fn($a) => $a['id'], $assoc);
+    
+    $quantites_map = [];
+    foreach ($assoc as $a) {
+        $quantites_map[$a['id']] = $a['quantite'];
+    }
+    $recettes_aliments_quantites_map[$r['id']] = $quantites_map;
 }
 
 // Edit Mode Logic
@@ -79,6 +111,17 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
         <i class="fa-solid fa-arrow-left"></i> Retour au Dashboard
     </a>
 
+    <?php if (!empty($flashWarnings)): ?>
+        <div style="background: rgba(243, 156, 18, 0.15); border: 1px solid #f39c12; border-left: 4px solid #f39c12; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+            <h4 style="color: #f39c12; margin: 0 0 10px 0;"><i class="fa-solid fa-triangle-exclamation"></i> Attention : Équilibre Nutritionnel</h4>
+            <ul style="margin: 0; padding-left: 20px; color: rgba(255,255,255,0.9);">
+                <?php foreach ($flashWarnings as $w): ?>
+                    <li style="margin-bottom: 6px;"><?= htmlspecialchars($w) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+    <?php endif; ?>
+
     <div class="submit-form-card">
         <h1 id="form-title" style="margin:0 0 24px;font-size:22px;font-weight:800;">
             <?php if ($recetteToEdit): ?>
@@ -107,22 +150,30 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                         <?php foreach ($tous_aliments as $al): ?>
                             <?php 
                                 $isChecked = false;
+                                $qte = '';
                                 if ($recetteToEdit && isset($recettes_aliments_map[$recetteToEdit['id']])) {
                                     if (in_array($al['id'], $recettes_aliments_map[$recetteToEdit['id']])) {
                                         $isChecked = true;
+                                        $qte = $recettes_aliments_quantites_map[$recetteToEdit['id']][$al['id']] ?? '';
                                     }
                                 }
                             ?>
-                            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px;font-weight:normal;color:rgba(236,240,241,0.8);font-size:14px;">
-                                <input type="checkbox" name="aliments[]" class="aliment-checkbox"
-                                       value="<?= $al['id'] ?>"
-                                       <?= $isChecked ? 'checked' : '' ?>
-                                       style="width:16px;height:16px;flex-shrink:0;cursor:pointer;">
-                                <?= htmlspecialchars((string)$al['nom']) ?>
-                                <span class="product-card-badge badge-green" style="margin-left:auto;">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;font-weight:normal;color:rgba(236,240,241,0.8);font-size:14px;">
+                                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex-grow:1;">
+                                    <input type="checkbox" name="aliments[]" class="aliment-checkbox"
+                                           value="<?= $al['id'] ?>"
+                                           <?= $isChecked ? 'checked' : '' ?>
+                                           style="width:16px;height:16px;flex-shrink:0;cursor:pointer;"
+                                           onchange="document.getElementById('qte_<?= $al['id'] ?>').style.display = this.checked ? 'block' : 'none';">
+                                    <?= htmlspecialchars((string)$al['nom']) ?>
+                                </label>
+                                <input type="number" step="1" min="1" name="quantites[<?= $al['id'] ?>]" id="qte_<?= $al['id'] ?>" class="qte-input"
+                                       placeholder="Qté (g)" value="<?= htmlspecialchars((string)$qte) ?>" 
+                                       style="width:90px; padding:4px 8px; font-size:13px; display:<?= $isChecked ? 'block' : 'none' ?>; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:4px;">
+                                <span class="product-card-badge badge-green" style="flex-shrink:0;">
                                     <?= htmlspecialchars((string)$al['calories']) ?> kcal
                                 </span>
-                            </label>
+                            </div>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <p style="color:rgba(236,240,241,0.4);margin:0;font-size:13px;">
@@ -190,4 +241,124 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
 </div>
 
 </div>
+
+<script>
+document.getElementById('recette-form').addEventListener('submit', function(e) {
+    let hasErrors = false;
+
+    // Reset previous errors dynamically
+    document.querySelectorAll('.error-msg').forEach(el => el.remove());
+    document.querySelectorAll('.is-invalid').forEach(el => {
+        el.classList.remove('is-invalid');
+        el.style.border = ''; 
+    });
+
+    function showError(inputId, message) {
+        hasErrors = true;
+        let inputEl = document.getElementById(inputId);
+        if(!inputEl) return;
+        inputEl.classList.add('is-invalid');
+        inputEl.style.border = '1px solid #dc3545';
+        
+        let errorSpan = document.createElement('span');
+        errorSpan.className = 'error-msg';
+        errorSpan.style.color = '#dc3545';
+        errorSpan.style.fontSize = '0.85em';
+        errorSpan.style.display = 'block';
+        errorSpan.style.marginTop = '5px';
+        errorSpan.innerText = message;
+        
+        inputEl.parentNode.appendChild(errorSpan);
+    }
+
+    let action = document.getElementById('action-input').value;
+
+    let nom = document.getElementById('nom-input').value.trim();
+    if (nom === "") {
+        showError('nom-input', "Veuillez entrer le nom de la recette.");
+    } else if (nom.length < 3) {
+        showError('nom-input', "Le nom doit contenir au moins 3 caractères.");
+    }
+
+    let description = document.getElementById('desc-input').value.trim();
+    if (description === "") {
+        showError('desc-input', "Veuillez entrer une description.");
+    } else if (description.length < 10) {
+        showError('desc-input', "La description doit contenir au moins 10 caractères.");
+    }
+
+    let temps = document.getElementById('temps-input').value.trim();
+    if (temps === "") {
+        showError('temps-input', "Veuillez entrer le temps de préparation.");
+    }
+
+    let diff = document.getElementById('diff-input').value;
+    if (diff === "") {
+        showError('diff-input', "Veuillez sélectionner un niveau de difficulté.");
+    }
+
+    let imageInput = document.getElementById('image-input');
+    if (action === 'add' && imageInput.files.length === 0) {
+        showError('image-input', "Veuillez sélectionner une image pour la nouvelle recette.");
+    }
+
+    let alimentsCheckboxes = document.querySelectorAll('.aliment-checkbox');
+    let hasCheckedAliment = false;
+    let alimentsContainer = null;
+    
+    for (let i = 0; i < alimentsCheckboxes.length; i++) {
+        if (!alimentsContainer) {
+            alimentsContainer = alimentsCheckboxes[i].closest('div').parentNode;
+        }
+        
+        if (alimentsCheckboxes[i].checked) {
+            hasCheckedAliment = true;
+            let id = alimentsCheckboxes[i].value;
+            let qteInput = document.getElementById('qte_' + id);
+            if (qteInput) {
+                let qteValue = qteInput.value.trim();
+                if (qteValue === "" || isNaN(qteValue) || parseFloat(qteValue) <= 0) {
+                    hasErrors = true;
+                    qteInput.classList.add('is-invalid');
+                    qteInput.style.border = '1px solid #dc3545';
+                    // We attach the error to the row container
+                    let row = qteInput.parentNode;
+                    let existingErr = row.querySelector('.error-msg');
+                    if (!existingErr) {
+                        let errorSpan = document.createElement('span');
+                        errorSpan.className = 'error-msg';
+                        errorSpan.style.color = '#dc3545';
+                        errorSpan.style.fontSize = '0.85em';
+                        errorSpan.style.display = 'block';
+                        errorSpan.style.width = '100%';
+                        errorSpan.style.marginTop = '5px';
+                        errorSpan.innerText = "Quantité requise (>0).";
+                        row.appendChild(errorSpan);
+                        row.style.flexWrap = 'wrap';
+                    }
+                }
+            }
+        }
+    }
+
+    if (!hasCheckedAliment && alimentsCheckboxes.length > 0 && alimentsContainer) {
+         hasErrors = true;
+         alimentsContainer.classList.add('is-invalid');
+         alimentsContainer.style.border = '1px solid #dc3545';
+         let errorSpan = document.createElement('span');
+         errorSpan.className = 'error-msg';
+         errorSpan.style.color = '#dc3545';
+         errorSpan.style.fontSize = '0.85em';
+         errorSpan.style.display = 'block';
+         errorSpan.style.marginTop = '5px';
+         errorSpan.innerText = "Veuillez sélectionner au moins un aliment.";
+         alimentsContainer.appendChild(errorSpan);
+    }
+
+    if (hasErrors) {
+        e.preventDefault();
+    }
+});
+</script>
+
 <?php require_once __DIR__ . '/../template_only/layouts/admin_footer.php'; ?>

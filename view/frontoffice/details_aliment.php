@@ -50,7 +50,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
         </div>
 
         <!-- Macros grid -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
             <div style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.25);border-radius:10px;padding:16px;text-align:center;">
                 <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Protéines</p>
                 <strong style="font-size:22px;color:#3498db;"><?= htmlspecialchars((string)$aliment['proteines']) ?></strong>
@@ -64,6 +64,11 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
             <div style="background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.25);border-radius:10px;padding:16px;text-align:center;">
                 <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Lipides</p>
                 <strong style="font-size:22px;color:#f39c12;"><?= htmlspecialchars((string)$aliment['lipides']) ?></strong>
+                <span style="font-size:12px;color:rgba(236,240,241,0.5);"> g</span>
+            </div>
+            <div style="background:rgba(155,89,182,0.1);border:1px solid rgba(155,89,182,0.25);border-radius:10px;padding:16px;text-align:center;">
+                <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Fibres</p>
+                <strong style="font-size:22px;color:#9b59b6;"><?= htmlspecialchars((string)($aliment['fibres'] ?? '0')) ?></strong>
                 <span style="font-size:12px;color:rgba(236,240,241,0.5);"> g</span>
             </div>
         </div>

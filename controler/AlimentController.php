@@ -25,27 +25,29 @@ class AlimentController {
         return $query->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
-    public function addAliment($nom, $calories, $proteines, $glucides, $lipides, $type, $image_url = null) {
-        $query = $this->db->prepare("INSERT INTO aliments (nom, calories, proteines, glucides, lipides, type, image_url) VALUES (:nom, :calories, :proteines, :glucides, :lipides, :type, :image_url)");
+    public function addAliment($nom, $calories, $proteines, $glucides, $lipides, $fibres, $type, $image_url = null) {
+        $query = $this->db->prepare("INSERT INTO aliments (nom, calories, proteines, glucides, lipides, fibres, type, image_url) VALUES (:nom, :calories, :proteines, :glucides, :lipides, :fibres, :type, :image_url)");
         $query->execute([
             'nom' => $nom,
             'calories' => $calories,
             'proteines' => $proteines,
             'glucides' => $glucides,
             'lipides' => $lipides,
+            'fibres' => $fibres,
             'type' => $type,
             'image_url' => $image_url
         ]);
     }
 
-    public function updateAliment($id, $nom, $calories, $proteines, $glucides, $lipides, $type, $image_url = null) {
-        $query = $this->db->prepare("UPDATE aliments SET nom = :nom, calories = :calories, proteines = :proteines, glucides = :glucides, lipides = :lipides, type = :type, image_url = :image_url WHERE id = :id");
+    public function updateAliment($id, $nom, $calories, $proteines, $glucides, $lipides, $fibres, $type, $image_url = null) {
+        $query = $this->db->prepare("UPDATE aliments SET nom = :nom, calories = :calories, proteines = :proteines, glucides = :glucides, lipides = :lipides, fibres = :fibres, type = :type, image_url = :image_url WHERE id = :id");
         $query->execute([
             'nom' => $nom,
             'calories' => $calories,
             'proteines' => $proteines,
             'glucides' => $glucides,
             'lipides' => $lipides,
+            'fibres' => $fibres,
             'type' => $type,
             'image_url' => $image_url,
             'id' => $id

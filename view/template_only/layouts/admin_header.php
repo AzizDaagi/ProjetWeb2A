@@ -61,6 +61,10 @@ $assetVersion = time();
                 <i class="fa-solid fa-heart-pulse"></i>
                 <span>Recommandations</span>
             </a>
+            <a href="/projetwebmalek/view/backoffice/generate_recette.php" class="admin-side-link admin-module-btn" style="background: rgba(155, 89, 182, 0.15); border-color: rgba(155, 89, 182, 0.4); color: #9b59b6;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Générateur IA</span>
+            </a>
             <a href="/projetwebmalek/view/frontoffice/liste_recettes.php" class="admin-side-link admin-module-btn" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                 <i class="fa-solid fa-earth-europe"></i>
                 <span>Voir le Site</span>

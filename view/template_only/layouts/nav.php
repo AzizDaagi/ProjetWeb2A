@@ -21,6 +21,9 @@
         <li><a href="/projetwebmalek/view/frontoffice/liste_recettes.php" class="nav-link">
             <i class="fa-solid fa-book-open"></i> My Orders
         </a></li>
+        <li><a href="/projetwebmalek/view/frontoffice/generate_recette.php" class="nav-link" style="color:#9b59b6;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Générateur IA
+        </a></li>
         <?php if (($_SESSION['user_role'] ?? 'user') === 'admin'): ?>
         <li><a href="/projetwebmalek/view/backoffice/manage_aliments.php" class="nav-link">
             <i class="fa-solid fa-apple-whole"></i> Admin Products

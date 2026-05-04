@@ -24,13 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($_POST['action'] === 'add') {
             $controller->addAliment(
                 $_POST['nom'], $_POST['calories'], $_POST['proteines'],
-                $_POST['glucides'], $_POST['lipides'], $_POST['type'],
+                $_POST['glucides'], $_POST['lipides'], $_POST['fibres'], $_POST['type'],
                 $image_url
             );
         } elseif ($_POST['action'] === 'update') {
             $controller->updateAliment(
                 $_POST['id'], $_POST['nom'], $_POST['calories'], $_POST['proteines'],
-                $_POST['glucides'], $_POST['lipides'], $_POST['type'],
+                $_POST['glucides'], $_POST['lipides'], $_POST['fibres'], $_POST['type'],
                 $image_url
             );
         } elseif ($_POST['action'] === 'delete') {
@@ -132,7 +132,8 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                     <input type="number" step="0.1" name="lipides" id="lip-input" placeholder="3.6" value="<?= $alimentToEdit ? htmlspecialchars($alimentToEdit['lipides']) : '' ?>">
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <!-- empty col for layout balance -->
+                    <label for="fib-input">Fibres (g)</label>
+                    <input type="number" step="0.1" name="fibres" id="fib-input" placeholder="2.0" value="<?= $alimentToEdit ? htmlspecialchars($alimentToEdit['fibres'] ?? '0') : '' ?>">
                 </div>
             </div>
 
@@ -165,4 +166,94 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
     </div>
 </div>
 </div>
+
+<script>
+document.getElementById('aliment-form').addEventListener('submit', function(e) {
+    let hasErrors = false;
+
+    // Reset previous errors dynamically
+    document.querySelectorAll('.error-msg').forEach(el => el.remove());
+    document.querySelectorAll('.is-invalid').forEach(el => {
+        el.classList.remove('is-invalid');
+        el.style.border = ''; 
+    });
+
+    function showError(inputId, message) {
+        hasErrors = true;
+        let inputEl = document.getElementById(inputId);
+        if(!inputEl) return;
+        inputEl.classList.add('is-invalid');
+        inputEl.style.border = '1px solid #dc3545';
+        
+        let errorSpan = document.createElement('span');
+        errorSpan.className = 'error-msg';
+        errorSpan.style.color = '#dc3545';
+        errorSpan.style.fontSize = '0.85em';
+        errorSpan.style.display = 'block';
+        errorSpan.style.marginTop = '5px';
+        errorSpan.innerText = message;
+        
+        inputEl.parentNode.appendChild(errorSpan);
+    }
+
+    let action = document.getElementById('action-input').value;
+
+    let nom = document.getElementById('nom-input').value.trim();
+    if (nom === "") {
+        showError('nom-input', "Veuillez entrer le nom de l'aliment.");
+    } else if (nom.length < 3) {
+        showError('nom-input', "Le nom doit contenir au moins 3 caractères.");
+    }
+
+    let type = document.getElementById('type-input').value;
+    if (type === "") {
+        showError('type-input', "Veuillez sélectionner un type d'aliment.");
+    }
+
+    let calories = document.getElementById('cal-input').value.trim();
+    if (calories === "") {
+        showError('cal-input', "Veuillez entrer les calories.");
+    } else if (isNaN(calories) || parseFloat(calories) < 0) {
+        showError('cal-input', "Les calories doivent être un nombre positif.");
+    }
+
+    let proteines = document.getElementById('prot-input').value.trim();
+    if (proteines === "") {
+        showError('prot-input', "Veuillez entrer les protéines.");
+    } else if (isNaN(proteines) || parseFloat(proteines) < 0) {
+        showError('prot-input', "Les protéines doivent être un nombre positif.");
+    }
+
+    let glucides = document.getElementById('glu-input').value.trim();
+    if (glucides === "") {
+        showError('glu-input', "Veuillez entrer les glucides.");
+    } else if (isNaN(glucides) || parseFloat(glucides) < 0) {
+        showError('glu-input', "Les glucides doivent être un nombre positif.");
+    }
+
+    let lipides = document.getElementById('lip-input').value.trim();
+    if (lipides === "") {
+        showError('lip-input', "Veuillez entrer les lipides.");
+    } else if (isNaN(lipides) || parseFloat(lipides) < 0) {
+        showError('lip-input', "Les lipides doivent être un nombre positif.");
+    }
+
+    let fibres = document.getElementById('fib-input').value.trim();
+    if (fibres === "") {
+        showError('fib-input', "Veuillez entrer les fibres.");
+    } else if (isNaN(fibres) || parseFloat(fibres) < 0) {
+        showError('fib-input', "Les fibres doivent être un nombre positif.");
+    }
+
+    let imageInput = document.getElementById('image-input');
+    if (action === 'add' && imageInput.files.length === 0) {
+        showError('image-input', "Veuillez sélectionner une image pour le nouvel aliment.");
+    }
+
+    if (hasErrors) {
+        e.preventDefault();
+    }
+});
+</script>
+
 <?php require_once __DIR__ . '/../template_only/layouts/admin_footer.php'; ?>
