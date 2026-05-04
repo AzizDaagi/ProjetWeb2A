@@ -24,6 +24,9 @@
         <li><a href="/projetwebmalek/view/frontoffice/generate_recette.php" class="nav-link" style="color:#9b59b6;">
             <i class="fa-solid fa-wand-magic-sparkles"></i> Générateur IA
         </a></li>
+        <li><a href="/projetwebmalek/view/frontoffice/stats_nutrition.php" class="nav-link" style="color:#3498db;">
+            <i class="fa-solid fa-chart-pie"></i> Statistiques
+        </a></li>
         <?php if (($_SESSION['user_role'] ?? 'user') === 'admin'): ?>
         <li><a href="/projetwebmalek/view/backoffice/manage_aliments.php" class="nav-link">
             <i class="fa-solid fa-apple-whole"></i> Admin Products

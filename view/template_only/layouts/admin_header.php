@@ -65,6 +65,10 @@ $assetVersion = time();
                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                 <span>Générateur IA</span>
             </a>
+            <a href="/projetwebmalek/view/frontoffice/stats_nutrition.php" class="admin-side-link admin-module-btn" style="background: rgba(52, 152, 219, 0.12); border-color: rgba(52, 152, 219, 0.35); color: #3498db;">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Statistiques</span>
+            </a>
             <a href="/projetwebmalek/view/frontoffice/liste_recettes.php" class="admin-side-link admin-module-btn" style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                 <i class="fa-solid fa-earth-europe"></i>
                 <span>Voir le Site</span>

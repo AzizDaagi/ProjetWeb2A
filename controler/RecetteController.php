@@ -458,5 +458,64 @@ class RecetteController {
             $stmt->execute(['qte' => $qte, 'id_recette' => $id_recette, 'id_aliment' => $id_aliment]);
         }
     }
+
+    /**
+     * Calcule les statistiques nutritionnelles globales sur toutes les recettes.
+     */
+    public function getStatistiquesNutritionnelles() {
+        $recettes = $this->listRecettes();
+
+        if (empty($recettes)) {
+            return null;
+        }
+
+        $totaux = ['calories'=>0,'proteines'=>0,'glucides'=>0,'lipides'=>0,'fibres'=>0];
+        $plusCalorique  = null;
+        $moinsCalorique = null;
+        $nbValides = 0; // recettes avec au moins un aliment renseigné
+
+        foreach ($recettes as $r) {
+            $nutrition = $this->calculerNutritionTotale($r['id']);
+
+            // Ignorer les recettes sans aliments associés (calories = 0)
+            if ($nutrition['calories'] <= 0) continue;
+
+            $nbValides++;
+            $totaux['calories']  += $nutrition['calories'];
+            $totaux['proteines'] += $nutrition['proteines'];
+            $totaux['glucides']  += $nutrition['glucides'];
+            $totaux['lipides']   += $nutrition['lipides'];
+            $totaux['fibres']    += $nutrition['fibres'];
+
+            // Plus calorique
+            if ($plusCalorique === null || $nutrition['calories'] > $plusCalorique['nutrition']['calories']) {
+                $plusCalorique = ['recette' => $r, 'nutrition' => $nutrition];
+            }
+
+            // Moins calorique
+            if ($moinsCalorique === null || $nutrition['calories'] < $moinsCalorique['nutrition']['calories']) {
+                $moinsCalorique = ['recette' => $r, 'nutrition' => $nutrition];
+            }
+        }
+
+        if ($nbValides === 0) return null;
+
+        // Moyennes arrondies
+        $moyennes = [
+            'calories'  => round($totaux['calories']  / $nbValides),
+            'proteines' => round($totaux['proteines'] / $nbValides, 1),
+            'glucides'  => round($totaux['glucides']  / $nbValides, 1),
+            'lipides'   => round($totaux['lipides']   / $nbValides, 1),
+            'fibres'    => round($totaux['fibres']    / $nbValides, 1),
+        ];
+
+        return [
+            'nb_recettes'     => count($recettes),
+            'nb_valides'      => $nbValides,
+            'moyennes'        => $moyennes,
+            'plus_calorique'  => $plusCalorique,
+            'moins_calorique' => $moinsCalorique,
+        ];
+    }
 }
 ?>
