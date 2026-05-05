@@ -1,24 +1,70 @@
 <?php
 
+require_once __DIR__ . '/../models/NutritionDashboardService.php';
 require_once __DIR__ . '/../models/ReminderMailer.php';
+require_once __DIR__ . '/../models/utilisateur.php';
 
-// 🔥 LOG pour vérifier exécution
-file_put_contents(__DIR__ . "/test_log.txt", date("Y-m-d H:i:s") . " RUN\n", FILE_APPEND);
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 
+$pdo = new PDO("mysql:host=localhost;dbname=smart_nutrition", "root", "");
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+$nutritionService = new NutritionDashboardService($pdo);
+$userModel = new Utilisateur($pdo);
 $mailer = new ReminderMailer();
 
-// 🔥 USER FIXE (pas de DB)
-$user = [
-    'id' => 1,
-    'email' => 'melikkrbb@gmail.com',
-    'nom' => 'Yassine'
-];
+$nutritionService->ensureReminderLogsTable();
 
-// 🔥 envoi
-$sent = $mailer->sendReminder($user);
+$users = $userModel->getAll();
+$logLines = [];
+$runAt = date('Y-m-d H:i:s');
 
-if ($sent) {
-    echo "MAIL SENT\n";
-} else {
-    echo "MAIL FAILED\n";
+$logLines[] = "[{$runAt}] Reminder run started";
+
+if (empty($users)) {
+    $logLines[] = "No users found.";
 }
+
+foreach ($users as $user) {
+    $userId = (int) ($user['id'] ?? 0);
+    $email = trim((string) ($user['email'] ?? ''));
+    $name = trim((string) ($user['nom'] ?? 'Utilisateur'));
+
+    if ($userId <= 0) {
+        $logLines[] = "Skipped invalid user row.";
+        continue;
+    }
+
+    if ($email === '') {
+        $logLines[] = "Skipped user #{$userId} ({$name}): missing email.";
+        continue;
+    }
+
+    $decision = $nutritionService->getSmartReminder($userId);
+
+    if (empty($decision['should_send'])) {
+        $logLines[] = "Skipped {$email}: " . ($decision['reason'] ?? 'no_reason');
+        continue;
+    }
+
+    $sent = $mailer->sendReminder([
+        'id' => $userId,
+        'email' => $email,
+        'nom' => $name,
+    ]);
+
+    if ($sent) {
+        $nutritionService->markReminderSent($userId);
+        $logLines[] = "Reminder sent to: {$email} | reason=" . ($decision['reason'] ?? 'unknown') . " | priority=" . ($decision['priority'] ?? 'medium');
+    } else {
+        $logLines[] = "Reminder failed for: {$email}";
+    }
+}
+
+$logLines[] = "[{$runAt}] Reminder run finished";
+
+$output = implode(PHP_EOL, $logLines) . PHP_EOL;
+
+echo $output;
+file_put_contents(__DIR__ . '/test_log.txt', $output, FILE_APPEND);

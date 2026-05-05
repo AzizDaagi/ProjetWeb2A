@@ -107,6 +107,9 @@
     }
 
     unset($_SESSION['aliment_edit_error']);
+    $isWaterEntry = (int) ($entry['is_water'] ?? 0) === 1;
+    $quantityUnit = $isWaterEntry ? 'ml' : ((($entry['unite'] ?? 'g') === 'piece') ? 'piece' : 'g');
+    $quantityValue = $isWaterEntry ? (string) ((int) ($entry['eau_ml'] ?? $entry['quantite'] ?? 0)) : (string) ($entry['quantite'] ?? '');
     ?>
 
     <div class="section-wrapper">
@@ -130,7 +133,7 @@
                 <input type="hidden" name="id" value="<?= htmlspecialchars($entry['id']) ?>">
 
                 <div class="form-group">
-                    <label>Aliment</label>
+                    <label><?= $isWaterEntry ? 'Consommation' : 'Aliment' ?></label>
                     <input type="text" value="<?= htmlspecialchars($entry['nom']) ?>" disabled>
                 </div>
 
@@ -140,8 +143,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Quantite (<?= ($entry['unite'] ?? 'g') === 'piece' ? 'piece' : 'g' ?>)</label>
-                    <input type="text" name="quantite" value="<?= htmlspecialchars($entry['quantite']) ?>">
+                    <label>Quantite (<?= htmlspecialchars($quantityUnit) ?>)</label>
+                    <input type="text" name="quantite" value="<?= htmlspecialchars($quantityValue) ?>">
                 </div>
 
                 <div class="actions">

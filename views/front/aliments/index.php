@@ -416,6 +416,40 @@
             font-size: 1rem;
         }
 
+        .meal-hydration-card {
+            margin-top: 16px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+            gap: 16px;
+            align-items: end;
+        }
+
+        body.theme-light .meal-hydration-card {
+            background: rgba(248, 250, 252, 0.82);
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+
+        .meal-hydration-card strong {
+            display: block;
+            font-size: 1rem;
+        }
+
+        .meal-hydration-card .meal-helper {
+            margin-top: 6px;
+        }
+
+        .meal-hydration-card .form-group {
+            margin-bottom: 0;
+        }
+
+        .meal-validate-form {
+            display: block;
+        }
+
         .meal-total-value {
             font-size: 1.4rem;
             font-weight: 800;
@@ -531,6 +565,10 @@
             .history-filter-grid {
                 grid-template-columns: 1fr;
             }
+
+            .meal-hydration-card {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -559,6 +597,7 @@
         'proteine' => 'Proteine',
         'glucide' => 'Glucide',
         'lipide' => 'Lipide',
+        'eau' => 'Hydratation',
     ];
 
     $statusLabels = [
@@ -631,16 +670,28 @@
                             <th>Quantite</th>
                             <th>Type</th>
                             <th>Calories</th>
+                            <th>Eau</th>
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                        <tbody>
                         <?php foreach ($details as $d): ?>
+                            <?php $isWaterEntry = (int) ($d['is_water'] ?? 0) === 1; ?>
                             <tr>
                                 <td><?= htmlspecialchars((string) ($d['nom'] ?? 'Aliment')) ?></td>
-                                <td><?= htmlspecialchars((string) ($d['quantite'] ?? 0)) ?> <?= (($d['unite'] ?? 'g') === 'piece') ? 'piece' : 'g' ?></td>
+                                <td>
+                                    <?= htmlspecialchars((string) ($isWaterEntry ? ($d['eau_ml'] ?? 0) : ($d['quantite'] ?? 0))) ?>
+                                    <?= $isWaterEntry ? 'ml' : ((($d['unite'] ?? 'g') === 'piece') ? 'piece' : 'g') ?>
+                                </td>
                                 <td><?= htmlspecialchars((string) ($typeLabels[$d['type'] ?? ''] ?? ($d['type'] ?? '-'))) ?></td>
                                 <td><?= round((float) ($d['calories_calculees'] ?? 0)) ?> kcal</td>
+                                <td>
+                                    <?php if ($isWaterEntry && (int) ($d['eau_ml'] ?? 0) > 0): ?>
+                                        Eau : <?= (int) ($d['eau_ml'] ?? 0) ?> ml
+                                    <?php else: ?>
+                                        -
+                                    <?php endif; ?>
+                                </td>
                                 <td onclick="event.stopPropagation();">
                                     <div class="top-actions" style="margin-top: 0; justify-content: flex-start;">
                                         <a href="index.php?controller=suivi&action=edit&id=<?= (int) $d['id'] ?>" class="btn btn-secondary btn-sm">
@@ -869,12 +920,30 @@
                         <p class="meal-helper" style="margin-top: 8px;">Ce total sera enregistre en base seulement apres validation.</p>
                     </div>
 
-                    <div class="top-actions">
-                        <form method="POST" action="index.php?controller=suivi&action=validateMeal" class="inline-form">
+                    <form method="POST" action="index.php?controller=suivi&action=validateMeal" class="meal-validate-form" id="validateMealForm">
+                        <div class="meal-hydration-card">
+                            <div>
+                                <strong>Hydratation avec ce repas</strong>
+                                <p class="meal-helper">Indiquez l'eau bue avec ce repas avant de le valider.</p>
+                            </div>
+                            <div class="form-group">
+                                <label for="eau_ml">Eau bue avec ce repas</label>
+                                <select id="eau_ml" name="eau_ml">
+                                    <option value="0">Aucune</option>
+                                    <option value="250">1 verre - 250 ml</option>
+                                    <option value="500">2 verres - 500 ml</option>
+                                    <option value="750">3 verres - 750 ml</option>
+                                    <option value="1000">1 litre</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="top-actions">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fa-solid fa-check"></i> Valider le repas
                             </button>
-                        </form>
+                        </div>
+                    </form>
                         <form method="POST" action="index.php?controller=suivi&action=cancelMeal" class="inline-form">
                             <button type="submit" class="btn btn-secondary">
                                 <i class="fa-solid fa-xmark"></i> Annuler
@@ -931,6 +1000,7 @@
                     </form>
 
                     <?php if (!empty($history)): ?>
+                        <?php // TODO: afficher l'eau totale journaliere dans l'historique global. ?>
                         <table class="styled-table">
                             <thead>
                                 <tr>

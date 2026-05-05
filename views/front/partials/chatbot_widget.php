@@ -36,7 +36,7 @@ $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
         <div class="chat-header-title">
             <span class="chat-status-dot" aria-hidden="true"></span>
             <h2 class="chat-title">Assistant Nutrition &#x1F957;</h2>
-            <span class="mood-badge" id="moodBadge">😊 En forme</span>
+            <span class="mood-badge" id="moodBadge">ðŸ˜Š En forme</span>
         </div>
         <div class="chat-header-actions">
             <button type="button" id="clearChat" class="chat-header-button" aria-label="Effacer la conversation" title="Effacer la conversation">
@@ -50,42 +50,30 @@ $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
     <div id="chatMessages" class="chat-messages">
         <div id="chatNotice" class="chat-notice" aria-live="polite"></div>
 
-        <?php if (empty($chatWidgetHistory)): ?>
-            <div class="chat-message is-bot">
-                <div class="chat-bubble">
-                    Bonjour, je peux répondre rapidement sur les calories, les protéines, l'hydratation et quelques conseils nutritionnels simples.
-                </div>
+        <?php foreach ($chatWidgetHistory as $chatMessage): ?>
+            <?php
+            $role = ($chatMessage['role'] ?? '') === 'assistant' ? 'bot' : 'user';
+            $time = trim((string) ($chatMessage['time'] ?? ''));
+            $source = trim((string) ($chatMessage['source'] ?? ''));
+            ?>
+            <div class="chat-message is-<?= htmlspecialchars($role) ?>">
+                <div class="chat-bubble"><?= nl2br(htmlspecialchars((string) ($chatMessage['message'] ?? ''))) ?></div>
                 <div class="chat-meta">
-                    <span><?= htmlspecialchars(date('H:i')) ?></span>
-                    <span class="chat-source">local</span>
+                    <span><?= htmlspecialchars($time !== '' ? $time : date('H:i')) ?></span>
+                    <?php if ($role === 'bot'): ?>
+                        <span class="chat-source"><?= htmlspecialchars($source !== '' ? $source : 'local') ?></span>
+                    <?php endif; ?>
                 </div>
             </div>
-        <?php else: ?>
-            <?php foreach ($chatWidgetHistory as $chatMessage): ?>
-                <?php
-                $role = ($chatMessage['role'] ?? '') === 'assistant' ? 'bot' : 'user';
-                $time = trim((string) ($chatMessage['time'] ?? ''));
-                $source = trim((string) ($chatMessage['source'] ?? ''));
-                ?>
-                <div class="chat-message is-<?= htmlspecialchars($role) ?>">
-                    <div class="chat-bubble"><?= nl2br(htmlspecialchars((string) ($chatMessage['message'] ?? ''))) ?></div>
-                    <div class="chat-meta">
-                        <span><?= htmlspecialchars($time !== '' ? $time : date('H:i')) ?></span>
-                        <?php if ($role === 'bot'): ?>
-                            <span class="chat-source"><?= htmlspecialchars($source !== '' ? $source : 'local') ?></span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+        <?php endforeach; ?>
     </div>
 
     <div class="quick-replies">
-        <button class="qr-btn" data-msg="Quelles sont mes calories aujourd'hui ?">🔥 Calories</button>
-        <button class="qr-btn" data-msg="Parle-moi des protéines">💪 Protéines</button>
-        <button class="qr-btn" data-msg="Conseils hydratation">💧 Hydratation</button>
-        <button class="qr-btn" data-msg="Donne-moi un conseil">💡 Conseil</button>
-        <button class="qr-btn" data-msg="Mon statut nutritionnel">📊 Statut</button>
+        <button class="qr-btn" data-msg="Quelles sont mes calories aujourd'hui ?">Calories</button>
+        <button class="qr-btn" data-msg="Parle-moi des protÃ©ines">Proteines</button>
+        <button class="qr-btn" data-msg="Conseils hydratation">Hydratation</button>
+        <button class="qr-btn" data-msg="Donne-moi un conseil">Conseil</button>
+        <button class="qr-btn" data-msg="Mon statut nutritionnel"> Statut</button>
     </div>
 
     <form id="chatForm" class="chat-input-bar">
@@ -112,18 +100,17 @@ $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
             <path d="M82 78 Q98 84 100 94 Q100 100 94 100" stroke="#f8fafc" stroke-width="5" stroke-linecap="round" fill="none"/>
             <path id="browL" d="M40 29 Q44 26 48 28" stroke="#94a3b8" stroke-width="1.8" fill="none" stroke-linecap="round"/>
             <path id="browR" d="M72 30 Q76 27 80 29" stroke="#94a3b8" stroke-width="1.8" fill="none" stroke-linecap="round"/>
-            <ellipse cx="44" cy="42" rx="9.5" ry="9.5" fill="#e8f4fd" stroke="#bfdbfe" stroke-width="1"/>
-            <ellipse cx="76" cy="42" rx="9.5" ry="9.5" fill="#e8f4fd" stroke="#bfdbfe" stroke-width="1"/>
-            <circle cx="44" cy="42" r="7" fill="#4f8ec9" opacity="0.3"/>
-            <circle cx="76" cy="42" r="7" fill="#4f8ec9" opacity="0.3"/>
-            <circle id="eye-left" cx="44" cy="42" r="5.5" fill="#1e293b"/>
-            <circle id="eye-right" cx="76" cy="42" r="5.5" fill="#1e293b"/>
-            <circle cx="46" cy="40" r="2.2" fill="white"/>
-            <circle cx="78" cy="40" r="2.2" fill="white"/>
-            <circle cx="43" cy="44" r="1" fill="white" opacity="0.5"/>
-            <circle cx="75" cy="44" r="1" fill="white" opacity="0.5"/>
-            <g class="lid-l"><ellipse cx="44" cy="36.5" rx="9.5" ry="5.5" fill="#f0f4f8"/></g>
-            <g class="lid-r"><ellipse cx="76" cy="36.5" rx="9.5" ry="5.5" fill="#f0f4f8"/></g>
+            <ellipse cx="44" cy="42" rx="7.5" ry="7.5" fill="#eef7ff" stroke="#9fc8ef" stroke-width="1"/>
+            <ellipse cx="76" cy="42" rx="7.5" ry="7.5" fill="#eef7ff" stroke="#9fc8ef" stroke-width="1"/>
+            <circle id="iris-left"  cx="44" cy="42" r="5.8" fill="#2e7ecb" opacity="0.82"/>
+            <circle id="iris-right" cx="76" cy="42" r="5.8" fill="#2e7ecb" opacity="0.82"/>
+            <circle id="eye-left"   cx="44" cy="42" r="3.2" fill="#0d1b2a"/>
+            <circle id="eye-right"  cx="76" cy="42" r="3.2" fill="#0d1b2a"/>
+            <circle id="spec-left"  cx="46" cy="40" r="1.5" fill="white"/>
+            <circle id="spec-right" cx="78" cy="40" r="1.5" fill="white"/>
+            <circle id="spec2-left"  cx="43" cy="44" r="0.7" fill="white" opacity="0.5"/>
+            <circle id="spec2-right" cx="75" cy="44" r="0.7" fill="white" opacity="0.5"/>
+
             <ellipse cx="33" cy="53" rx="8.5" ry="5" fill="#fda4af" opacity="0.4"/>
             <ellipse cx="87" cy="53" rx="8.5" ry="5" fill="#fda4af" opacity="0.4"/>
             <path id="mouth" d="M50 58 Q60 67 70 58" stroke="#94a3b8" stroke-width="2" fill="none" stroke-linecap="round"/>

@@ -4,6 +4,7 @@ class Suivi
 {
     private $pdo;
     private $lastError;
+    private $columnExistsCache = [];
 
     public function __construct($pdo)
     {
@@ -26,6 +27,7 @@ class Suivi
         $this->lastError = null;
         $alimentId = $data['aliment_id'] ?? null;
         $quantite = $data['quantite'] ?? 0;
+        $eauMl = max(0, (int) ($data['eau_ml'] ?? 0));
         $type = $data['type'] ?? null;
         $date = trim((string) ($data['date_consommation'] ?? date('Y-m-d')));
 
@@ -69,6 +71,7 @@ class Suivi
         return [
             'aliment_id' => (int) $alimentId,
             'quantite' => $quantite,
+            'eau_ml' => $eauMl,
             'calories' => $caloriesCalculees,
             'calories_calculees' => $caloriesCalculees,
             'type' => $type,
@@ -78,10 +81,11 @@ class Suivi
         ];
     }
 
-    public function validerRepas(array $items, $date)
+    public function validerRepas(array $items, $date, int $mealWaterMl = 0)
     {
         $this->lastError = null;
         $date = trim((string) $date);
+        $mealWaterMl = max(0, $mealWaterMl);
 
         if (empty($items)) {
             $this->lastError = "Aucun aliment n'a ete ajoute a ce repas.";
@@ -100,18 +104,18 @@ class Suivi
             return false;
         }
 
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO repas_consomme (aliment_id, quantite, calories_calculees, type, date_consommation, objectif_id)
-             VALUES (?, ?, ?, ?, ?, ?)"
-        );
+        $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
+        $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
+        $stmt = $this->pdo->prepare($this->buildMealInsertQuery($hasWaterColumn, $hasIsWaterColumn));
 
         try {
             $this->pdo->beginTransaction();
 
-            foreach ($items as $item) {
+            foreach (array_values($items) as $item) {
                 $mealItem = $this->prepareMealItem([
                     'aliment_id' => $item['aliment_id'] ?? null,
                     'quantite' => $item['quantite'] ?? 0,
+                    'eau_ml' => 0,
                     'type' => $item['type'] ?? null,
                     'date_consommation' => $date,
                 ]);
@@ -120,17 +124,45 @@ class Suivi
                     throw new RuntimeException($this->lastError ?: "Impossible de preparer un aliment du repas.");
                 }
 
-                $isInserted = $stmt->execute([
+                $params = [
                     (int) $mealItem['aliment_id'],
                     (float) $mealItem['quantite'],
                     (float) $mealItem['calories_calculees'],
                     $mealItem['type'],
                     $date,
                     $objectifId,
-                ]);
+                ];
+
+                if ($hasWaterColumn) {
+                    $params[] = 0;
+                }
+
+                if ($hasIsWaterColumn) {
+                    $params[] = 0;
+                }
+
+                $isInserted = $stmt->execute($params);
 
                 if (!$isInserted) {
                     throw new RuntimeException("Impossible d'enregistrer un aliment du repas.");
+                }
+            }
+
+            if ($mealWaterMl > 0 && $hasWaterColumn) {
+                $waterStmt = $this->pdo->prepare($this->buildWaterInsertQuery($hasIsWaterColumn));
+                $waterParams = [
+                    $mealWaterMl,
+                    $date,
+                    $objectifId,
+                    $mealWaterMl,
+                ];
+
+                if ($hasIsWaterColumn) {
+                    $waterParams[] = 1;
+                }
+
+                if (!$waterStmt->execute($waterParams)) {
+                    throw new RuntimeException("Impossible d'enregistrer l'hydratation du repas.");
                 }
             }
 
@@ -427,19 +459,30 @@ class Suivi
 
     public function getByDate($date)
     {
+        $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
+        $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
         $stmt = $this->pdo->prepare("
             SELECT
                 r.id,
                 r.aliment_id,
                 r.quantite,
                 r.calories_calculees,
+                " . ($hasWaterColumn ? "COALESCE(r.eau_ml, 0)" : "0") . " AS eau_ml,
+                " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0)" : "0") . " AS is_water,
                 COALESCE(r.type, a.type) AS type,
-                COALESCE(a.unite, 'g') AS unite,
+                CASE
+                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'ml'
+                    ELSE COALESCE(a.unite, 'g')
+                END AS unite,
                 r.date_consommation,
-                a.nom
+                CASE
+                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'Consommation d''eau'
+                    ELSE COALESCE(a.nom, 'Aliment')
+                END AS nom
             FROM repas_consomme r
-            JOIN aliments a ON r.aliment_id = a.id
+            LEFT JOIN aliments a ON r.aliment_id = a.id
             WHERE date_consommation = ?
+            ORDER BY r.id ASC
         ");
         $stmt->execute([$date]);
 
@@ -448,10 +491,24 @@ class Suivi
 
     public function getById($id)
     {
+        $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
         $stmt = $this->pdo->prepare("
-            SELECT r.*, a.nom, a.calories, COALESCE(a.unite, 'g') AS unite
+            SELECT
+                r.*,
+                CASE
+                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'Consommation d''eau'
+                    ELSE COALESCE(a.nom, 'Aliment')
+                END AS nom,
+                CASE
+                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 0
+                    ELSE COALESCE(a.calories, 0)
+                END AS calories,
+                CASE
+                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'ml'
+                    ELSE COALESCE(a.unite, 'g')
+                END AS unite
             FROM repas_consomme r
-            JOIN aliments a ON r.aliment_id = a.id
+            LEFT JOIN aliments a ON r.aliment_id = a.id
             WHERE r.id = ?
         ");
         $stmt->execute([(int) $id]);
@@ -475,21 +532,41 @@ class Suivi
         }
 
         $quantite = (float) $quantite;
-        $caloriesCalculees = ($repas['unite'] ?? 'g') === 'piece'
-            ? ((float) $repas['calories']) * $quantite
-            : (((float) $repas['calories']) * $quantite) / 100;
+        $isWaterEntry = (int) ($repas['is_water'] ?? 0) === 1;
+        $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
 
-        $stmt = $this->pdo->prepare("
-            UPDATE repas_consomme
-            SET quantite = ?, calories_calculees = ?
-            WHERE id = ?
-        ");
+        if ($isWaterEntry) {
+            $stmt = $this->pdo->prepare(
+                $hasWaterColumn
+                    ? "UPDATE repas_consomme SET quantite = ?, calories_calculees = 0, eau_ml = ? WHERE id = ?"
+                    : "UPDATE repas_consomme SET quantite = ?, calories_calculees = 0 WHERE id = ?"
+            );
 
-        $stmt->execute([
-            $quantite,
-            $caloriesCalculees,
-            (int) $id
-        ]);
+            $params = [$quantite];
+
+            if ($hasWaterColumn) {
+                $params[] = (int) round($quantite);
+            }
+
+            $params[] = (int) $id;
+            $stmt->execute($params);
+        } else {
+            $caloriesCalculees = ($repas['unite'] ?? 'g') === 'piece'
+                ? ((float) $repas['calories']) * $quantite
+                : (((float) $repas['calories']) * $quantite) / 100;
+
+            $stmt = $this->pdo->prepare("
+                UPDATE repas_consomme
+                SET quantite = ?, calories_calculees = ?
+                WHERE id = ?
+            ");
+
+            $stmt->execute([
+                $quantite,
+                $caloriesCalculees,
+                (int) $id
+            ]);
+        }
 
         return $repas['date_consommation'];
     }
@@ -513,25 +590,90 @@ class Suivi
             return false;
         }
 
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO repas_consomme (aliment_id, quantite, calories_calculees, type, date_consommation, objectif_id)
-             VALUES (?, ?, ?, ?, ?, ?)"
-        );
+        $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
+        $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
+        $stmt = $this->pdo->prepare($this->buildMealInsertQuery($hasWaterColumn, $hasIsWaterColumn));
 
-        $isInserted = $stmt->execute([
+        $params = [
             (int) ($mealItem['aliment_id'] ?? 0),
             (float) ($mealItem['quantite'] ?? 0),
             (float) ($mealItem['calories_calculees'] ?? 0),
             $mealItem['type'] ?? null,
             $mealItem['date_consommation'] ?? date('Y-m-d'),
             $objectifId,
-        ]);
+        ];
+
+        if ($hasWaterColumn) {
+            $params[] = (int) ($mealItem['eau_ml'] ?? 0);
+        }
+
+        if ($hasIsWaterColumn) {
+            $params[] = 0;
+        }
+
+        $isInserted = $stmt->execute($params);
 
         if (!$isInserted) {
             $this->lastError = "Impossible d'ajouter cette consommation pour le moment.";
         }
 
         return $isInserted;
+    }
+
+    private function buildMealInsertQuery(bool $hasWaterColumn, bool $hasIsWaterColumn): string
+    {
+        $columns = [
+            'aliment_id',
+            'quantite',
+            'calories_calculees',
+            'type',
+            'date_consommation',
+            'objectif_id',
+        ];
+        $placeholders = ['?', '?', '?', '?', '?', '?'];
+
+        if ($hasWaterColumn) {
+            $columns[] = 'eau_ml';
+            $placeholders[] = '?';
+        }
+
+        if ($hasIsWaterColumn) {
+            $columns[] = 'is_water';
+            $placeholders[] = '?';
+        }
+
+        return "INSERT INTO repas_consomme (" . implode(', ', $columns) . ")
+                VALUES (" . implode(', ', $placeholders) . ")";
+    }
+
+    private function buildWaterInsertQuery(bool $hasIsWaterColumn): string
+    {
+        $columns = [
+            'aliment_id',
+            'quantite',
+            'calories_calculees',
+            'type',
+            'date_consommation',
+            'objectif_id',
+            'eau_ml',
+        ];
+        $placeholders = [
+            'NULL',
+            '?',
+            '0',
+            "'eau'",
+            '?',
+            '?',
+            '?',
+        ];
+
+        if ($hasIsWaterColumn) {
+            $columns[] = 'is_water';
+            $placeholders[] = '?';
+        }
+
+        return "INSERT INTO repas_consomme (" . implode(', ', $columns) . ")
+                VALUES (" . implode(', ', $placeholders) . ")";
     }
 
     private function isValidConsumptionDate($date)
@@ -560,5 +702,25 @@ class Suivi
         $objectifId = $stmt->fetchColumn();
 
         return $objectifId !== false ? (int) $objectifId : null;
+    }
+
+    private function columnExists($tableName, $columnName)
+    {
+        $cacheKey = $tableName . '.' . $columnName;
+
+        if (array_key_exists($cacheKey, $this->columnExistsCache)) {
+            return $this->columnExistsCache[$cacheKey];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `$tableName` LIKE ?");
+            $stmt->execute([$columnName]);
+            $exists = (bool) $stmt->fetchColumn();
+        } catch (Exception $exception) {
+            $exists = false;
+        }
+
+        $this->columnExistsCache[$cacheKey] = $exists;
+        return $exists;
     }
 }

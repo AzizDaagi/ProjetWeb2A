@@ -532,7 +532,7 @@
 
 .qr-btn {
   flex-shrink: 0;
-  padding: 6px 12px;
+  padding: 8.5px 12px;
   border-radius: 16px;
   border: 1px solid #22c55e;
   background: #f0fdf4;
@@ -570,15 +570,22 @@
 }
 
 .peek-mascot {
+  --hover-lift: 0px;
+  --hover-rotate: 0deg;
+  --hover-scale: 1;
+  --gaze-shift-x: 0px;
+  --gaze-shift-y: 0px;
+  --gaze-rotate: 0deg;
   position: absolute;
-  bottom: calc(100% + 25px);
+  bottom: calc(100% + 60px);
   right: 18px;
   width: 54px;
   height: 70px;
   transform-origin: bottom center;
   z-index: 22;
   cursor: pointer;
-  transform: translateY(38px);
+  will-change: transform;
+  transform: translateX(var(--gaze-shift-x)) translateY(calc(38px + var(--hover-lift) + var(--gaze-shift-y))) rotate(calc(var(--hover-rotate) + var(--gaze-rotate))) scale(var(--hover-scale));
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter .2s;
 }
 
@@ -587,25 +594,154 @@
 }
 
 .peek-mascot.is-visible {
-  transform: translateY(0);
+  transform: translateX(var(--gaze-shift-x)) translateY(calc(var(--hover-lift) + var(--gaze-shift-y))) rotate(calc(var(--hover-rotate) + var(--gaze-rotate))) scale(var(--hover-scale));
 }
 
 .peek-mascot.is-hiding {
   transition: transform 0.6s ease-in;
-  transform: translateY(38px);
+  transform: translateX(var(--gaze-shift-x)) translateY(calc(38px + var(--hover-lift) + var(--gaze-shift-y))) rotate(calc(var(--hover-rotate) + var(--gaze-rotate))) scale(var(--hover-scale));
+}
+
+.peek-mascot.is-cinematic {
+  z-index: 100;
+  pointer-events: none;
+  animation: none !important;
+}
+
+.peek-mascot .mascot-arm-left,
+.peek-mascot .mascot-arm-right {
+  transform-box: view-box;
+  will-change: transform;
+}
+
+/* Pivot gauche : jointure épaule gauche */
+.peek-mascot .mascot-arm-left {
+  transform-origin: 38px 76px;
+}
+
+/* Pivot droit : jointure épaule droite — coordonnées SVG réelles */
+.peek-mascot .mascot-arm-right {
+  transform-origin: 82px 78px;
+}
+
+.mascot-eye {
+  transform-box: fill-box;
+  transform-origin: center center;
+  transition: transform 110ms ease-out;
+}
+
+.mascot-eye.is-blinking {
+  transform: scaleY(0.2);
+}
+
+@keyframes bigWave {
+  0%, 100% {
+    transform: rotate(0);
+  }
+
+  25% {
+    transform: rotate(-16deg);
+  }
+
+  75% {
+    transform: rotate(16deg);
+  }
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlayOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* Bras droit = bras qui fait le coucou — amplitude maximale vers le haut */
+@keyframes armWaveRightCinematic {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  /* Montée rapide — bras levé au-dessus de la tête */
+  15% {
+    transform: rotate(-80deg);
+  }
+
+  /* Balancement aller */
+  35% {
+    transform: rotate(-50deg);
+  }
+
+  /* Balancement retour */
+  55% {
+    transform: rotate(-72deg);
+  }
+
+  /* Dernier balancement avant descente */
+  75% {
+    transform: rotate(-40deg);
+  }
+
+  /* Retour doux à la position repos */
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Bras gauche — léger contrepoids symétrique discret */
+@keyframes armWaveLeftCinematic {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  20% {
+    transform: rotate(14deg);
+  }
+
+  45% {
+    transform: rotate(-10deg);
+  }
+
+  70% {
+    transform: rotate(7deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.peek-mascot .mascot-arm-right.arm-wave-cinematic {
+  animation: armWaveRightCinematic 980ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.peek-mascot .mascot-arm-left.arm-wave-cinematic {
+  animation: armWaveLeftCinematic 960ms ease-out;
 }
 
 @keyframes peekIdle {
   0%, 100% {
-    transform: translateY(0) rotate(-1.5deg) scaleY(1);
+    transform: translateX(var(--gaze-shift-x)) translateY(calc(0px + var(--hover-lift) + var(--gaze-shift-y))) rotate(calc(-1.5deg + var(--hover-rotate) + var(--gaze-rotate))) scale(var(--hover-scale)) scaleX(1) scaleY(1);
   }
 
-  40% {
-    transform: translateY(-4px) rotate(1deg) scaleY(1.01);
+  35% {
+    transform: translateX(var(--gaze-shift-x)) translateY(calc(-2px + var(--hover-lift) + var(--gaze-shift-y))) rotate(calc(0.6deg + var(--hover-rotate) + var(--gaze-rotate))) scale(var(--hover-scale)) scaleX(1.012) scaleY(1.03);
   }
 
-  70% {
-    transform: translateY(-2px) rotate(-0.5deg) scaleY(1);
+  68% {
+    transform: translateX(var(--gaze-shift-x)) translateY(calc(1px + var(--hover-lift) + var(--gaze-shift-y))) rotate(calc(1.3deg + var(--hover-rotate) + var(--gaze-rotate))) scale(var(--hover-scale)) scaleX(1.006) scaleY(0.992);
   }
 }
 
@@ -752,26 +888,6 @@
   animation: peekShake 0.55s ease-in-out forwards;
 }
 
-@keyframes blinkAnim {
-  0%, 88%, 100% {
-    transform: scaleY(1);
-  }
-
-  93% {
-    transform: scaleY(.06);
-  }
-}
-
-.lid-l {
-  transform-origin: 44px 37px;
-  animation: blinkAnim 4s ease-in-out infinite;
-}
-
-.lid-r {
-  transform-origin: 76px 37px;
-  animation: blinkAnim 4s ease-in-out infinite .18s;
-}
-
 @keyframes earWiggle {
   0%, 100% {
     transform: rotate(0);
@@ -833,6 +949,13 @@
 .mascot-speech.show {
   opacity: 1;
   transform: translateY(0) translateX(0) scale(1);
+}
+
+.mascot-speech.speech-hidden {
+  opacity: 0 !important;
+  transform: translateY(10px) translateX(0) scale(0.96) !important;
+  pointer-events: none;
+  transition: all 300ms ease;
 }
 
 .mascot-particle {

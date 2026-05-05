@@ -32,6 +32,12 @@
         </li>
 
         <li>
+            <a href="index.php?action=nutrition_dashboard" class="nav-link">
+                <i class="fa-solid fa-chart-line"></i> Dashboard Nutrition
+            </a>
+        </li>
+
+        <li>
             <a href="index.php?controller=backoffice&action=dashboard" class="nav-link">
                 <i class="fa-solid fa-gear"></i> Back Office
             </a>

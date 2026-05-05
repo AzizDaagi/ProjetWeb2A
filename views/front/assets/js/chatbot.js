@@ -8,13 +8,20 @@ document.addEventListener('DOMContentLoaded', function () {
   const messages = document.getElementById('chatMessages');
   const notice = document.getElementById('chatNotice');
   const mascot = document.getElementById('mascotSvg');
+  const irisL = document.getElementById('iris-left');
+  const irisR = document.getElementById('iris-right');
   const eyeL = document.getElementById('eye-left');
   const eyeR = document.getElementById('eye-right');
+  const specLeft = document.getElementById('spec-left');
+  const specRight = document.getElementById('spec-right');
+  const spec2Left = document.getElementById('spec2-left');
+  const spec2Right = document.getElementById('spec2-right');
   const quickReplyButtons = document.querySelectorAll('.qr-btn');
 
   const pulseStorageKey = 'snChatWidgetPulseSeen';
   const welcomeMessage = "Bonjour, je peux répondre rapidement sur les calories, les protéines, l'hydratation et quelques conseils nutritionnels simples.";
   let botReplyHandledManually = false;
+  let blockSpeech = false;
 
   if (!toggle || !box || !input || !clearButton || !form || !sendButton || !messages) {
     return;
@@ -22,6 +29,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.documentElement.appendChild(toggle);
   document.documentElement.appendChild(box);
+  eyeL.classList.add('mascot-eye');
+  eyeR.classList.add('mascot-eye');
 
   function currentTime() {
     return new Intl.DateTimeFormat('fr-FR', {
@@ -45,6 +54,10 @@ document.addEventListener('DOMContentLoaded', function () {
     toggle.setAttribute('aria-label', isHidden ? 'Chat' : 'Fermer le chatbot');
     box.setAttribute('aria-hidden', isHidden ? 'true' : 'false');
     renderToggleIcon(isHidden);
+  }
+
+  function isChatOpen() {
+    return !box.classList.contains('chat-hidden');
   }
 
   function showNotice(message) {
@@ -74,7 +87,15 @@ document.addEventListener('DOMContentLoaded', function () {
     messages.scrollTop = messages.scrollHeight;
   }
 
+  function hasConversationMessages() {
+    return messages.querySelector('.chat-message') !== null;
+  }
+
   function appendMessage(role, text, source, time, customNode) {
+    if (!customNode && (!text || text.trim() === '')) {
+      return;
+    }
+
     removeEmptyState();
 
     const wrapper = document.createElement('div');
@@ -86,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (customNode) {
       bubble.appendChild(customNode);
     } else {
-      bubble.textContent = text;
+      bubble.innerHTML = text;
     }
 
     const meta = document.createElement('div');
@@ -139,10 +160,21 @@ document.addEventListener('DOMContentLoaded', function () {
     const badgeEl = document.getElementById('moodBadge');
     const inputEl = document.getElementById('chatInput');
     const formEl = document.getElementById('chatForm');
+    const mascotPaths = mascot ? mascot.querySelectorAll('path') : [];
+    const leftArmEls = [mascotPaths[1], mascotPaths[2]].filter(Boolean);
+    const rightArmEls = [mascotPaths[3], mascotPaths[4]].filter(Boolean);
 
     if (!mascot || !eyeL || !eyeR || !mouthEl || !browL || !browR) {
       return;
     }
+
+    leftArmEls.forEach(function (armPath) {
+      armPath.classList.add('mascot-arm-left');
+    });
+
+    rightArmEls.forEach(function (armPath) {
+      armPath.classList.add('mascot-arm-right');
+    });
 
     const SPEECHES = {
       focus: "Hmm… dis-moi tout, je t'écoute 👂",
@@ -182,9 +214,17 @@ document.addEventListener('DOMContentLoaded', function () {
     let stateTimer = null;
     let hideTimer = null;
     let typeTimer = null;
+    let entranceSequenceTimer = null;
+    let armWaveResetTimer = null;
+    let blinkTimer = null;
+    let replyBounceTimer = null;
+    let hoverSpeechTimer = null;
     let pendingQuickReplyReaction = null;
     let pendingQuickReplyTimer = null;
     let suppressNextBotReplySpeech = false;
+    let cinematicTimers = [];
+    let cinematicEyeMotionActive = false;
+    let isMascotHovering = false;
     let lx = 44;
     let rx = 76;
     let ly = 42;
@@ -193,14 +233,95 @@ document.addEventListener('DOMContentLoaded', function () {
     let trx = 76;
     let tly = 42;
     let tryValue = 42;
-    function showMascot() {
-      mascot.classList.remove('is-hiding');
-      mascot.classList.add('is-visible');
+    let lastMouseMoveAt = Date.now();
+    let hoverRotateCurrent = 0;
+    let hoverRotateTarget = 0;
+    let hoverLiftCurrent = 0;
+    let hoverLiftTarget = 0;
+    let hoverScaleCurrent = 1;
+    let hoverScaleTarget = 1;
+    let gazeShiftXCurrent = 0;
+    let gazeShiftXTarget = 0;
+    let gazeShiftYCurrent = 0;
+    let gazeShiftYTarget = 0;
+    let gazeRotateCurrent = 0;
+    let gazeRotateTarget = 0;
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function clearHideTimers() {
       window.clearTimeout(hideTimer);
     }
 
+    function clearCinematicTimers() {
+      cinematicTimers.forEach(function (timerId) {
+        window.clearTimeout(timerId);
+      });
+      cinematicTimers = [];
+      window.clearTimeout(armWaveResetTimer);
+      armWaveResetTimer = null;
+    }
+
+    function queueCinematicStep(callback, delay) {
+      const timerId = window.setTimeout(function () {
+        cinematicTimers = cinematicTimers.filter(function (activeId) {
+          return activeId !== timerId;
+        });
+        callback();
+      }, delay);
+
+      cinematicTimers.push(timerId);
+      return timerId;
+    }
+
+    function scheduleRandomBlink() {
+      window.clearTimeout(blinkTimer);
+      blinkTimer = window.setTimeout(function () {
+        if (!mascot.classList.contains('is-cinematic')) {
+          eyeL.classList.add('is-blinking');
+          eyeR.classList.add('is-blinking');
+
+          window.setTimeout(function () {
+            eyeL.classList.remove('is-blinking');
+            eyeR.classList.remove('is-blinking');
+          }, 110);
+        }
+
+        scheduleRandomBlink();
+      }, 3000 + Math.random() * 3000);
+    }
+
+    function showHoverSpeech() {
+      window.clearTimeout(hoverSpeechTimer);
+      showSpeech('👀');
+      hoverSpeechTimer = window.setTimeout(function () {
+        if (isMascotHovering && !mascot.classList.contains('is-cinematic')) {
+          showSpeech('👀');
+          return;
+        }
+
+        hideSpeech();
+      }, 700);
+    }
+
+    function showMascot() {
+      if (mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
+      mascot.classList.remove('is-hiding');
+      mascot.classList.add('is-visible');
+      clearHideTimers();
+    }
+
     function scheduleMascotHide(delay) {
-      window.clearTimeout(hideTimer);
+      if (mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
+      clearHideTimers();
       hideTimer = window.setTimeout(function () {
         mascot.classList.remove('is-visible');
         mascot.classList.add('is-hiding');
@@ -215,8 +336,9 @@ document.addEventListener('DOMContentLoaded', function () {
       const data = STATES[stateName] || STATES.idle;
       const visibilityClass = mascot.classList.contains('is-visible') ? ' is-visible' : '';
       const hidingClass = mascot.classList.contains('is-hiding') ? ' is-hiding' : '';
+      const cinematicClass = mascot.classList.contains('is-cinematic') ? ' is-cinematic' : '';
 
-      mascot.className = 'peek-mascot state-' + stateName + visibilityClass + hidingClass;
+      mascot.className = 'peek-mascot state-' + stateName + visibilityClass + hidingClass + cinematicClass;
       mouthEl.setAttribute('d', data.mouth);
       browL.setAttribute('d', data.bL);
       browR.setAttribute('d', data.bR);
@@ -231,6 +353,10 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      if (blockSpeech) {
+        return;
+      }
+
       speechEl.textContent = text;
       speechEl.classList.add('show');
     }
@@ -239,6 +365,26 @@ document.addEventListener('DOMContentLoaded', function () {
       if (speechEl) {
         speechEl.classList.remove('show');
       }
+    }
+
+    function hideSpeechInstant() {
+      if (!speechEl) {
+        return;
+      }
+
+      speechEl.classList.remove('show');
+      speechEl.classList.add('speech-hidden');
+    }
+
+    function showSpeechSmooth() {
+      if (!speechEl) {
+        return;
+      }
+
+      speechEl.classList.add('show');
+      requestAnimationFrame(function () {
+        speechEl.classList.remove('speech-hidden');
+      });
     }
 
     function triggerState(stateName, speechKey, duration) {
@@ -268,12 +414,340 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
 
+    function replayWave() {
+      mascot.classList.remove('state-wave');
+      void mascot.offsetWidth;
+      mascot.classList.add('state-wave');
+    }
+
+    function setCinematicEyes(offsetX, offsetY) {
+      cinematicEyeMotionActive = true;
+      tlx = 44 + offsetX;
+      trx = 76 + offsetX;
+      tly = 42 + offsetY;
+      tryValue = 42 + offsetY;
+      gazeShiftXTarget = 0;
+      gazeShiftYTarget = 0;
+      gazeRotateTarget = 0;
+    }
+
+    function resetCinematicEyes() {
+      cinematicEyeMotionActive = false;
+      tlx = 44;
+      trx = 76;
+      tly = 42;
+      tryValue = 42;
+      gazeShiftXTarget = 0;
+      gazeShiftYTarget = 0;
+      gazeRotateTarget = 0;
+    }
+
+    function replayArmWave() {
+      if (!leftArmEls.length && !rightArmEls.length) {
+        return;
+      }
+
+      window.clearTimeout(armWaveResetTimer);
+
+      leftArmEls.forEach(function (armPath) {
+        armPath.classList.remove('arm-wave-cinematic');
+        void armPath.offsetWidth;
+        armPath.classList.add('arm-wave-cinematic');
+      });
+
+      rightArmEls.forEach(function (armPath) {
+        armPath.classList.remove('arm-wave-cinematic');
+        void armPath.offsetWidth;
+        armPath.classList.add('arm-wave-cinematic');
+      });
+
+      armWaveResetTimer = window.setTimeout(function () {
+        leftArmEls.forEach(function (armPath) {
+          armPath.classList.remove('arm-wave-cinematic');
+        });
+        rightArmEls.forEach(function (armPath) {
+          armPath.classList.remove('arm-wave-cinematic');
+        });
+      }, 1020);
+    }
+
+    function nudgeMascotOnReply() {
+      if (mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
+      window.clearTimeout(replyBounceTimer);
+      clearHideTimers();
+      showMascot();
+      setCinematicEyes(1.6, -1.2);
+
+      mascot.style.transition = 'none';
+      mascot.style.transform = 'translateY(0) translateX(0) scale(1)';
+
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          mascot.style.transition = 'transform 170ms ease-out';
+          mascot.style.transform = 'translateY(-9px) translateX(-2px) scaleX(1.04) scaleY(0.98)';
+        });
+      });
+
+      replyBounceTimer = window.setTimeout(function () {
+        mascot.style.transition = 'transform 210ms ease-in-out';
+        mascot.style.transform = 'translateY(2px) translateX(0) scaleX(0.985) scaleY(1.02)';
+      }, 180);
+
+      replyBounceTimer = window.setTimeout(function () {
+        mascot.style.transition = '';
+        mascot.style.transform = '';
+        resetCinematicEyes();
+      }, 430);
+    }
+
+    function resetCinematicPresentation() {
+      clearCinematicTimers();
+      resetCinematicEyes();
+      window.clearTimeout(replyBounceTimer);
+      window.clearTimeout(hoverSpeechTimer);
+      leftArmEls.forEach(function (armPath) {
+        armPath.classList.remove('arm-wave-cinematic');
+      });
+      rightArmEls.forEach(function (armPath) {
+        armPath.classList.remove('arm-wave-cinematic');
+      });
+      mascot.style.transition = '';
+      mascot.style.transform = '';
+      mascot.style.opacity = '';
+      mascot.classList.remove('is-cinematic');
+      hoverRotateCurrent = 0;
+      hoverRotateTarget = 0;
+      hoverLiftCurrent = 0;
+      hoverLiftTarget = 0;
+      hoverScaleCurrent = 1;
+      hoverScaleTarget = 1;
+      gazeShiftXCurrent = 0;
+      gazeShiftXTarget = 0;
+      gazeShiftYCurrent = 0;
+      gazeShiftYTarget = 0;
+      gazeRotateCurrent = 0;
+      gazeRotateTarget = 0;
+      mascot.style.setProperty('--hover-rotate', '0deg');
+      mascot.style.setProperty('--hover-lift', '0px');
+      mascot.style.setProperty('--hover-scale', '1');
+      mascot.style.setProperty('--gaze-shift-x', '0px');
+      mascot.style.setProperty('--gaze-shift-y', '0px');
+      mascot.style.setProperty('--gaze-rotate', '0deg');
+      blockSpeech = false;
+      hideSpeech();
+      setState('idle');
+    }
+
+    function cancelEntranceSequence() {
+      if (!entranceSequenceTimer) {
+        return;
+      }
+
+      window.clearTimeout(entranceSequenceTimer);
+      entranceSequenceTimer = null;
+      box.dataset.cinematicOpen = '0';
+    }
+
+    function playEntranceSequence() {
+      cancelEntranceSequence();
+
+      if (!isChatOpen() || mascot.classList.contains('is-cinematic')) {
+        box.dataset.cinematicOpen = '0';
+        return;
+      }
+
+      clearHideTimers();
+      clearCinematicTimers();
+      blockSpeech = true;
+      box.dataset.cinematicOpen = '1';
+      mascot.classList.add('is-cinematic', 'is-visible');
+      mascot.classList.remove('is-peeking', 'is-hiding');
+      hideSpeechInstant();
+
+      mascot.style.transition = 'none';
+      mascot.style.transform = 'translateY(0) translateX(0) scale(1) rotate(0deg)';
+      mascot.style.opacity = '1';
+      setCinematicEyes(0, 0);
+
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          mascot.style.transition = 'transform 180ms ease-out';
+          mascot.style.transform = 'translateY(14px) translateX(-10px) scale(0.94) rotate(2deg)';
+        });
+      });
+
+      queueCinematicStep(function () {
+        mascot.style.transition = 'transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1)';
+        mascot.style.transform = 'translateY(-136px) translateX(-90px) scale(2.54) rotate(-5.6deg)';
+        setCinematicEyes(3.2, -3.5);
+      }, 190);
+
+      queueCinematicStep(function () {
+        mascot.style.transition = 'transform 220ms ease-out';
+        mascot.style.transform = 'translateY(-102px) translateX(-80px) scale(2.28) rotate(1.8deg)';
+        setCinematicEyes(4.8, -1.2);
+      }, 640);
+
+      queueCinematicStep(function () {
+        if (!mascot.classList.contains('is-cinematic')) {
+          return;
+        }
+
+        setState('wave');
+        replayWave();
+        replayArmWave();
+        spawnParticles(['👋', '✨', '⭐', '🌟']);
+      }, 930);
+
+      queueCinematicStep(function () {
+        if (!mascot.classList.contains('is-cinematic')) {
+          return;
+        }
+
+        setCinematicEyes(-1.6, 1.2);
+      }, 1130);
+
+      queueCinematicStep(function () {
+        if (!mascot.classList.contains('is-cinematic')) {
+          return;
+        }
+
+        mascot.style.transition = 'transform 500ms cubic-bezier(0.25, 1, 0.5, 1)';
+        mascot.style.transform = 'translateY(0) translateX(0) scale(1) rotate(0deg)';
+        setState('idle');
+        setCinematicEyes(0, 0);
+      }, 1450);
+
+      queueCinematicStep(function () {
+        resetCinematicEyes();
+        mascot.style.transition = '';
+        mascot.style.transform = '';
+        mascot.style.opacity = '';
+        mascot.classList.remove('is-cinematic');
+        box.dataset.cinematicOpen = '0';
+        blockSpeech = false;
+        hideSpeech();
+        if (!hasConversationMessages()) {
+          botReplyHandledManually = true;
+          appendMessage('bot', welcomeMessage, 'local', currentTime());
+          botReplyHandledManually = false;
+        }
+        scheduleMascotHide(3500);
+      }, 1930);
+    }
+
+    function playExitSequence() {
+      return new Promise(function (resolve) {
+        cancelEntranceSequence();
+
+        if (mascot.classList.contains('is-cinematic')) {
+          resolve();
+          return;
+        }
+
+        clearHideTimers();
+        clearCinematicTimers();
+        blockSpeech = true;
+        box.dataset.cinematicOpen = '0';
+        mascot.classList.add('is-cinematic', 'is-visible');
+        mascot.classList.remove('is-peeking', 'is-hiding');
+        hideSpeechInstant();
+
+        mascot.style.transition = 'none';
+        mascot.style.transform = 'translateY(0) translateX(0) scale(1) rotate(0deg)';
+        mascot.style.opacity = '1';
+        setCinematicEyes(0, 0);
+
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            mascot.style.transition = 'transform 170ms ease-out';
+            mascot.style.transform = 'translateY(10px) translateX(-8px) scale(0.95) rotate(2deg)';
+          });
+        });
+
+        queueCinematicStep(function () {
+          mascot.style.transition = 'transform 360ms cubic-bezier(0.34, 1.56, 0.64, 1)';
+          mascot.style.transform = 'translateY(-132px) translateX(-90px) scale(2.48) rotate(-6deg)';
+          setCinematicEyes(-2.8, -2.8);
+        }, 180);
+
+        queueCinematicStep(function () {
+          mascot.style.transition = 'transform 220ms ease-out';
+          mascot.style.transform = 'translateY(-100px) translateX(-80px) scale(2.24) rotate(1.3deg)';
+          setCinematicEyes(-4.1, -0.8);
+        }, 560);
+
+        queueCinematicStep(function () {
+          if (!mascot.classList.contains('is-cinematic')) {
+            return;
+          }
+
+          setState('wave');
+          replayWave();
+          replayArmWave();
+          spawnParticles(['👋', '✨', '💫']);
+        }, 840);
+
+        queueCinematicStep(function () {
+          if (!mascot.classList.contains('is-cinematic')) {
+            return;
+          }
+
+          setCinematicEyes(0.8, 1.4);
+        }, 1040);
+
+        queueCinematicStep(function () {
+          if (!mascot.classList.contains('is-cinematic')) {
+            return;
+          }
+
+          hideSpeech();
+          mascot.style.transition = 'transform 340ms ease-in, opacity 340ms ease-in';
+          mascot.style.transform = 'translateY(44px) translateX(0) scale(0.12) rotate(8deg)';
+          mascot.style.opacity = '0';
+          setCinematicEyes(0, 0);
+        }, 1280);
+
+        queueCinematicStep(function () {
+          resetCinematicPresentation();
+          mascot.classList.remove('is-visible', 'is-hiding');
+          resolve();
+        }, 1680);
+      });
+    }
+
+    function queueEntranceSequence() {
+      cancelEntranceSequence();
+      if (mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
+      box.dataset.cinematicOpen = '1';
+      entranceSequenceTimer = window.setTimeout(function () {
+        entranceSequenceTimer = null;
+        playEntranceSequence();
+      }, 60);
+    }
+
     window.setState = setState;
     window.triggerState = triggerState;
     window.showSpeech = showSpeech;
     window.hideSpeech = hideSpeech;
+    window.__chatMascotCinematics = {
+      queueEntranceSequence: queueEntranceSequence,
+      playExitSequence: playExitSequence,
+      cancelEntranceSequence: cancelEntranceSequence
+    };
     window.onBotReply = function (source) {
+      if (mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
       showMascot();
+      nudgeMascotOnReply();
 
       if (suppressNextBotReplySpeech) {
         suppressNextBotReplySpeech = false;
@@ -296,6 +770,10 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     mascot.addEventListener('click', function () {
+      if (mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
       const options = [
         { s: 'happy', sk: 'click', parts: ['⭐', '✨', '🌟'] },
         { s: 'wave', sk: 'happy', parts: ['👋', '🌟', '✨'] },
@@ -309,8 +787,51 @@ document.addEventListener('DOMContentLoaded', function () {
       scheduleMascotHide(3000);
     });
 
+    mascot.addEventListener('mouseenter', function () {
+      if (mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
+      isMascotHovering = true;
+      hoverScaleTarget = 1.05;
+      hoverLiftTarget = -4;
+      showMascot();
+      clearHideTimers();
+      showHoverSpeech();
+    });
+
+    mascot.addEventListener('mousemove', function (event) {
+      if (!isMascotHovering || mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
+      const rect = mascot.getBoundingClientRect();
+      const relativeX = ((event.clientX - (rect.left + rect.width / 2)) / rect.width);
+      const relativeY = ((event.clientY - (rect.top + rect.height / 2)) / rect.height);
+
+      hoverRotateTarget = Math.max(-6, Math.min(6, relativeX * 10));
+      hoverLiftTarget = Math.max(-6, Math.min(-1, -4 + (relativeY * -2)));
+      hoverScaleTarget = 1.05;
+      lastMouseMoveAt = Date.now();
+    });
+
+    mascot.addEventListener('mouseleave', function () {
+      isMascotHovering = false;
+      hoverRotateTarget = 0;
+      hoverLiftTarget = 0;
+      hoverScaleTarget = 1;
+      window.clearTimeout(hoverSpeechTimer);
+      hideSpeech();
+      scheduleMascotHide(2500);
+    });
+
     if (inputEl) {
       inputEl.addEventListener('focus', function () {
+        if (box.dataset.cinematicOpen === '1' || mascot.classList.contains('is-cinematic')) {
+          box.dataset.introPending = '0';
+          return;
+        }
+
         showMascot();
         window.clearTimeout(hideTimer);
 
@@ -322,12 +843,20 @@ document.addEventListener('DOMContentLoaded', function () {
       });
 
       inputEl.addEventListener('blur', function () {
+        if (mascot.classList.contains('is-cinematic')) {
+          return;
+        }
+
         setState('idle');
         hideSpeech();
         scheduleMascotHide(3000);
       });
 
       inputEl.addEventListener('input', function () {
+        if (mascot.classList.contains('is-cinematic')) {
+          return;
+        }
+
         showMascot();
         if (pendingQuickReplyTimer) {
           window.clearTimeout(pendingQuickReplyTimer);
@@ -340,6 +869,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (formEl) {
       formEl.addEventListener('submit', function () {
+        if (mascot.classList.contains('is-cinematic')) {
+          return;
+        }
+
         const text = inputEl ? inputEl.value.trim() : '';
 
         if (!text) {
@@ -359,6 +892,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.qr-btn').forEach(function (button) {
       button.addEventListener('click', function () {
+        if (mascot.classList.contains('is-cinematic')) {
+          return;
+        }
+
         const message = (button.dataset.msg || '').toLowerCase();
         const key = Object.keys(QR_REACTIONS).find(function (entry) {
           return message.includes(entry);
@@ -393,35 +930,220 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
 
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && mascot.classList.contains('is-cinematic')) {
+        resetCinematicPresentation();
+        mascot.classList.remove('is-visible');
+        box.dataset.cinematicOpen = '0';
+        scheduleMascotHide(500);
+      }
+    });
+
     showMascot();
+    scheduleRandomBlink();
     scheduleMascotHide(2000);
 
     document.addEventListener('mousemove', function (event) {
+      if (cinematicEyeMotionActive || mascot.classList.contains('is-cinematic')) {
+        return;
+      }
+
+      lastMouseMoveAt = Date.now();
       const rect = mascot.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      const dx = ((event.clientX - centerX) / window.innerWidth) * 7;
-      const dy = ((event.clientY - centerY) / window.innerHeight) * 7;
-      tlx = 44 + dx;
-      trx = 76 + dx;
-      tly = 42 + dy;
-      tryValue = 42 + dy;
+      const normX = clamp((event.clientX - centerX) / (window.innerWidth * 0.18), -1, 1);
+      const normY = clamp((event.clientY - centerY) / (window.innerHeight * 0.22), -1, 1);
+
+      tlx = 44 + (normX * 5.2);
+      trx = 76 + (normX * 5.2);
+      tly = 42 + (normY * 4.1);
+      tryValue = 42 + (normY * 4.1);
+      gazeShiftXTarget = normX * 4.4;
+      gazeShiftYTarget = normY * -2.2;
+      gazeRotateTarget = normX * 3.4;
     });
 
     (function tick() {
-      lx += (tlx - lx) * .09;
-      rx += (trx - rx) * .09;
-      ly += (tly - ly) * .09;
-      ry += (tryValue - ry) * .09;
+      // Let the gaze linger a bit so the follow remains visible.
+      if (!cinematicEyeMotionActive && !isMascotHovering && Date.now() - lastMouseMoveAt > 520) {
+        tlx = 44;
+        trx = 76;
+        tly = 42;
+        tryValue = 42;
+        gazeShiftXTarget = 0;
+        gazeShiftYTarget = 0;
+        gazeRotateTarget = 0;
+      }
 
-      eyeL.setAttribute('cx', Math.min(47, Math.max(41, lx)));
-      eyeR.setAttribute('cx', Math.min(79, Math.max(73, rx)));
-      eyeL.setAttribute('cy', Math.min(45, Math.max(39, ly)));
-      eyeR.setAttribute('cy', Math.min(45, Math.max(39, ry)));
+      lx += (tlx - lx) * .13;
+      rx += (trx - rx) * .13;
+      ly += (tly - ly) * .13;
+      ry += (tryValue - ry) * .13;
+
+      if (!mascot.classList.contains('is-cinematic')) {
+        hoverRotateCurrent += (hoverRotateTarget - hoverRotateCurrent) * .12;
+        hoverLiftCurrent += (hoverLiftTarget - hoverLiftCurrent) * .12;
+        hoverScaleCurrent += (hoverScaleTarget - hoverScaleCurrent) * .12;
+        gazeShiftXCurrent += (gazeShiftXTarget - gazeShiftXCurrent) * .08;
+        gazeShiftYCurrent += (gazeShiftYTarget - gazeShiftYCurrent) * .08;
+        gazeRotateCurrent += (gazeRotateTarget - gazeRotateCurrent) * .08;
+        mascot.style.setProperty('--hover-rotate', hoverRotateCurrent.toFixed(2) + 'deg');
+        mascot.style.setProperty('--hover-lift', hoverLiftCurrent.toFixed(2) + 'px');
+        mascot.style.setProperty('--hover-scale', hoverScaleCurrent.toFixed(3));
+        mascot.style.setProperty('--gaze-shift-x', gazeShiftXCurrent.toFixed(2) + 'px');
+        mascot.style.setProperty('--gaze-shift-y', gazeShiftYCurrent.toFixed(2) + 'px');
+        mascot.style.setProperty('--gaze-rotate', gazeRotateCurrent.toFixed(2) + 'deg');
+      }
+
+      const irisLeftX = 44 + ((lx - 44) * 0.65);
+      const irisRightX = 76 + ((rx - 76) * 0.65);
+      const irisLeftY = 42 + ((ly - 42) * 0.65);
+      const irisRightY = 42 + ((ry - 42) * 0.65);
+      const pupilLeftX  = Math.min(48.0, Math.max(40.0, lx));
+      const pupilRightX = Math.min(80.0, Math.max(72.0, rx));
+      const pupilLeftY  = Math.min(46.0, Math.max(38.0, ly));
+      const pupilRightY = Math.min(46.0, Math.max(38.0, ry));
+
+      if (irisL && irisR) {
+        irisL.setAttribute('cx', irisLeftX.toFixed(2));
+        irisR.setAttribute('cx', irisRightX.toFixed(2));
+        irisL.setAttribute('cy', irisLeftY.toFixed(2));
+        irisR.setAttribute('cy', irisRightY.toFixed(2));
+      }
+
+      eyeL.setAttribute('cx', pupilLeftX.toFixed(2));
+      eyeR.setAttribute('cx', pupilRightX.toFixed(2));
+      eyeL.setAttribute('cy', pupilLeftY.toFixed(2));
+      eyeR.setAttribute('cy', pupilRightY.toFixed(2));
+
+      if (specLeft && specRight && spec2Left && spec2Right) {
+        specLeft.setAttribute('cx', (pupilLeftX + 1.9).toFixed(2));
+        specRight.setAttribute('cx', (pupilRightX + 1.9).toFixed(2));
+        specLeft.setAttribute('cy', (pupilLeftY - 1.9).toFixed(2));
+        specRight.setAttribute('cy', (pupilRightY - 1.9).toFixed(2));
+        spec2Left.setAttribute('cx', (pupilLeftX - 1.1).toFixed(2));
+        spec2Right.setAttribute('cx', (pupilRightX - 1.1).toFixed(2));
+        spec2Left.setAttribute('cy', (pupilLeftY + 1.35).toFixed(2));
+        spec2Right.setAttribute('cy', (pupilRightY + 1.35).toFixed(2));
+      }
 
       requestAnimationFrame(tick);
     })();
+
+    // ─── DEBUG VISUAL TEST ──────────────────────────────────────────────────
+    // Set to true to auto-run on mascot click, or call window.testMascotMotion()
+    // from the browser console at any time.
+    const MASCOT_ANIMATION_DEBUG = false;
+
+    window.testMascotMotion = function () {
+      // 1. Audit every selector and warn loudly if anything is missing
+      var checks = {
+        mascot:        mascot,
+        'eye-left':    eyeL,
+        'eye-right':   eyeR,
+        'arm-right':   rightArmEls[0] || null,
+        'arm-left':    leftArmEls[0]  || null,
+      };
+      var allOk = true;
+      Object.keys(checks).forEach(function (label) {
+        if (!checks[label]) {
+          console.warn('[testMascotMotion] MISSING element: ' + label);
+          allOk = false;
+        }
+      });
+      if (!allOk) {
+        console.warn('[testMascotMotion] Some elements are null — animation will be partial.');
+      }
+
+      // 2. Eyes → SVG setAttribute (same path the tick loop uses)
+      if (eyeL) { eyeL.setAttribute('cx', 49); eyeL.setAttribute('cy', 40); }
+      if (eyeR) { eyeR.setAttribute('cx', 81); eyeR.setAttribute('cy', 40); }
+
+      // 3. Body tilt → CSS custom properties (same path the tick loop uses)
+      if (mascot) {
+        mascot.style.setProperty('--hover-rotate', '5deg');
+        mascot.style.setProperty('--hover-lift',   '-8px');
+        mascot.style.setProperty('--gaze-shift-x', '5px');
+        mascot.style.setProperty('--gaze-shift-y', '-3px');
+        mascot.style.setProperty('--gaze-rotate',  '4deg');
+        mascot.style.setProperty('--hover-scale',  '1.08');
+      }
+
+      // 4. Arms → cinematic wave class (same path replayArmWave uses)
+      window.clearTimeout(armWaveResetTimer);
+      leftArmEls.forEach(function (el) {
+        el.classList.remove('arm-wave-cinematic');
+        void el.offsetWidth; // force reflow so re-adding triggers animation
+        el.classList.add('arm-wave-cinematic');
+      });
+      rightArmEls.forEach(function (el) {
+        el.classList.remove('arm-wave-cinematic');
+        void el.offsetWidth;
+        el.classList.add('arm-wave-cinematic');
+      });
+
+      // 5. Return to neutral after 900 ms
+      armWaveResetTimer = window.setTimeout(function () {
+        // Reset eyes to neutral targets; the tick loop will lerp them back
+        tlx = 44; trx = 76; tly = 42; tryValue = 42;
+
+        // Reset body CSS vars to neutral
+        if (mascot) {
+          mascot.style.setProperty('--hover-rotate', '0deg');
+          mascot.style.setProperty('--hover-lift',   '0px');
+          mascot.style.setProperty('--gaze-shift-x', '0px');
+          mascot.style.setProperty('--gaze-shift-y', '0px');
+          mascot.style.setProperty('--gaze-rotate',  '0deg');
+          mascot.style.setProperty('--hover-scale',  '1');
+        }
+
+        // Remove arm classes
+        leftArmEls.forEach(function (el)  { el.classList.remove('arm-wave-cinematic'); });
+        rightArmEls.forEach(function (el) { el.classList.remove('arm-wave-cinematic'); });
+      }, 900);
+
+      console.info('[testMascotMotion] fired — watch the mascot for ~900 ms.');
+    };
+
+    if (MASCOT_ANIMATION_DEBUG) {
+      mascot.addEventListener('click', function () {
+        window.testMascotMotion();
+      });
+    }
+    // ─── END DEBUG ───────────────────────────────────────────────────────────
   })();
+
+  toggle.addEventListener('click', async function (event) {
+    if (!mascot || !window.__chatMascotCinematics) {
+      return;
+    }
+
+    if (mascot.classList.contains('is-cinematic')) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return;
+    }
+
+    if (isChatOpen()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      box.dataset.introPending = '0';
+      box.dataset.cinematicOpen = '0';
+      window.__chatMascotCinematics.cancelEntranceSequence();
+      await window.__chatMascotCinematics.playExitSequence();
+
+      if (typeof window.hideSpeech === 'function') {
+        window.hideSpeech();
+      }
+
+      box.classList.add('chat-hidden');
+      syncState(true);
+      return;
+    }
+
+    window.__chatMascotCinematics.queueEntranceSequence();
+  }, true);
 
   toggle.addEventListener('click', function () {
     const isHidden = box.classList.contains('chat-hidden');
@@ -469,7 +1191,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       messages.innerHTML = '';
-      appendMessage('bot', welcomeMessage, 'local', currentTime());
       showNotice('Conversation effacée ✓');
     } catch (error) {
       showNotice("Impossible d'effacer la conversation.");

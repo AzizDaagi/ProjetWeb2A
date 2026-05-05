@@ -149,6 +149,7 @@ class alimentctrl
     {
         $mealItems = $this->getMealItemsFromSession();
         $mealDate = $this->getMealDateFromSession();
+        $eauMl = max(0, (int) ($_POST['eau_ml'] ?? 0));
 
         if (empty($mealItems) || $mealDate === null) {
             $_SESSION['aliment_error'] = ["Aucun repas en attente a valider."];
@@ -156,7 +157,7 @@ class alimentctrl
             exit;
         }
 
-        if (!$this->suiviModel->validerRepas($mealItems, $mealDate)) {
+        if (!$this->suiviModel->validerRepas($mealItems, $mealDate, $eauMl)) {
             $_SESSION['aliment_error'] = [
                 $this->suiviModel->getLastError() ?: "Impossible d'enregistrer ce repas pour le moment."
             ];
@@ -333,6 +334,7 @@ class alimentctrl
         $errors = [];
         $alimentId = $data['aliment_id'] ?? null;
         $quantite = $data['quantite'] ?? null;
+        $eauMl = $data['eau_ml'] ?? 0;
         $type = $data['type'] ?? '';
         $date = trim($data['date_consommation'] ?? '');
 
@@ -346,6 +348,10 @@ class alimentctrl
 
         if (!in_array($type, $this->allowedTypes, true)) {
             $errors[] = "Type invalide.";
+        }
+
+        if (!is_numeric($eauMl) || (int) $eauMl < 0) {
+            $errors[] = "Quantite d'eau invalide.";
         }
 
         if (!$this->isValidTrackingDate($date)) {
