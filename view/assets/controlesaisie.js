@@ -117,6 +117,41 @@
         return true;
     }
 
+    function validateNewPassword(input) {
+        if (!input) {
+            return true;
+        }
+
+        var value = input.value || '';
+        if (value.trim() === '') {
+            showError(input, 'Mot de passe est obligatoire.');
+            return false;
+        }
+
+        if (value.length < 8) {
+            showError(input, 'Mot de passe doit contenir au moins 8 caracteres.');
+            return false;
+        }
+
+        if (!/[A-Z]/.test(value)) {
+            showError(input, 'Mot de passe doit contenir une majuscule.');
+            return false;
+        }
+
+        if (!/[a-z]/.test(value)) {
+            showError(input, 'Mot de passe doit contenir une minuscule.');
+            return false;
+        }
+
+        if (!/[0-9]/.test(value)) {
+            showError(input, 'Mot de passe doit contenir un chiffre.');
+            return false;
+        }
+
+        clearError(input);
+        return true;
+    }
+
     function validateResetCode(input) {
         if (!input) {
             return true;
@@ -449,7 +484,7 @@
         var validators = [
             function () { return validateEmail(emailInput); },
             function () { return validateResetCode(codeInput); },
-            function () { return validatePassword(passwordInput); },
+            function () { return validateNewPassword(passwordInput); },
             function () { return validatePasswordConfirm(passwordInput, passwordConfirmInput); }
         ];
 
@@ -463,10 +498,10 @@
         }
         if (passwordInput) {
             passwordInput.addEventListener('input', function () {
-                validatePassword(passwordInput);
+                validateNewPassword(passwordInput);
                 validatePasswordConfirm(passwordInput, passwordConfirmInput);
             });
-            passwordInput.addEventListener('blur', function () { validatePassword(passwordInput); });
+            passwordInput.addEventListener('blur', function () { validateNewPassword(passwordInput); });
         }
         if (passwordConfirmInput) {
             passwordConfirmInput.addEventListener('input', function () { validatePasswordConfirm(passwordInput, passwordConfirmInput); });

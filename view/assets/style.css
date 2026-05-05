@@ -20,8 +20,7 @@ body {
     background-size: cover;
     color: var(--text-main);
     opacity: 1;
-    transform: translateY(0);
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition: opacity 0.4s ease;
     min-height: 100vh;
     overflow-x: hidden; 
 }
@@ -449,7 +448,6 @@ body.theme-light {
 
 body.is-ready {
     opacity: 1;
-    transform: translateY(0);
 }
 
 .container {
@@ -599,6 +597,8 @@ p {
     flex-direction: column;
     align-items: flex-end;
     gap: 10px;
+    --voice-scroll-progress: 0;
+    transition: transform 0.28s ease, opacity 0.28s ease;
 }
 
 .voice-toggle-btn {
@@ -612,6 +612,7 @@ p {
     border: 1px solid rgba(52, 152, 219, 0.38);
     background: linear-gradient(135deg, rgba(52, 152, 219, 0.92), rgba(46, 204, 113, 0.88));
     box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
+    transition: transform 0.28s ease, box-shadow 0.28s ease, background 0.28s ease;
 }
 
 .voice-toggle-btn i {
@@ -631,6 +632,8 @@ p {
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    transform-origin: bottom right;
+    transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease;
 }
 
 .voice-control-head {
@@ -694,6 +697,36 @@ p {
     margin-top: 10px;
     color: rgba(236, 240, 241, 0.68);
     font-size: 13px;
+}
+
+.voice-control-dock.is-scroll-down .voice-control-panel {
+    transform: translateY(10px) scale(0.97);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+}
+
+.voice-control-dock.is-scroll-down .voice-toggle-btn {
+    transform: translateY(4px) scale(0.98);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
+}
+
+.voice-control-dock.is-scroll-up .voice-control-panel,
+.voice-control-dock.is-near-top .voice-control-panel {
+    transform: translateY(0) scale(1);
+}
+
+.voice-control-dock.is-scroll-up .voice-toggle-btn,
+.voice-control-dock.is-near-top .voice-toggle-btn {
+    transform: translateY(0) scale(1.02);
+}
+
+.voice-control-dock.is-scroll-active .voice-control-panel {
+    border-color: rgba(243, 156, 18, 0.28);
+}
+
+.voice-control-dock.is-deep-page .voice-control-panel {
+    background:
+        linear-gradient(135deg, rgba(10, 18, 27, 0.95), rgba(14, 26, 39, 0.94)),
+        radial-gradient(circle at top right, rgba(243, 156, 18, 0.08), transparent 40%);
 }
 
 @media (max-width: 768px) {
@@ -882,6 +915,45 @@ button:focus-visible,
     border-radius: 10px;
     border: 1px solid rgba(52, 152, 219, 0.32);
     background: rgba(12, 19, 29, 0.72);
+}
+
+.google-auth-card {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(236, 240, 241, 0.24);
+    background: rgba(12, 19, 29, 0.72);
+}
+
+.google-auth-title {
+    margin: 0 0 6px;
+    text-align: left;
+    font-size: 18px;
+}
+
+.google-auth-text {
+    margin: 0 0 10px;
+    color: rgba(236, 240, 241, 0.82);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.google-login-btn {
+    width: 100%;
+    margin-top: 0;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: linear-gradient(90deg, #2f3c56, #415b84);
+}
+
+.google-login-status {
+    margin: 10px 0 0;
+    min-height: 18px;
+    font-size: 13px;
+    color: rgba(236, 240, 241, 0.82);
+}
+
+.google-login-status.is-error {
+    color: #ffd8a8;
 }
 
 .face-auth-title {
@@ -1555,6 +1627,7 @@ body.theme-light .theme-toggle {
     .voice-control-panel {
         width: 100%;
     }
+
 }
 
 .main-content {
