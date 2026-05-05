@@ -29,6 +29,19 @@
         </div>
     </form>
 
+    <section class="google-auth-card">
+        <h2 class="google-auth-title"><i class="fa-brands fa-google icon"></i>Connexion Google</h2>
+        <p class="google-auth-text">Connectez-vous en un clic avec votre compte Google.</p>
+        <?php if (!empty($firebaseGoogleEnabled)): ?>
+            <button type="button" id="googleLoginBtn" class="google-login-btn">
+                <i class="fa-brands fa-google"></i>Continuer avec Google
+            </button>
+            <p id="googleLoginStatus" class="google-login-status" aria-live="polite"></p>
+        <?php else: ?>
+            <p class="alert alert-error">Configuration Firebase manquante. Ajoutez FIREBASE_WEB_API_KEY dans votre fichier .env.</p>
+        <?php endif; ?>
+    </section>
+
     <section
         class="face-auth-card"
         data-face-auth-mode="login"
@@ -56,3 +69,58 @@
 
     <p class="link-text">Pas encore de compte ? <a href="/smart_nutrition/index.php?action=register">S'inscrire</a></p>
 </div>
+
+<?php if (!empty($firebaseGoogleEnabled)): ?>
+<script>
+window.SMART_NUTRITION_FIREBASE_CONFIG = <?= json_encode($firebaseConfig, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+</script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js';
+
+const config = window.SMART_NUTRITION_FIREBASE_CONFIG || null;
+const loginButton = document.getElementById('googleLoginBtn');
+const statusEl = document.getElementById('googleLoginStatus');
+
+if (config && loginButton && statusEl) {
+    const app = initializeApp(config);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    const setStatus = (message, isError = false) => {
+        statusEl.textContent = message;
+        statusEl.classList.toggle('is-error', isError);
+    };
+
+    loginButton.addEventListener('click', async () => {
+        loginButton.disabled = true;
+        setStatus('Connexion Google en cours...');
+
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const idToken = await result.user.getIdToken(true);
+
+            const response = await fetch('/smart_nutrition/index.php?action=google-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ idToken })
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.message || 'Connexion Google echouee.');
+            }
+
+            window.location.href = payload.redirect || '/smart_nutrition/index.php?action=home';
+        } catch (error) {
+            setStatus(error && error.message ? error.message : 'Connexion Google echouee.', true);
+            loginButton.disabled = false;
+        }
+    });
+}
+</script>
+<?php endif; ?>

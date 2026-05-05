@@ -812,6 +812,8 @@ function initHomeWeatherCard() {
 }
 
 function initVoiceControl() {
+    var dockEl = document.getElementById('voiceControlDock');
+    var panelEl = document.getElementById('voiceControlPanel');
     var toggleButton = document.getElementById('voiceToggleBtn');
     var statusLabel = document.getElementById('voiceStatusLabel');
     var statusBadge = document.getElementById('voiceStatusBadge');
@@ -819,7 +821,7 @@ function initVoiceControl() {
     var lastActionEl = document.getElementById('voiceLastAction');
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!toggleButton || !statusLabel || !statusBadge || !transcriptEl || !lastActionEl) {
+    if (!dockEl || !panelEl || !toggleButton || !statusLabel || !statusBadge || !transcriptEl || !lastActionEl) {
         return;
     }
 
@@ -837,6 +839,9 @@ function initVoiceControl() {
     var shouldRestart = false;
     var manualStop = false;
     var restartTimer = null;
+    var scrollTicking = false;
+    var scrollIdleTimer = null;
+    var lastScrollY = window.pageYOffset || window.scrollY || 0;
     var storageKey = 'smartNutritionTheme';
     var routeMap = [
         { action: 'home', aliases: ['accueil', 'home', 'page accueil'] },
@@ -859,6 +864,68 @@ function initVoiceControl() {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
+
+    function updateVoiceScrollUI() {
+        var scrollTop = window.pageYOffset || window.scrollY || document.documentElement.scrollTop || 0;
+        var docHeight = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight,
+            document.body.offsetHeight,
+            document.documentElement.offsetHeight
+        );
+        var viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+        var maxScroll = Math.max(docHeight - viewportHeight, 0);
+        var progress = maxScroll > 0 ? scrollTop / maxScroll : 0;
+        var progressPercent = Math.round(progress * 100);
+        var direction = 'idle';
+
+        if (scrollTop > lastScrollY + 4) {
+            direction = 'down';
+        } else if (scrollTop < lastScrollY - 4) {
+            direction = 'up';
+        }
+
+        lastScrollY = scrollTop;
+
+        dockEl.classList.toggle('is-scroll-down', direction === 'down');
+        dockEl.classList.toggle('is-scroll-up', direction === 'up');
+        dockEl.classList.toggle('is-near-top', progress <= 0.04);
+        dockEl.classList.toggle('is-deep-page', progress >= 0.55);
+        dockEl.classList.add('is-scroll-active');
+
+        if (scrollIdleTimer) {
+            clearTimeout(scrollIdleTimer);
+        }
+
+        scrollIdleTimer = setTimeout(function () {
+            dockEl.classList.remove('is-scroll-active', 'is-scroll-down', 'is-scroll-up');
+            if ((window.pageYOffset || window.scrollY || 0) <= 24) {
+                dockEl.classList.add('is-near-top');
+            }
+        }, 180);
+
+        if (!isListening) {
+            if (direction === 'down') {
+                transcriptEl.textContent = 'Interface vocale dynamique: vous descendez dans la page.';
+            } else if (direction === 'up') {
+                transcriptEl.textContent = 'Interface vocale dynamique: vous remontez dans la page.';
+            } else if (progressPercent <= 5) {
+                transcriptEl.textContent = 'Cliquez sur le micro puis dites une commande.';
+            }
+        }
+    }
+
+    function onVoiceScroll() {
+        if (scrollTicking) {
+            return;
+        }
+
+        scrollTicking = true;
+        window.requestAnimationFrame(function () {
+            updateVoiceScrollUI();
+            scrollTicking = false;
+        });
+    }
 
     function normalizeVoiceText(value) {
         var text = (value || '').toLowerCase();
@@ -1447,6 +1514,11 @@ function initVoiceControl() {
 
         startListening();
     });
+
+    window.addEventListener('scroll', onVoiceScroll, { passive: true });
+    window.addEventListener('resize', onVoiceScroll);
+    dockEl.classList.add('is-near-top');
+    updateVoiceScrollUI();
 }
 
 function initAdminModuleButtons() {

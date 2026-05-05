@@ -2,6 +2,8 @@
 
 return [
     'app_url' => getenv('APP_URL') ?: 'http://localhost/smart_nutrition',
+    'firebase_web_api_key' => getenv('FIREBASE_WEB_API_KEY') ?: '',
+    'firebase_project_id' => getenv('FIREBASE_PROJECT_ID') ?: '',
     'weather_default_lat' => (float) (getenv('WEATHER_DEFAULT_LAT') ?: 36.8065),
     'weather_default_lon' => (float) (getenv('WEATHER_DEFAULT_LON') ?: 10.1815),
     'weather_api_timeout' => (int) (getenv('WEATHER_API_TIMEOUT') ?: 10),
@@ -9,6 +11,8 @@ return [
     // Use local environment variables instead:
     // BREVO_API_KEY, BREVO_SMTP_HOST, BREVO_SMTP_PORT, BREVO_SMTP_USERNAME,
     // BREVO_SMTP_PASSWORD, BREVO_SMTP_SECURE, BREVO_FROM_EMAIL, BREVO_FROM_NAME
+    // Firebase:
+    // FIREBASE_WEB_API_KEY, FIREBASE_PROJECT_ID
     // OpenWeather:
     // OPENWEATHER_API_KEY, WEATHER_DEFAULT_LAT, WEATHER_DEFAULT_LON, WEATHER_API_TIMEOUT
 ];

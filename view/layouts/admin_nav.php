@@ -59,7 +59,7 @@ if ($adminInitials === '') {
         <div class="admin-brand">
             <a href="/smart_nutrition/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/smart_nutrition/2-removebg-preview.png"
+                    src="/smart_nutrition/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"

@@ -56,6 +56,149 @@ class AuthController
         return $_POST;
     }
 
+    private function postJsonRequest($url, array $payload)
+    {
+        if (!function_exists('curl_init')) {
+            return [
+                'success' => false,
+                'status' => 0,
+                'body' => null,
+                'error' => 'cURL indisponible sur le serveur.',
+            ];
+        }
+
+        $jsonPayload = json_encode($payload);
+        if ($jsonPayload === false) {
+            return [
+                'success' => false,
+                'status' => 0,
+                'body' => null,
+                'error' => 'Erreur de serialisation JSON.',
+            ];
+        }
+
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return [
+                'success' => false,
+                'status' => 0,
+                'body' => null,
+                'error' => 'Impossible d\'initialiser cURL.',
+            ];
+        }
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Accept: application/json',
+        ]);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPayload);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+
+        $rawResponse = curl_exec($ch);
+        $curlError = curl_error($ch);
+        $statusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($rawResponse === false || $curlError !== '') {
+            return [
+                'success' => false,
+                'status' => $statusCode,
+                'body' => null,
+                'error' => $curlError !== '' ? $curlError : 'Erreur reseau.',
+            ];
+        }
+
+        $decoded = json_decode((string) $rawResponse, true);
+
+        return [
+            'success' => $statusCode >= 200 && $statusCode < 300,
+            'status' => $statusCode,
+            'body' => is_array($decoded) ? $decoded : null,
+            'error' => '',
+        ];
+    }
+
+    private function extractGoogleNames($displayName)
+    {
+        $name = trim((string) $displayName);
+        if ($name === '') {
+            return ['prenom' => 'Google', 'nom' => 'User'];
+        }
+
+        $parts = preg_split('/\s+/', $name);
+        $parts = is_array($parts) ? array_values(array_filter($parts, function ($part) {
+            return trim((string) $part) !== '';
+        })) : [];
+
+        if (count($parts) === 0) {
+            return ['prenom' => 'Google', 'nom' => 'User'];
+        }
+
+        if (count($parts) === 1) {
+            return ['prenom' => $parts[0], 'nom' => 'User'];
+        }
+
+        $prenom = array_shift($parts);
+        $nom = implode(' ', $parts);
+
+        return [
+            'prenom' => $prenom,
+            'nom' => $nom,
+        ];
+    }
+
+    private function verifyFirebaseIdToken($idToken)
+    {
+        $apiKey = trim((string) ($this->appConfig['firebase_web_api_key'] ?? ''));
+        if ($apiKey === '') {
+            return [
+                'success' => false,
+                'error' => 'Configuration Firebase manquante (FIREBASE_WEB_API_KEY).',
+                'user' => null,
+            ];
+        }
+
+        $verifyUrl = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . urlencode($apiKey);
+        $result = $this->postJsonRequest($verifyUrl, [
+            'idToken' => (string) $idToken,
+        ]);
+
+        if (!$result['success']) {
+            return [
+                'success' => false,
+                'error' => 'Verification Firebase echouee.',
+                'user' => null,
+            ];
+        }
+
+        $users = $result['body']['users'] ?? null;
+        if (!is_array($users) || empty($users[0]) || !is_array($users[0])) {
+            return [
+                'success' => false,
+                'error' => 'Utilisateur Firebase introuvable.',
+                'user' => null,
+            ];
+        }
+
+        $firebaseUser = $users[0];
+        $email = trim((string) ($firebaseUser['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return [
+                'success' => false,
+                'error' => 'E-mail Firebase invalide.',
+                'user' => null,
+            ];
+        }
+
+        return [
+            'success' => true,
+            'error' => '',
+            'user' => $firebaseUser,
+        ];
+    }
+
     private function sanitizeFaceDescriptor($rawDescriptor)
     {
         if (!is_array($rawDescriptor) || count($rawDescriptor) !== self::FACE_DESCRIPTOR_SIZE) {
@@ -527,6 +670,71 @@ class AuthController
         $this->redirect($this->hydrateSessionAndResolveNextAction($user));
     }
 
+    // ================= GOOGLE LOGIN =================
+
+    public function loginWithGoogle()
+    {
+        $payload = $this->getRequestPayload();
+        $idToken = trim((string) ($payload['idToken'] ?? ''));
+
+        if ($idToken === '') {
+            $this->respondJson([
+                'success' => false,
+                'message' => 'Jeton Google manquant.',
+            ], 400);
+        }
+
+        $verification = $this->verifyFirebaseIdToken($idToken);
+        if (empty($verification['success'])) {
+            $this->respondJson([
+                'success' => false,
+                'message' => $verification['error'] ?? 'Verification Google impossible.',
+            ], 401);
+        }
+
+        $firebaseUser = $verification['user'];
+        $email = trim((string) ($firebaseUser['email'] ?? ''));
+        $displayName = trim((string) ($firebaseUser['displayName'] ?? ''));
+
+        $user = $this->userModel->findByEmail($email);
+
+        if (!$user) {
+            $names = $this->extractGoogleNames($displayName);
+
+            $created = $this->userModel->create([
+                'nom' => $names['nom'],
+                'prenom' => $names['prenom'],
+                'email' => $email,
+                // Local password placeholder for Google-created accounts.
+                'password' => password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT),
+                'role' => 'user',
+            ]);
+
+            if (!$created) {
+                $this->respondJson([
+                    'success' => false,
+                    'message' => 'Impossible de creer le compte Google local.',
+                ], 500);
+            }
+
+            $user = $this->userModel->findByEmail($email);
+        }
+
+        if (!$user) {
+            $this->respondJson([
+                'success' => false,
+                'message' => 'Compte utilisateur introuvable.',
+            ], 500);
+        }
+
+        $next = $this->hydrateSessionAndResolveNextAction($user);
+
+        $this->respondJson([
+            'success' => true,
+            'redirect' => $this->buildActionUrl($next),
+        ]);
+    }
+
     // ================= FACE LOGIN =================
 
     public function loginWithFace()
@@ -668,6 +876,18 @@ class AuthController
 
     $success = $_SESSION['success'] ?? '';
     unset($_SESSION['success']);
+
+    $firebaseConfig = [
+        'apiKey' => trim((string) (getenv('FIREBASE_WEB_API_KEY') ?: ($this->appConfig['firebase_web_api_key'] ?? ''))),
+        'authDomain' => trim((string) (getenv('FIREBASE_AUTH_DOMAIN') ?: 'smartnutrition-7f619.firebaseapp.com')),
+        'projectId' => trim((string) (getenv('FIREBASE_PROJECT_ID') ?: ($this->appConfig['firebase_project_id'] ?? 'smartnutrition-7f619'))),
+        'storageBucket' => trim((string) (getenv('FIREBASE_STORAGE_BUCKET') ?: 'smartnutrition-7f619.firebasestorage.app')),
+        'messagingSenderId' => trim((string) (getenv('FIREBASE_MESSAGING_SENDER_ID') ?: '584688286786')),
+        'appId' => trim((string) (getenv('FIREBASE_APP_ID') ?: '1:584688286786:web:abae17dce0c7979d61c1db')),
+        'measurementId' => trim((string) (getenv('FIREBASE_MEASUREMENT_ID') ?: 'G-BJTYY669Y6')),
+    ];
+
+    $firebaseGoogleEnabled = $firebaseConfig['apiKey'] !== '';
 
     $pageTitle = 'Connexion';
 
