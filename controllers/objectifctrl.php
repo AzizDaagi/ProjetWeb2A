@@ -19,30 +19,71 @@ class objectifctrl
 
     public function index()
     {
-        $activePlan = $this->objectifModel->getActivePlanStatus();
-        $planRows = $this->objectifModel->getLatestPlanRows();
-        $planStartDate = $activePlan['start_date'] ?? (!empty($planRows[0]['date_creation']) ? (string) $planRows[0]['date_creation'] : null);
-        $todayObjectif = $this->prepareStoredObjectif($this->objectifModel->getObjectifDuJour(), $planStartDate);
+        $planContext = $this->getPlanContext();
+        $activePlan = $planContext['activePlan'];
+        $planRows = $planContext['planRows'];
+        $todayObjectif = $planContext['todayObjectif'];
+        $planStartObjectif = $planContext['planStartObjectif'];
+        $canModifyPlanToday = $planContext['canModifyPlanToday'];
         $objectif = !empty($todayObjectif) ? $todayObjectif : null;
         $objectifMessage = empty($objectif) ? "Aucun objectif defini pour aujourd'hui." : null;
-        $planStartObjectif = !empty($planRows[0]) ? $this->prepareStoredObjectif($planRows[0], $planStartDate) : null;
-        $canModifyPlanToday = !empty($activePlan['can_modify_today']) && !empty($planStartObjectif);
         $objectifDebug = $_SESSION['objectif_debug'] ?? null;
-
-        $total_today = $this->suiviModel->getTodayTotal();
-        $todayMacros = $this->suiviModel->getTodayMacros();
-        $objectifSummary = $this->hasPhysicalProfile($objectif)
-            ? $this->objectifCalculator->calculateNutritionTargets($objectif)
-            : [];
         $sexeOptions = $this->objectifCalculator->getSexeOptions();
-        $activiteDisplayLabel = !empty($objectif)
-            ? $this->objectifCalculator->getActiviteLabel($objectif)
-            : '-';
         $activiteInputOptions = $this->objectifCalculator->getActiviteSelectOptions();
         $objectifTypeOptions = $this->objectifCalculator->getObjectifTypeOptions();
         unset($_SESSION['objectif_debug']);
 
         require __DIR__ . '/../views/front/objectif/index.php';
+    }
+
+    public function jour()
+    {
+        $planContext = $this->getPlanContext();
+        $activePlan = $planContext['activePlan'];
+        $planRows = $planContext['planRows'];
+        $planStartDate = $planContext['planStartDate'];
+        $todayObjectif = $planContext['todayObjectif'];
+        $planStartObjectif = $planContext['planStartObjectif'];
+        $canModifyPlanToday = $planContext['canModifyPlanToday'];
+
+        if (empty($planRows)) {
+            $_SESSION['objectif_error'] = ["Aucun plan nutritionnel n'est disponible pour le moment."];
+            header("Location: index.php?controller=objectif&action=index");
+            exit;
+        }
+
+        $selectedDay = $this->resolveRequestedPlanDay(
+            $_GET['day'] ?? null,
+            $todayObjectif,
+            count($planRows)
+        );
+
+        if ($selectedDay === null || empty($planRows[$selectedDay - 1])) {
+            $_SESSION['objectif_error'] = ["Le jour demande n'appartient pas au dernier plan nutritionnel."];
+            header("Location: index.php?controller=objectif&action=index");
+            exit;
+        }
+
+        $objectif = $this->prepareStoredObjectif($planRows[$selectedDay - 1], $planStartDate);
+
+        if (empty($objectif)) {
+            $_SESSION['objectif_error'] = ["Impossible de charger le detail de ce jour."];
+            header("Location: index.php?controller=objectif&action=index");
+            exit;
+        }
+
+        $objectifDate = $this->normalizeDateValue($objectif['date_creation'] ?? null) ?? date('Y-m-d');
+        $totalForDay = $this->suiviModel->getTotalByDate($objectifDate);
+        $dayMacros = $this->suiviModel->getMacrosByDate($objectifDate);
+        $objectifSummary = $this->hasPhysicalProfile($objectif)
+            ? $this->objectifCalculator->calculateNutritionTargets($objectif)
+            : [];
+        $sexeOptions = $this->objectifCalculator->getSexeOptions();
+        $activiteDisplayLabel = $this->objectifCalculator->getActiviteLabel($objectif);
+        $objectifTypeOptions = $this->objectifCalculator->getObjectifTypeOptions();
+        $isSelectedDayToday = $objectifDate === date('Y-m-d');
+
+        require __DIR__ . '/../views/front/objectif/jour.php';
     }
 
     public function store()
@@ -216,6 +257,53 @@ class objectifctrl
 
         header("Location: index.php?controller=objectif&action=index");
         exit;
+    }
+
+    private function getPlanContext()
+    {
+        $activePlan = $this->objectifModel->getActivePlanStatus();
+        $planRows = $this->objectifModel->getLatestPlanRows();
+        $planStartDate = $activePlan['start_date'] ?? (!empty($planRows[0]['date_creation']) ? (string) $planRows[0]['date_creation'] : null);
+        $todayObjectif = $this->prepareStoredObjectif($this->objectifModel->getObjectifDuJour(), $planStartDate);
+        $planStartObjectif = !empty($planRows[0]) ? $this->prepareStoredObjectif($planRows[0], $planStartDate) : null;
+
+        return [
+            'activePlan' => $activePlan,
+            'planRows' => $planRows,
+            'planStartDate' => $planStartDate,
+            'todayObjectif' => $todayObjectif,
+            'planStartObjectif' => $planStartObjectif,
+            'canModifyPlanToday' => !empty($activePlan['can_modify_today']) && !empty($planStartObjectif),
+        ];
+    }
+
+    private function resolveRequestedPlanDay($requestedDay, $todayObjectif, $planRowCount)
+    {
+        $day = null;
+
+        if ($requestedDay !== null && $requestedDay !== '') {
+            $validatedDay = filter_var($requestedDay, FILTER_VALIDATE_INT);
+
+            if ($validatedDay === false) {
+                return null;
+            }
+
+            $day = (int) $validatedDay;
+        } elseif (
+            is_array($todayObjectif) &&
+            array_key_exists('plan_day_index', $todayObjectif) &&
+            $todayObjectif['plan_day_index'] !== null
+        ) {
+            $day = (int) $todayObjectif['plan_day_index'] + 1;
+        } else {
+            $day = 1;
+        }
+
+        if ($day < 1 || $day > (int) $planRowCount) {
+            return null;
+        }
+
+        return $day;
     }
 
     private function validateObjectifInput($data)

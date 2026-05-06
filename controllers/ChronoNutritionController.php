@@ -21,31 +21,37 @@ class ChronoNutritionController {
 
     public function chrono_profile_get() {
         $userId = $_SESSION['user_id'] ?? 1;
-        echo json_encode($this->model->getProfile($userId));
+        $this->respondJson($this->model->getProfile($userId));
     }
 
     public function chrono_profile_save() {
         $userId = $_SESSION['user_id'] ?? 1;
         $data = json_decode(file_get_contents('php://input'), true);
-        echo json_encode($this->model->saveProfile($userId, $data));
+        $this->respondJson($this->model->saveProfile($userId, is_array($data) ? $data : []));
     }
 
     public function chrono_optimal_timing() {
         $userId = $_SESSION['user_id'] ?? 1;
-        echo json_encode($this->service->getOptimalTiming($userId));
+        $this->respondJson($this->service->getOptimalTiming($userId));
     }
 
     public function chrono_fasting_window() {
         $userId = $_SESSION['user_id'] ?? 1;
-        echo json_encode($this->service->getFastingWindow($userId));
+        $this->respondJson($this->service->getFastingWindow($userId));
     }
 
     public function chrono_nutrient_timing() {
-        echo json_encode($this->service->getNutrientTiming());
+        $this->respondJson($this->service->getNutrientTiming());
     }
 
     public function chrono_sleep_sync() {
+        $userId = $_SESSION['user_id'] ?? 1;
         $data = json_decode(file_get_contents('php://input'), true);
-        echo json_encode($this->service->sleepSync($data));
+        $this->respondJson($this->service->sleepSync($userId, is_array($data) ? $data : []));
+    }
+
+    private function respondJson(array $payload): void {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode($payload);
     }
 }

@@ -7,6 +7,54 @@
     <title>Objectif Nutritionnel</title>
     <link rel="stylesheet" href="views/front/assets/css/style.css">
     <style>
+        .objectif-page .container {
+            width: min(1360px, calc(100vw - 48px));
+            max-width: 1360px;
+        }
+
+        .objectif-shell {
+            padding: 28px 0 56px;
+        }
+
+        .objectif-page-header {
+            margin-bottom: 28px;
+        }
+
+        .objectif-page-header h1 {
+            margin-bottom: 10px;
+        }
+
+        .objectif-section {
+            margin-top: 28px;
+        }
+
+        .objectif-section-head {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .objectif-section-kicker {
+            margin: 0 0 8px;
+            color: #2ecc71;
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .objectif-section-head h2 {
+            margin: 0;
+        }
+
+        .objectif-section-head .muted {
+            margin: 8px 0 0;
+            max-width: 760px;
+        }
+
         .progress-bar {
             width: 100%;
             height: 10px;
@@ -57,7 +105,7 @@
         .objectif-form-grid,
         .objectif-stats-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 16px;
         }
 
@@ -195,6 +243,7 @@
             justify-content: center;
             gap: 12px;
             flex-wrap: wrap;
+            grid-column: 1 / -1;
         }
 
         .stats-link-wrap .btn,
@@ -212,7 +261,7 @@
         }
 
         .plan-card {
-            margin-top: 24px;
+            margin-top: 0;
         }
 
         .plan-card h2 {
@@ -225,7 +274,8 @@
 
         .plan-list {
             display: grid;
-            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
             margin-top: 18px;
         }
 
@@ -238,7 +288,21 @@
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease, opacity 0.2s ease, transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .plan-day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+            border-color: rgba(52, 152, 219, 0.36);
+        }
+
+        .plan-day:focus-visible {
+            outline: 2px solid rgba(46, 204, 113, 0.7);
+            outline-offset: 2px;
         }
 
         .plan-day__meta {
@@ -253,6 +317,11 @@
         .plan-day__date {
             font-size: 0.92rem;
             color: rgba(236, 240, 241, 0.72);
+        }
+
+        .plan-day__hint {
+            font-size: 0.8rem;
+            color: rgba(236, 240, 241, 0.62);
         }
 
         .plan-day__value {
@@ -270,7 +339,7 @@
         .plan-day.is-today {
             background: rgba(46, 204, 113, 0.12);
             border-color: rgba(46, 204, 113, 0.45);
-            box-shadow: 0 0 0 1px rgba(46, 204, 113, 0.12);
+            box-shadow: 0 0 0 1px rgba(46, 204, 113, 0.12), 0 18px 30px rgba(46, 204, 113, 0.12);
         }
 
         .plan-day.is-future {
@@ -325,6 +394,45 @@
 
         body.theme-light .plan-day__badge.is-future {
             color: #1d4ed8;
+        }
+
+        .objectif-chrono-entry {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 16px;
+            background: rgba(52, 152, 219, 0.08);
+            border: 1px solid rgba(52, 152, 219, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .objectif-chrono-entry__content {
+            max-width: 720px;
+        }
+
+        .objectif-chrono-entry__title {
+            margin: 0 0 8px;
+            font-size: 1.05rem;
+        }
+
+        .objectif-chrono-entry__text {
+            margin: 0;
+            color: rgba(236, 240, 241, 0.78);
+            line-height: 1.55;
+        }
+
+        .objectif-chrono-entry__action {
+            width: auto;
+            margin-top: 0;
+            padding: 10px 16px;
+            white-space: nowrap;
+        }
+
+        body.theme-light .objectif-chrono-entry__text {
+            color: #475569;
         }
 
         .macro-list {
@@ -402,11 +510,58 @@
             font-weight: 700;
         }
 
+        .objectif-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+
+        .objectif-detail-card {
+            margin-top: 0 !important;
+        }
+
+        .objectif-detail-card--wide {
+            grid-column: 1 / -1;
+        }
+
+        .objectif-day-anchor {
+            scroll-margin-top: 92px;
+        }
+
+        .objectif-focus-flash {
+            animation: objectifFlash 1.1s ease;
+        }
+
+        @keyframes objectifFlash {
+            0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+            30% { box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.24); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+        }
+
+        body.theme-light .plan-day__hint {
+            color: #64748b;
+        }
+
         @media (max-width: 768px) {
             .objectif-form-grid,
             .objectif-stats-grid,
-            .summary-grid {
+            .summary-grid,
+            .plan-list,
+            .objectif-detail-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .objectif-page .container {
+                width: min(100%, calc(100vw - 28px));
+            }
+
+            .objectif-section-head {
+                align-items: flex-start;
+            }
+
+            .objectif-chrono-entry {
+                align-items: flex-start;
             }
 
             .metric-tooltip__bubble {
@@ -456,32 +611,15 @@
         ? (string) $lastPlanRow['date_creation']
         : null;
 
-    if (!function_exists('getProgressClass')) {
-        function getProgressClass($current, $target)
-        {
-            if ((float) $target === 0.0) {
-                return '';
-            }
-
-            $ratio = $current / $target;
-
-            if ($ratio <= 0.8) {
-                return 'progress-ok';
-            }
-
-            if ($ratio <= 1) {
-                return 'progress-warning';
-            }
-
-            return 'progress-over';
-        }
-    }
     ?>
 
-    <div class="main-content">
+    <div class="main-content objectif-page">
         <div class="container">
-            <h1>Objectif Nutritionnel</h1>
-            <p class="subtitle">Definis ton profil physique et laisse l'application calculer automatiquement tes calories.</p>
+            <div class="objectif-shell">
+            <div class="objectif-page-header">
+                <h1>Objectif Nutritionnel</h1>
+                <p class="subtitle">Definis ton profil physique, visualise ton plan calorique sur 7 jours et accede rapidement au detail du jour.</p>
+            </div>
 
             <?php if (!empty($_SESSION['objectif_success'])): ?>
                 <div class="success-message">
@@ -516,6 +654,14 @@
                     <?= htmlspecialchars((string) $objectifMessage) ?>
                 </div>
             <?php endif; ?>
+
+            <section class="objectif-section">
+                <div class="objectif-section-head">
+                    <div>
+                        <h2>Objectif nutritionnel et profil</h2>
+                        <p class="muted">Renseigne tes parametres et genere ton plan calorique hebdomadaire.</p>
+                    </div>
+                </div>
 
             <div class="card">
                 <form method="POST" action="index.php?controller=objectif&action=store" novalidate>
@@ -589,10 +735,18 @@
                     </button>
                 </form>
             </div>
+            </section>
 
             <?php if (!empty($planRows)): ?>
+                <section class="objectif-section">
+                    <div class="objectif-section-head">
+                        <div>
+                            <h2>Plan calorique sur 7 jours</h2>
+                            <p class="muted">Le jour en cours est mis en avant. Clique sur une carte pour rejoindre le detail du jour.</p>
+                        </div>
+                    </div>
+
                 <div class="card plan-card">
-                    <h2>Plan calorique sur 7 jours</h2>
                     <p class="muted">
                         Vue complete du dernier plan enregistre, du <?= htmlspecialchars((string) date('d/m/Y', strtotime((string) ($activePlan['start_date'] ?? $planRangeStart ?? 'now')))) ?>
                         au <?= htmlspecialchars((string) date('d/m/Y', strtotime((string) ($activePlan['end_date'] ?? $planRangeEnd ?? 'now')))) ?>.
@@ -615,10 +769,11 @@
                                 $planStateLabel = 'A venir';
                             }
                             ?>
-                            <div class="plan-day is-<?= htmlspecialchars((string) $planState) ?>">
+                            <a href="index.php?controller=objectif&action=jour&day=<?= urlencode((string) ($planIndex + 1)) ?>" class="plan-day is-<?= htmlspecialchars((string) $planState) ?>">
                                 <div class="plan-day__meta">
                                     <span class="plan-day__label">Jour <?= htmlspecialchars((string) ($planIndex + 1)) ?></span>
                                     <span class="plan-day__date"><?= htmlspecialchars((string) date('d/m/Y', strtotime($planDate))) ?></span>
+                                    <span class="plan-day__hint">Voir le detail du jour</span>
                                 </div>
 
                                 <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end;">
@@ -627,218 +782,26 @@
                                     </span>
                                     <span class="plan-day__value"><?= htmlspecialchars((string) round((float) ($planRow['calories_cible'] ?? 0))) ?> kcal</span>
                                 </div>
-                            </div>
+                            </a>
                         <?php endforeach; ?>
                     </div>
+
+                    <div class="objectif-chrono-entry">
+                        <div class="objectif-chrono-entry__content">
+                            <h3 class="objectif-chrono-entry__title">Chrono-Nutrition</h3>
+                            <p class="objectif-chrono-entry__text">
+                                Ajuste tes horaires de repas selon ton rythme de sommeil, ton energie et ton activite.
+                            </p>
+                        </div>
+
+                        <a href="index.php?action=chrono_nutrition" class="btn btn-secondary objectif-chrono-entry__action">
+                            Optimiser mes horaires
+                        </a>
+                    </div>
                 </div>
+                </section>
             <?php endif; ?>
-
-            <?php if (!empty($objectif)): ?>
-                <?php
-                $caloriesCible = (float) ($objectif['calories_cible'] ?? 0);
-                $proteinesObjectif = (float) ($objectif['proteines'] ?? 0);
-                $glucidesObjectif = (float) ($objectif['glucides'] ?? 0);
-                $lipidesObjectif = (float) ($objectif['lipides'] ?? 0);
-
-                $proteinesConsommees = (float) ($todayMacros['proteines'] ?? 0);
-                $glucidesConsommes = (float) ($todayMacros['glucides'] ?? 0);
-                $lipidesConsommes = (float) ($todayMacros['lipides'] ?? 0);
-
-                $remaining = round($caloriesCible - $total_today);
-                $ratio = $caloriesCible > 0 ? $total_today / $caloriesCible : 0;
-                $progress = min($ratio * 100, 100);
-
-                if ($ratio < 0.8) {
-                    $status = "En dessous";
-                    $color = "#3498db";
-                } elseif ($ratio <= 1) {
-                    $status = "Parfait";
-                    $color = "#2ecc71";
-                } elseif ($ratio <= 1.2) {
-                    $status = "Attention";
-                    $color = "#f39c12";
-                } else {
-                    $status = "Depasse";
-                    $color = "#e74c3c";
-                }
-
-                $macroRows = [
-                    [
-                        'label' => 'Proteines',
-                        'consumed' => $proteinesConsommees,
-                        'target' => $proteinesObjectif,
-                    ],
-                    [
-                        'label' => 'Glucides',
-                        'consumed' => $glucidesConsommes,
-                        'target' => $glucidesObjectif,
-                    ],
-                    [
-                        'label' => 'Lipides',
-                        'consumed' => $lipidesConsommes,
-                        'target' => $lipidesObjectif,
-                    ],
-                ];
-                ?>
-
-                <div class="card" style="margin-top: 24px;">
-                    <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;">
-                        <div>
-                            <h2 style="margin:0 0 8px;">Objectif du jour</h2>
-                            <?php if (!empty($objectif['date_creation'])): ?>
-                                <p class="muted" style="margin:0;">Date de l'objectif : <?= htmlspecialchars((string) $objectif['date_creation']) ?></p>
-                            <?php endif; ?>
-                        </div>
-
-                        <?php if (!empty($todayObjectif) && (int) ($todayObjectif['id'] ?? 0) === (int) ($objectif['id'] ?? 0)): ?>
-                            <span class="objectif-chip">Objectif du jour</span>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <small>Calories cible</small>
-                            <strong><?= round($caloriesCible) ?> kcal</strong>
-                        </div>
-                        <div class="summary-item">
-                            <small>Type d'objectif</small>
-                            <strong><?= htmlspecialchars((string) ($objectifTypeOptions[$objectif['objectif_type'] ?? 'maintien'] ?? 'Maintien')) ?></strong>
-                        </div>
-                        <div class="summary-item">
-                            <small>Activite</small>
-                            <strong><?= htmlspecialchars((string) ($activiteDisplayLabel ?? '-')) ?></strong>
-                        </div>
-                    </div>
-
-                    <?php if (!empty($objectifSummary)): ?>
-                        <div class="objectif-stats-grid">
-                            <div class="summary-item">
-                                <small>Profil</small>
-                                <strong>
-                                    <?= htmlspecialchars(number_format((float) ($objectif['poids'] ?? 0), 1, '.', ' ')) ?> kg
-                                    /
-                                    <?= htmlspecialchars(number_format((float) ($objectif['taille'] ?? 0), 0, '.', ' ')) ?> cm
-                                    /
-                                    <?= htmlspecialchars((string) ($objectif['age'] ?? '-')) ?> ans
-                                </strong>
-                                <div class="muted" style="margin-top:8px;">
-                                    <?= htmlspecialchars((string) ($sexeOptions[$objectif['sexe'] ?? ''] ?? '-')) ?>
-                                </div>
-                            </div>
-
-                            <div class="summary-item">
-                                <small>
-                                    <span class="metric-tooltip">
-                                        BMR
-                                        <span class="metric-tooltip__icon" aria-hidden="true">?</span>
-                                        <span class="metric-tooltip__bubble">Calories br&ucirc;l&eacute;es au repos (m&eacute;tabolisme de base)</span>
-                                    </span>
-                                </small>
-                                <strong><?= htmlspecialchars((string) ($objectifSummary['bmr'] ?? round($caloriesCible))) ?> kcal</strong>
-                            </div>
-
-                            <div class="summary-item">
-                                <small>
-                                    <span class="metric-tooltip">
-                                        TDEE
-                                        <span class="metric-tooltip__icon" aria-hidden="true">?</span>
-                                        <span class="metric-tooltip__bubble">Calories totales d&eacute;pens&eacute;es par jour (incluant l&apos;activit&eacute; physique)</span>
-                                    </span>
-                                </small>
-                                <strong><?= htmlspecialchars((string) ($objectifSummary['tdee'] ?? round($caloriesCible))) ?> kcal</strong>
-                                <?php if (isset($objectifSummary['activity_factor'])): ?>
-                                    <div class="muted" style="margin-top:8px;">Facteur activite x<?= htmlspecialchars((string) $objectifSummary['activity_factor']) ?></div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                        <div class="objectif-note" style="margin-top: 18px;">
-                            Cet objectif ne contient pas encore toutes les donnees physiques necessaires au calcul automatique. Mets-le a jour pour profiter du nouveau systeme complet.
-                        </div>
-                    <?php endif; ?>
-
-                    <p><strong>Proteines :</strong> <?= round($proteinesObjectif) ?> g</p>
-                    <p><strong>Glucides :</strong> <?= round($glucidesObjectif) ?> g</p>
-                    <p><strong>Lipides :</strong> <?= round($lipidesObjectif) ?> g</p>
-
-                    <div class="objectif-actions">
-                        <?php if (!empty($canModifyPlanToday) && !empty($planStartObjectif['id'])): ?>
-                            <a href="index.php?controller=objectif&action=edit&id=<?= urlencode((string) $planStartObjectif['id']) ?>" class="btn btn-secondary">
-                                Modifier le plan
-                            </a>
-                        <?php endif; ?>
-                        <?php if (empty($activePlan['is_locked'])): ?>
-                            <a href="index.php?controller=objectif&action=delete&id=<?= urlencode((string) $objectif['id']) ?>" class="btn btn-secondary" onclick="return confirm('Supprimer cet objectif ?');">
-                                Supprimer
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <div class="card" style="margin-top: 20px;">
-                    <h2>Comparaison quotidienne</h2>
-                    <p><strong>Consomme aujourd'hui :</strong> <?= round($total_today) ?> kcal</p>
-                    <p><strong>Restant :</strong> <?= $remaining ?> kcal</p>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: <?= round($progress, 2) ?>%; background: <?= htmlspecialchars((string) $color) ?>;"></div>
-                    </div>
-                    <p style="color: <?= htmlspecialchars((string) $color) ?>; margin-top: 12px;">
-                        <?= htmlspecialchars((string) $status) ?>
-                    </p>
-                </div>
-
-                <div class="card" style="margin-top: 20px;">
-                    <h2>Comparaison des macronutriments</h2>
-                    <div class="macro-list">
-                        <?php foreach ($macroRows as $macroRow): ?>
-                            <?php
-                            $macroTarget = (float) $macroRow['target'];
-                            $macroConsumed = (float) $macroRow['consumed'];
-                            $macroRatio = $macroTarget > 0 ? $macroConsumed / $macroTarget : 0;
-                            $macroProgress = min($macroRatio * 100, 100);
-                            $macroPercent = $macroTarget > 0 ? round($macroRatio * 100) : 0;
-                            $macroClass = getProgressClass($macroConsumed, $macroTarget);
-
-                            if ($macroRatio <= 0.8) {
-                                $macroColor = '#2ecc71';
-                                $macroStatus = 'Bonne marge';
-                            } elseif ($macroRatio <= 1) {
-                                $macroColor = '#f1c40f';
-                                $macroStatus = 'Proche de la cible';
-                            } else {
-                                $macroColor = '#e74c3c';
-                                $macroStatus = 'Objectif depasse';
-                            }
-                            ?>
-                            <div class="macro-row">
-                                <div class="macro-head">
-                                    <span class="macro-name"><?= htmlspecialchars((string) $macroRow['label']) ?></span>
-                                    <span class="macro-values">
-                                        <?= round($macroConsumed, 1) ?> g / <?= round($macroTarget, 1) ?> g
-                                        <span class="macro-percent">- <?= $macroPercent ?>%</span>
-                                    </span>
-                                </div>
-                                <div class="macro-bar">
-                                    <div class="macro-fill <?= htmlspecialchars((string) $macroClass) ?>" style="width: <?= round($macroProgress, 2) ?>%;"></div>
-                                </div>
-                                <div class="macro-status" style="color: <?= htmlspecialchars((string) $macroColor) ?>;">
-                                    <?= htmlspecialchars((string) $macroStatus) ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="stats-link-wrap">
-                    <a href="index.php?controller=stats&action=index" class="btn btn-primary">
-                        Voir statistiques
-                    </a>
-
-                    <a href="index.php?controller=suivi&action=sendReport" class="btn btn-secondary">
-                        Envoyer rapport hebdomadaire
-                    </a>
-                </div>
-            <?php endif; ?>
+            </div>
         </div>
     </div>
 

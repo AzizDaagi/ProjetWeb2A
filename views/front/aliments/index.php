@@ -450,6 +450,79 @@
             display: block;
         }
 
+        .hydration-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .hydration-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 14px;
+        }
+
+        .hydration-stat {
+            min-width: 150px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(52, 152, 219, 0.08);
+            border: 1px solid rgba(52, 152, 219, 0.16);
+        }
+
+        body.theme-light .hydration-stat {
+            background: rgba(59, 130, 246, 0.08);
+            border-color: rgba(59, 130, 246, 0.14);
+        }
+
+        .hydration-stat-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgba(236, 240, 241, 0.7);
+        }
+
+        body.theme-light .hydration-stat-label {
+            color: #64748b;
+        }
+
+        .hydration-stat-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #38bdf8;
+        }
+
+        .hydration-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .hydration-feedback {
+            margin-top: 14px;
+            min-height: 22px;
+            color: rgba(236, 240, 241, 0.76);
+            font-size: 0.92rem;
+        }
+
+        body.theme-light .hydration-feedback {
+            color: #64748b;
+        }
+
+        .hydration-feedback.is-error {
+            color: #dc2626;
+        }
+
+        .hydration-feedback.is-success {
+            color: #16a34a;
+        }
+
         .meal-total-value {
             font-size: 1.4rem;
             font-weight: 800;
@@ -566,8 +639,13 @@
                 grid-template-columns: 1fr;
             }
 
+            .hydration-card,
             .meal-hydration-card {
                 grid-template-columns: 1fr;
+            }
+
+            .hydration-actions {
+                justify-content: flex-start;
             }
         }
     </style>
@@ -921,39 +999,45 @@
                     </div>
 
                     <form method="POST" action="index.php?controller=suivi&action=validateMeal" class="meal-validate-form" id="validateMealForm">
-                        <div class="meal-hydration-card">
-                            <div>
-                                <strong>Hydratation avec ce repas</strong>
-                                <p class="meal-helper">Indiquez l'eau bue avec ce repas avant de le valider.</p>
-                            </div>
-                            <div class="form-group">
-                                <label for="eau_ml">Eau bue avec ce repas</label>
-                                <select id="eau_ml" name="eau_ml">
-                                    <option value="0">Aucune</option>
-                                    <option value="250">1 verre - 250 ml</option>
-                                    <option value="500">2 verres - 500 ml</option>
-                                    <option value="750">3 verres - 750 ml</option>
-                                    <option value="1000">1 litre</option>
-                                </select>
-                            </div>
-                        </div>
-
                         <div class="top-actions">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fa-solid fa-check"></i> Valider le repas
                             </button>
                         </div>
                     </form>
-                        <form method="POST" action="index.php?controller=suivi&action=cancelMeal" class="inline-form">
-                            <button type="submit" class="btn btn-secondary">
-                                <i class="fa-solid fa-xmark"></i> Annuler
-                            </button>
-                        </form>
-                    </div>
+                    <form method="POST" action="index.php?controller=suivi&action=cancelMeal" class="inline-form">
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fa-solid fa-xmark"></i> Annuler
+                        </button>
+                    </form>
                 </div>
             <?php endif; ?>
 
             <?php if (empty($isAddMode)): ?>
+                <div class="glass-card" id="hydrationCard">
+                    <div class="hydration-card">
+                        <div>
+                            <h3 class="section-title" style="margin-bottom: 0;"><i class="fa-solid fa-glass-water"></i> Hydratation du jour</h3>
+                            <p class="meal-helper">Ajoute ton eau separement pour suivre l'hydratation sans melanger les aliments.</p>
+                            <div class="hydration-stats">
+                                <div class="hydration-stat">
+                                    <span class="hydration-stat-label">Progression</span>
+                                    <span class="hydration-stat-value" id="hydrationTotalMl"><?= (int) ($todayWater['total_ml'] ?? 0) ?> / 2000 ml</span>
+                                </div>
+                                <div class="hydration-stat">
+                                    <span class="hydration-stat-label">Nombre de verres</span>
+                                    <span class="hydration-stat-value" id="hydrationGlasses"><?= htmlspecialchars(rtrim(rtrim(number_format((float) ($todayWater['glasses'] ?? 0), 1, '.', ''), '0'), '.')) ?></span>
+                                </div>
+                            </div>
+                            <div class="hydration-feedback" id="hydrationFeedback">Chaque clic ajoute une consommation d'eau independante dans l'historique.</div>
+                        </div>
+                        <div class="hydration-actions">
+                            <button type="button" class="btn btn-secondary" data-water-add="500">+ 500 ml</button>
+                            <button type="button" class="btn btn-primary" data-water-add="250">+ 1 verre</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="glass-card">
                     <h3 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Historique</h3>
 
@@ -1057,6 +1141,10 @@
         const historyPeriodSelect = document.getElementById('history_period');
         const historyStartDateInput = document.getElementById('history_start_date');
         const historyEndDateInput = document.getElementById('history_end_date');
+        const hydrationTotalMl = document.getElementById('hydrationTotalMl');
+        const hydrationGlasses = document.getElementById('hydrationGlasses');
+        const hydrationFeedback = document.getElementById('hydrationFeedback');
+        const hydrationButtons = document.querySelectorAll('[data-water-add]');
         const macroConfig = {
             proteine: { key: 'proteines', label: 'prot' },
             glucide: { key: 'glucides', label: 'gluc' },
@@ -1066,6 +1154,11 @@
         let activeSearchToken = 0;
 
         function formatNumber(value) {
+            const number = Number(value ?? 0);
+            return Number.isFinite(number) ? number.toFixed(1).replace(/\.0$/, '') : '0';
+        }
+
+        function formatGlassCount(value) {
             const number = Number(value ?? 0);
             return Number.isFinite(number) ? number.toFixed(1).replace(/\.0$/, '') : '0';
         }
@@ -1256,6 +1349,132 @@
 
             historyPeriodSelect.addEventListener('change', syncHistoryDateInputs);
             syncHistoryDateInputs();
+        }
+
+        function setHydrationFeedback(message, type) {
+            if (!hydrationFeedback) {
+                return;
+            }
+
+            hydrationFeedback.textContent = message;
+            hydrationFeedback.classList.remove('is-error', 'is-success');
+
+            if (type) {
+                hydrationFeedback.classList.add(type);
+            }
+        }
+
+        function updateDashboardHydration(data) {
+            const dashboardAmount = document.getElementById('nutritionHydrationAmount');
+            const dashboardGlasses = document.getElementById('nutritionHydrationGlasses');
+            const dashboardProgressBar = document.getElementById('nutritionHydrationProgressBar');
+            const dashboardProgressText = document.getElementById('nutritionHydrationProgressText');
+
+            if (dashboardAmount) {
+                dashboardAmount.textContent = String(data.total_ml || 0) + ' / ' + String(data.target_ml || 2000) + ' ml';
+            }
+
+            if (dashboardGlasses) {
+                const glassesValue = formatGlassCount(data.glasses || 0);
+                dashboardGlasses.textContent = glassesValue + ' ' + (Number(data.glasses || 0) > 1 ? 'verres' : 'verre');
+            }
+
+            if (dashboardProgressBar) {
+                dashboardProgressBar.style.width = String(data.progress || 0) + '%';
+            }
+
+            if (dashboardProgressText) {
+                dashboardProgressText.textContent = String(data.progress || 0) + '%';
+            }
+        }
+
+        function renderHydration(data) {
+            if (!hydrationTotalMl || !hydrationGlasses) {
+                return;
+            }
+
+            const totalMl = Number(data && data.total_ml ? data.total_ml : 0);
+            const targetMl = Number(data && data.target_ml ? data.target_ml : 2000);
+            const glassesValue = Number(data && data.glasses ? data.glasses : 0);
+
+            hydrationTotalMl.textContent = totalMl + ' / ' + targetMl + ' ml';
+            hydrationGlasses.textContent = formatGlassCount(glassesValue);
+            updateDashboardHydration({
+                total_ml: totalMl,
+                target_ml: targetMl,
+                glasses: glassesValue,
+                progress: Number(data && data.progress ? data.progress : 0)
+            });
+        }
+
+        function refreshHydration() {
+            if (!hydrationTotalMl) {
+                return Promise.resolve();
+            }
+
+            return fetch('index.php?action=nutrition_water_today')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (payload) {
+                    if (!payload || payload.error) {
+                        throw new Error(payload && payload.error ? payload.error : 'Impossible de charger l hydratation.');
+                    }
+
+                    renderHydration(payload.data || {});
+                    return payload.data || {};
+                })
+                .catch(function (error) {
+                    setHydrationFeedback(error.message || 'Impossible de charger l hydratation.', 'is-error');
+                });
+        }
+
+        function addWater(amountMl) {
+            if (!hydrationButtons.length) {
+                return;
+            }
+
+            hydrationButtons.forEach(function (button) {
+                button.disabled = true;
+            });
+            setHydrationFeedback('Ajout de l hydratation...', '');
+
+            fetch('index.php?action=nutrition_water_add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                },
+                body: 'amount_ml=' + encodeURIComponent(String(amountMl))
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (payload) {
+                    if (!payload || payload.error) {
+                        throw new Error(payload && payload.error ? payload.error : 'Impossible d ajouter l hydratation.');
+                    }
+
+                    renderHydration(payload.data || {});
+                    setHydrationFeedback('Hydratation ajoutee avec succes.', 'is-success');
+                })
+                .catch(function (error) {
+                    setHydrationFeedback(error.message || 'Impossible d ajouter l hydratation.', 'is-error');
+                })
+                .finally(function () {
+                    hydrationButtons.forEach(function (button) {
+                        button.disabled = false;
+                    });
+                });
+        }
+
+        if (hydrationButtons.length) {
+            hydrationButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    addWater(Number(this.dataset.waterAdd || 250));
+                });
+            });
+
+            refreshHydration();
         }
     </script>
     <?php require __DIR__ . '/../partials/chatbot_widget.php'; ?>

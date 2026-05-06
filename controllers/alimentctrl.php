@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../models/aliment.php';
 require_once __DIR__ . '/../models/ReportMailer.php';
 require_once __DIR__ . '/../models/suivi.php';
+require_once __DIR__ . '/../services/UsdaNutritionService.php';
 
 class alimentctrl
 {
@@ -10,6 +11,7 @@ class alimentctrl
     private $alimentModel;
     private $reportMailer;
     private $suiviModel;
+    private $usdaNutritionService;
     private $allowedTypes = ['proteine', 'glucide', 'lipide'];
     private $allowedUnits = ['g', 'piece'];
 
@@ -18,6 +20,7 @@ class alimentctrl
         $this->alimentModel = new Aliment($pdo);
         $this->reportMailer = new ReportMailer();
         $this->suiviModel = new Suivi($pdo);
+        $this->usdaNutritionService = new UsdaNutritionService();
     }
 
     public function index()
@@ -80,6 +83,7 @@ class alimentctrl
         $mealTotal = $this->calculateMealTotal($mealItems);
         $hasMealDateConflict = $isAddMode && !empty($mealItems) && $mealDate !== null && $mealDate !== $selectedDate;
         $showMealSection = $isMainTrackingPage && !empty($mealItems);
+        $todayWater = $this->suiviModel->getTodayWater();
 
         require __DIR__ . '/../views/front/aliments/index.php';
     }
@@ -149,7 +153,6 @@ class alimentctrl
     {
         $mealItems = $this->getMealItemsFromSession();
         $mealDate = $this->getMealDateFromSession();
-        $eauMl = max(0, (int) ($_POST['eau_ml'] ?? 0));
 
         if (empty($mealItems) || $mealDate === null) {
             $_SESSION['aliment_error'] = ["Aucun repas en attente a valider."];
@@ -157,7 +160,7 @@ class alimentctrl
             exit;
         }
 
-        if (!$this->suiviModel->validerRepas($mealItems, $mealDate, $eauMl)) {
+        if (!$this->suiviModel->validerRepas($mealItems, $mealDate)) {
             $_SESSION['aliment_error'] = [
                 $this->suiviModel->getLastError() ?: "Impossible d'enregistrer ce repas pour le moment."
             ];
@@ -169,6 +172,30 @@ class alimentctrl
 
         header("Location: index.php?controller=suivi&action=index&mode=detail&date=" . urlencode($mealDate));
         exit;
+    }
+
+    public function nutrition_water_today()
+    {
+        $this->successJson($this->suiviModel->getTodayWater());
+    }
+
+    public function nutrition_water_add()
+    {
+        if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+            $this->errorJson("Methode non autorisee.", 405);
+        }
+
+        $amountMl = $this->resolveWaterAmount($_POST['amount_ml'] ?? 250);
+
+        if ($amountMl === null) {
+            $this->errorJson("Quantite d'eau invalide.");
+        }
+
+        if (!$this->suiviModel->addWater($amountMl)) {
+            $this->errorJson($this->suiviModel->getLastError() ?: "Impossible d'ajouter cette hydratation pour le moment.", 500);
+        }
+
+        $this->successJson($this->suiviModel->getTodayWater());
     }
 
     public function cancelMeal()
@@ -240,6 +267,39 @@ class alimentctrl
 
         header("Location: index.php");
         exit;
+    }
+
+    public function nutrition_usda_lookup()
+    {
+        if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
+            $this->errorJson("Methode non autorisee.", 405);
+        }
+
+        $rawBody = file_get_contents('php://input');
+        $payload = json_decode($rawBody ?: '{}', true);
+
+        if (!is_array($payload)) {
+            $this->errorJson("Requete JSON invalide.");
+        }
+
+        $query = trim((string) ($payload['query'] ?? ''));
+
+        if ($query === '') {
+            $this->errorJson("La recherche est obligatoire.");
+        }
+
+        $result = $this->usdaNutritionService->lookup($query);
+
+        if ($result['error'] !== null) {
+            $this->errorJson((string) $result['error'], 400);
+        }
+
+        $this->successJson($result['data']);
+    }
+
+    public function usdaNutritionLookup()
+    {
+        $this->nutrition_usda_lookup();
     }
 
     public function delete()
@@ -334,7 +394,6 @@ class alimentctrl
         $errors = [];
         $alimentId = $data['aliment_id'] ?? null;
         $quantite = $data['quantite'] ?? null;
-        $eauMl = $data['eau_ml'] ?? 0;
         $type = $data['type'] ?? '';
         $date = trim($data['date_consommation'] ?? '');
 
@@ -348,10 +407,6 @@ class alimentctrl
 
         if (!in_array($type, $this->allowedTypes, true)) {
             $errors[] = "Type invalide.";
-        }
-
-        if (!is_numeric($eauMl) || (int) $eauMl < 0) {
-            $errors[] = "Quantite d'eau invalide.";
         }
 
         if (!$this->isValidTrackingDate($date)) {
@@ -529,6 +584,43 @@ class alimentctrl
 
         header("Location: index.php?controller=suivi&action=index");
 
+        exit;
+    }
+
+    private function resolveWaterAmount($amount)
+    {
+        if (!is_numeric($amount)) {
+            return null;
+        }
+
+        $amount = (int) $amount;
+
+        if ($amount <= 0 || $amount > 2000) {
+            return null;
+        }
+
+        return $amount;
+    }
+
+    private function successJson($data)
+    {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode([
+            'data' => $data,
+            'error' => null,
+            'cached' => false,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    private function errorJson($message, $statusCode = 400)
+    {
+        header('Content-Type: application/json; charset=UTF-8', true, (int) $statusCode);
+        echo json_encode([
+            'data' => null,
+            'error' => (string) $message,
+            'cached' => false,
+        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 }

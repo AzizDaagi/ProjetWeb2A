@@ -27,7 +27,6 @@ class Suivi
         $this->lastError = null;
         $alimentId = $data['aliment_id'] ?? null;
         $quantite = $data['quantite'] ?? 0;
-        $eauMl = max(0, (int) ($data['eau_ml'] ?? 0));
         $type = $data['type'] ?? null;
         $date = trim((string) ($data['date_consommation'] ?? date('Y-m-d')));
 
@@ -71,7 +70,6 @@ class Suivi
         return [
             'aliment_id' => (int) $alimentId,
             'quantite' => $quantite,
-            'eau_ml' => $eauMl,
             'calories' => $caloriesCalculees,
             'calories_calculees' => $caloriesCalculees,
             'type' => $type,
@@ -81,11 +79,10 @@ class Suivi
         ];
     }
 
-    public function validerRepas(array $items, $date, int $mealWaterMl = 0)
+    public function validerRepas(array $items, $date)
     {
         $this->lastError = null;
         $date = trim((string) $date);
-        $mealWaterMl = max(0, $mealWaterMl);
 
         if (empty($items)) {
             $this->lastError = "Aucun aliment n'a ete ajoute a ce repas.";
@@ -115,7 +112,6 @@ class Suivi
                 $mealItem = $this->prepareMealItem([
                     'aliment_id' => $item['aliment_id'] ?? null,
                     'quantite' => $item['quantite'] ?? 0,
-                    'eau_ml' => 0,
                     'type' => $item['type'] ?? null,
                     'date_consommation' => $date,
                 ]);
@@ -148,24 +144,6 @@ class Suivi
                 }
             }
 
-            if ($mealWaterMl > 0 && $hasWaterColumn) {
-                $waterStmt = $this->pdo->prepare($this->buildWaterInsertQuery($hasIsWaterColumn));
-                $waterParams = [
-                    $mealWaterMl,
-                    $date,
-                    $objectifId,
-                    $mealWaterMl,
-                ];
-
-                if ($hasIsWaterColumn) {
-                    $waterParams[] = 1;
-                }
-
-                if (!$waterStmt->execute($waterParams)) {
-                    throw new RuntimeException("Impossible d'enregistrer l'hydratation du repas.");
-                }
-            }
-
             $this->pdo->commit();
             return true;
         } catch (Exception $exception) {
@@ -188,13 +166,67 @@ class Suivi
 
     public function getTodayTotal()
     {
-        $stmt = $this->pdo->query(
-            "SELECT SUM(calories_calculees) as total
-             FROM repas_consomme
-             WHERE date_consommation = CURDATE()"
-        );
+        return $this->getTotalByDate(date('Y-m-d'));
+    }
 
-        return $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
+    public function getTodayWater()
+    {
+        $date = date('Y-m-d');
+        $totalMl = $this->getWaterTotalByDate($date);
+        $targetMl = 2000;
+
+        return [
+            'date' => $date,
+            'total_ml' => $totalMl,
+            'target_ml' => $targetMl,
+            'glasses' => round($totalMl / 250, 1),
+            'progress' => (int) min(100, round(($totalMl / max(1, $targetMl)) * 100)),
+        ];
+    }
+
+    public function addWater($amountMl = 250)
+    {
+        $this->lastError = null;
+        $amountMl = (int) $amountMl;
+        $date = date('Y-m-d');
+
+        if ($amountMl <= 0) {
+            $this->lastError = "Quantite d'eau invalide.";
+            return false;
+        }
+
+        $objectifId = $this->getObjectifIdByDate($date);
+
+        if ($objectifId === null) {
+            $this->lastError = "Aucun objectif n'existe pour aujourd'hui. Genere d'abord un plan nutritionnel.";
+            return false;
+        }
+
+        if (!$this->columnExists('repas_consomme', 'eau_ml')) {
+            $this->lastError = "La colonne eau_ml est introuvable dans repas_consomme.";
+            return false;
+        }
+
+        $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
+        $stmt = $this->pdo->prepare($this->buildWaterInsertQuery($hasIsWaterColumn));
+        $params = [
+            $amountMl,
+            $date,
+            $objectifId,
+            $amountMl,
+        ];
+
+        if ($hasIsWaterColumn) {
+            $params[] = 1;
+        }
+
+        $isInserted = $stmt->execute($params);
+
+        if (!$isInserted) {
+            $this->lastError = "Impossible d'ajouter cette hydratation pour le moment.";
+        }
+
+        return $isInserted;
     }
 
     public function countAllMeals()
@@ -275,7 +307,12 @@ class Suivi
 
     public function getTodayMacros()
     {
-        $stmt = $this->pdo->query(
+        return $this->getMacrosByDate(date('Y-m-d'));
+    }
+
+    public function getMacrosByDate($date)
+    {
+        $stmt = $this->pdo->prepare(
             "SELECT
                 COALESCE(SUM(
                     CASE
@@ -297,8 +334,9 @@ class Suivi
                 ), 0) AS lipides
              FROM repas_consomme r
              JOIN aliments a ON r.aliment_id = a.id
-             WHERE r.date_consommation = CURDATE()"
+             WHERE r.date_consommation = ?"
         );
+        $stmt->execute([(string) $date]);
 
         $result = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
@@ -476,7 +514,7 @@ class Suivi
                 END AS unite,
                 r.date_consommation,
                 CASE
-                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'Consommation d''eau'
+                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'Conso eau'
                     ELSE COALESCE(a.nom, 'Aliment')
                 END AS nom
             FROM repas_consomme r
@@ -496,7 +534,7 @@ class Suivi
             SELECT
                 r.*,
                 CASE
-                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'Consommation d''eau'
+                    WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'Conso eau'
                     ELSE COALESCE(a.nom, 'Aliment')
                 END AS nom,
                 CASE
@@ -604,7 +642,7 @@ class Suivi
         ];
 
         if ($hasWaterColumn) {
-            $params[] = (int) ($mealItem['eau_ml'] ?? 0);
+            $params[] = 0;
         }
 
         if ($hasIsWaterColumn) {
@@ -674,6 +712,33 @@ class Suivi
 
         return "INSERT INTO repas_consomme (" . implode(', ', $columns) . ")
                 VALUES (" . implode(', ', $placeholders) . ")";
+    }
+
+    private function getWaterTotalByDate($date)
+    {
+        $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
+        $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
+
+        if (!$hasWaterColumn) {
+            return 0;
+        }
+
+        $query = "
+            SELECT COALESCE(SUM(eau_ml), 0) AS total_eau_ml
+            FROM repas_consomme
+            WHERE DATE(date_consommation) = ?
+        ";
+
+        if ($hasIsWaterColumn) {
+            $query .= " AND is_water = 1";
+        } else {
+            $query .= " AND type = 'eau'";
+        }
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute([(string) $date]);
+
+        return (int) $stmt->fetchColumn();
     }
 
     private function isValidConsumptionDate($date)

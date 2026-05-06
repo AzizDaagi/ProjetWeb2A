@@ -24,6 +24,8 @@ class  ReminderMailer  {
 
         $mail->setFrom($config['from_email'], $config['from_name']);
         $mail->addAddress($user['email'], $user['nom']);
+        $baseUrl = getenv('APP_BASE_URL') ?: 'http://localhost/projet-web-25-26';
+        $trackingUrl = $baseUrl . '/index.php?controller=suivi&action=index';
 
         $mail->isHTML(true);
         $mail->Subject = "Rappel nutrition";
@@ -56,7 +58,7 @@ class  ReminderMailer  {
 
   <tr>
     <td style='text-align:center; padding-top:20px;'>
-      <a href='http://localhost/projet-web-25-26/public'
+      <a href='" . htmlspecialchars($trackingUrl, ENT_QUOTES, 'UTF-8') . "'
          style='background:#22c55e; color:white; padding:10px 20px; text-decoration:none; border-radius:8px;'>
          Ajouter mon repas
       </a>

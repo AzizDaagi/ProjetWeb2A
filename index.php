@@ -29,6 +29,13 @@
         $controllerName = 'nutritiondashboard';
     }
     if (!isset($_GET['controller']) && in_array($action, [
+        'nutrition_water_today',
+        'nutrition_water_add',
+        'nutrition_usda_lookup',
+    ], true)) {
+        $controllerName = 'suivi';
+    }
+    if (!isset($_GET['controller']) && in_array($action, [
     'chrono_nutrition',
     'chrono_profile_save',
     'chrono_profile_get',

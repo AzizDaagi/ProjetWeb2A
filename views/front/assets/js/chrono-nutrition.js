@@ -1,152 +1,559 @@
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("chrono-form");
-    const results = {
+    const saveButton = document.getElementById("saveProfile");
+    const feedback = document.getElementById("chrono-feedback");
+    const disclaimer = document.getElementById("chrono-disclaimer");
+    const blocks = {
+        summary: document.getElementById("block-summary"),
         timing: document.getElementById("block-timing"),
+        personalization: document.getElementById("block-personalization"),
         fasting: document.getElementById("block-fasting"),
         nutrients: document.getElementById("block-nutrients"),
         sleep: document.getElementById("block-sleep")
     };
 
-    // Fetch profile on load
-    fetch("index.php?action=chrono_profile_get")
-        .then(response => response.json())
-        .then(response => {
-            if (response.data) {
-                form.chronotype.value = response.data.chronotype;
-                form.wake_time.value = response.data.wake_time;
-                form.sleep_time.value = response.data.sleep_time;
-                form.sleep_quality.value = response.data.sleep_quality;
-                loadResults();
-            } else {
-                Object.values(results).forEach(block => {
-                    block.innerHTML = "<p>Sauvegardez d'abord votre profil</p>";
-                });
-            }
-        })
-        .catch(() => {
-            Object.values(results).forEach(block => {
-                block.innerHTML = "<p>Erreur lors du chargement du profil</p>";
-            });
-        });
+    const actionMap = {
+        timing: "chrono_optimal_timing",
+        fasting: "chrono_fasting_window",
+        nutrients: "chrono_nutrient_timing",
+        sleep: "chrono_sleep_sync"
+    };
 
-    // Save profile on submit
-    form.addEventListener("submit", (e) => {
-        e.preventDefault();
+    loadProfile();
+
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        setSavingState(true);
+        hideFeedback();
+
         const payload = {
             chronotype: form.chronotype.value,
             wake_time: form.wake_time.value,
             sleep_time: form.sleep_time.value,
-            sleep_quality: form.sleep_quality.value
+            sleep_quality: form.sleep_quality.value,
+            energy_peak: form.energy_peak.value,
+            energy_dip: form.energy_dip.value,
+            workout_time: form.workout_time.value,
+            last_caffeine_time: form.last_caffeine_time.value,
+            preferred_meals_count: form.preferred_meals_count.value
         };
 
-        fetch("index.php?action=chrono_profile_save", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        })
-            .then(response => response.json())
-            .then(() => loadResults())
-            .catch(() => {
-                alert("Erreur lors de la sauvegarde du profil");
+        try {
+            const response = await fetchJson("index.php?action=chrono_profile_save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             });
+
+            if (response.error) {
+                throw new Error(response.error);
+            }
+
+            if (response.data && response.data.profile) {
+                applyProfileToForm(response.data.profile);
+            }
+
+            showFeedback(
+                (response.data && response.data.message) || "Profil chrono enregistre avec succes.",
+                "success"
+            );
+
+            await loadResults();
+        } catch (error) {
+            showFeedback(error.message || "Erreur lors de la sauvegarde du profil chrono.", "error");
+        } finally {
+            setSavingState(false);
+        }
     });
 
-   // Mapping clé → action réelle
-const actionMap = {
-    timing:    'chrono_optimal_timing',
-    fasting:   'chrono_fasting_window',
-    nutrients: 'chrono_nutrient_timing',
-    sleep:     'chrono_sleep_sync'
-};
+    async function loadProfile() {
+        renderLoadingState(blocks.summary, "Resume chrono");
+        renderLoadingState(blocks.timing, "Horaires recommandes");
+        renderLoadingState(blocks.personalization, "Personnalisation chrono");
+        renderLoadingState(blocks.fasting, "Jeûne intermittent");
+        renderLoadingState(blocks.nutrients, "Nutriments par moment");
+        renderLoadingState(blocks.sleep, "Synchronisation sommeil");
+        setDisclaimer("");
 
-function loadResults() {
-    Object.keys(results).forEach(key => {
-        const block   = results[key];
-        const action  = actionMap[key]; // ← utiliser le bon nom d'action
-        block.innerHTML = "<div class='spinner'></div>";
+        try {
+            const response = await fetchJson("index.php?action=chrono_profile_get");
 
-        fetch(`index.php?action=${action}`) // ← plus chrono_${key}
-            .then(response => response.json())
-            .then(response => {
-                if (response.error) {
-                    block.innerHTML = `<p class='error'>${response.error}</p>`;
-                    return;
+            if (response.error) {
+                throw new Error(response.error);
+            }
+
+            if (response.data) {
+                applyProfileToForm(response.data);
+                await loadResults();
+                return;
+            }
+
+            renderEmptyModule("Sauvegarde ton profil chrono pour afficher des recommandations adaptees a ton rythme.");
+        } catch (error) {
+            renderModuleError(error.message || "Erreur lors du chargement du profil chrono.");
+        }
+    }
+
+    async function loadResults() {
+        renderLoadingState(blocks.summary, "Resume chrono");
+        renderLoadingState(blocks.timing, "Horaires recommandes");
+        renderLoadingState(blocks.personalization, "Personnalisation chrono");
+        renderLoadingState(blocks.fasting, "Jeûne intermittent");
+        renderLoadingState(blocks.nutrients, "Nutriments par moment");
+        renderLoadingState(blocks.sleep, "Synchronisation sommeil");
+        setDisclaimer("");
+
+        const timingPromise = fetchJson(`index.php?action=${actionMap.timing}`)
+            .then((response) => {
+                if (response.error || !response.data) {
+                    throw new Error(response.error || "Aucune recommandation d horaires disponible.");
                 }
-                const data = response.data;
-                if (!data) {
-                    block.innerHTML = "<p>Aucune donnée disponible</p>";
-                    return;
-                }
-                switch (key) {
-                    case "timing":    block.innerHTML = renderTiming(data);    break;
-                    case "fasting":   block.innerHTML = renderFasting(data);   break;
-                    case "nutrients": block.innerHTML = renderNutrients(data); break;
-                    case "sleep":     block.innerHTML = renderSleep(data);     break;
-                }
+
+                renderSummary(response.data.summary);
+                renderTiming(response.data.meals || []);
+                renderPersonalization(response.data.personalization);
             })
-            .catch(() => {
-                block.innerHTML = "<p>Erreur lors du chargement des données</p>";
-            })
-            .finally(() => {
-                const spinner = block.querySelector(".spinner");
-                if (spinner) spinner.remove();
+            .catch((error) => {
+                renderErrorState(blocks.summary, "Resume chrono", error.message || "Impossible de charger le resume chrono.");
+                renderErrorState(blocks.timing, "Horaires recommandes", error.message || "Impossible de charger les horaires recommandes.");
+                renderErrorState(blocks.personalization, "Personnalisation chrono", error.message || "Impossible de charger la personnalisation chrono.");
             });
-    });
-}
 
-    function renderTiming(data) {
-        return `
-            <div class="meal-slot">
-                <span class="meal-label">Petit-déjeuner</span>
-                <span class="meal-time">${data.breakfast.start} – ${data.breakfast.end}</span>
+        const fastingPromise = fetchJson(`index.php?action=${actionMap.fasting}`)
+            .then((response) => {
+                if (response.error || !response.data) {
+                    throw new Error(response.error || "Aucune indication de jeûne intermittent disponible.");
+                }
+
+                renderFasting(response.data);
+                setDisclaimer(response.data.disclaimer || "");
+            })
+            .catch((error) => {
+                renderErrorState(blocks.fasting, "Jeûne intermittent", error.message || "Impossible de charger le jeûne intermittent.");
+                setDisclaimer("");
+            });
+
+        const nutrientPromise = fetchJson(`index.php?action=${actionMap.nutrients}`)
+            .then((response) => {
+                if (response.error || !response.data) {
+                    throw new Error(response.error || "Aucun conseil nutritionnel disponible.");
+                }
+
+                renderNutrients(response.data.periods || []);
+            })
+            .catch((error) => {
+                renderErrorState(blocks.nutrients, "Nutriments par moment", error.message || "Impossible de charger les conseils nutritionnels.");
+            });
+
+        const sleepPromise = fetchJson(`index.php?action=${actionMap.sleep}`)
+            .then((response) => {
+                if (response.error || !response.data) {
+                    throw new Error(response.error || "Aucune recommandation sommeil disponible.");
+                }
+
+                renderSleep(response.data);
+            })
+            .catch((error) => {
+                renderErrorState(blocks.sleep, "Synchronisation sommeil", error.message || "Impossible de charger les recommandations sommeil.");
+            });
+
+        await Promise.allSettled([timingPromise, fastingPromise, nutrientPromise, sleepPromise]);
+    }
+
+    function renderSummary(summary) {
+        if (!summary) {
+            renderEmptyState(blocks.summary, "Resume chrono", "Aucune information de profil chrono n est disponible pour le moment.");
+            return;
+        }
+
+        blocks.summary.innerHTML = `
+            <div class="chrono-panel">
+                <div class="chrono-section-head">
+                    <div>
+                        <h2 class="chrono-panel__title">Resume chrono</h2>
+                        <p class="chrono-panel__intro">${escapeHtml(summary.message || "")}</p>
+                    </div>
+                    <span class="chrono-highlight">${escapeHtml(summary.chronotype_label || "Profil")}</span>
+                </div>
+                <div class="chrono-summary-list">
+                    <div class="chrono-meta-item">
+                        <small>Chronotype</small>
+                        <strong>${escapeHtml(summary.chronotype_label || "--")}</strong>
+                    </div>
+                    <div class="chrono-meta-item">
+                        <small>Heure de reveil</small>
+                        <strong>${escapeHtml(summary.wake_time || "--:--")}</strong>
+                    </div>
+                    <div class="chrono-meta-item">
+                        <small>Heure de coucher</small>
+                        <strong>${escapeHtml(summary.sleep_time || "--:--")}</strong>
+                    </div>
+                    <div class="chrono-meta-item">
+                        <small>Sommeil estime</small>
+                        <strong>${escapeHtml(formatDuration(summary.sleep_duration_h))}</strong>
+                        <p class="chrono-meta-note">${escapeHtml(summary.sleep_duration_label || "")}</p>
+                    </div>
+                    <div class="chrono-meta-item">
+                        <small>Repas souhaites</small>
+                        <strong>${escapeHtml(summary.preferred_meals_count_label || "--")}</strong>
+                    </div>
+                </div>
             </div>
-            <div class="meal-slot">
-                <span class="meal-label">Déjeuner</span>
-                <span class="meal-time">${data.lunch.start} – ${data.lunch.end}</span>
+        `;
+    }
+
+    function renderTiming(meals) {
+        if (!Array.isArray(meals) || meals.length === 0) {
+            renderEmptyState(blocks.timing, "Horaires recommandes", "Aucun horaire recommande n est disponible pour ce profil.");
+            return;
+        }
+
+        blocks.timing.innerHTML = `
+            <div class="chrono-panel">
+                <h2 class="chrono-panel__title">Horaires recommandes</h2>
+                <p class="chrono-panel__intro">Chaque plage indique un repere de rythme alimentaire, pas une heure obligatoire a suivre minute par minute.</p>
+                <div class="chrono-meal-grid">
+                    ${meals.map((meal) => `
+                        <article class="chrono-subcard">
+                            <span class="chrono-badge ${periodBadgeClass(meal.key)}">
+                                ${escapeHtml(periodLabel(meal.key))}
+                            </span>
+                            <h3>${escapeHtml(meal.label || "--")}</h3>
+                            <span class="chrono-time">${escapeHtml(meal.start || "--:--")} - ${escapeHtml(meal.end || "--:--")}</span>
+                            <p>${escapeHtml(meal.message || "")}</p>
+                        </article>
+                    `).join("")}
+                </div>
             </div>
-            <div class="meal-slot">
-                <span class="meal-label">Dîner</span>
-                <span class="meal-time">${data.dinner.start} – ${data.dinner.end}</span>
+        `;
+    }
+
+    function renderPersonalization(data) {
+        if (!data || !Array.isArray(data.recommendations) || data.recommendations.length === 0) {
+            renderEmptyState(blocks.personalization, "Personnalisation chrono", "Aucune personnalisation chrono n est disponible pour le moment.");
+            return;
+        }
+
+        const badges = Array.isArray(data.badges) ? data.badges : [];
+
+        blocks.personalization.innerHTML = `
+            <div class="chrono-panel">
+                <h2 class="chrono-panel__title">${escapeHtml(data.title || "Personnalisation chrono")}</h2>
+                <p class="chrono-panel__intro">${escapeHtml(data.intro || "")}</p>
+                ${badges.length > 0 ? `
+                    <div class="chrono-badges">
+                        ${badges.map((badge) => `
+                            <span class="chrono-badge chrono-badge--soft">
+                                ${escapeHtml(`${badge.label || ""} : ${badge.value || ""}`)}
+                            </span>
+                        `).join("")}
+                    </div>
+                ` : ""}
+                <div class="chrono-advice-list">
+                    ${data.recommendations.map((recommendation) => `
+                        <article class="chrono-subcard">
+                            <span class="chrono-badge ${priorityBadgeClass(recommendation.priority)}">
+                                ${escapeHtml(recommendation.priority_label || "Priorite moyenne")}
+                            </span>
+                            <h3>${escapeHtml(recommendation.title || "--")}</h3>
+                            <p>${escapeHtml(recommendation.description || "")}</p>
+                        </article>
+                    `).join("")}
+                </div>
             </div>
         `;
     }
 
     function renderFasting(data) {
-        return `
-            <p>Début du jeûne : ${data.fast_start}</p>
-            <p>Fin du jeûne : ${data.fast_end}</p>
-            <p>Durée : ${data.duration_h} heures</p>
-            <p>${data.message}</p>
+        console.log('[Chrono fasting data]', data);
+
+        blocks.fasting.innerHTML = `
+            <div class="chrono-panel">
+                <div class="chrono-section-head">
+                    <div>
+                        <h2 class="chrono-panel__title">Jeûne intermittent</h2>
+                        <p class="chrono-panel__intro">${escapeHtml(data.message || "Cette fenetre indique la periode de jeune estimee entre le dernier repas de la journee et le premier repas du lendemain.")}</p>
+                    </div>
+                    <span class="chrono-badge chrono-badge--protocol">Protocole ${escapeHtml(data.protocol || "12/12")}</span>
+                </div>
+                <div class="chrono-fasting-grid">
+                    <article class="chrono-subcard chrono-subcard--window">
+                        <span class="chrono-badge chrono-badge--period-noon">Fenêtre alimentaire</span>
+                        <h3>${escapeHtml(data.eating_start || "--:--")} &rarr; ${escapeHtml(data.eating_end || "--:--")}</h3>
+                        <p>Durée alimentaire : ${escapeHtml(formatDuration(data.eating_duration_h))}</p>
+                    </article>
+                    <article class="chrono-subcard chrono-subcard--window">
+                        <span class="chrono-badge chrono-badge--period-evening">Fenêtre de jeûne</span>
+                        <h3>${escapeHtml(data.fast_start || "--:--")} &rarr; ${escapeHtml(data.fast_end || "--:--")}</h3>
+                        <p>Durée du jeûne : ${escapeHtml(formatDuration(data.fast_duration_h))}</p>
+                    </article>
+                </div>
+                <div class="chrono-inline-list">
+                    <div class="chrono-row">
+                        <span>Type recommandé</span>
+                        <strong>${escapeHtml(data.protocol || "12/12")}</strong>
+                    </div>
+                    <div class="chrono-row">
+                        <span>Fenêtre alimentaire</span>
+                        <strong>${escapeHtml(data.eating_start || "--:--")} - ${escapeHtml(data.eating_end || "--:--")}</strong>
+                    </div>
+                    <div class="chrono-row">
+                        <span>Durée alimentaire</span>
+                        <strong>${escapeHtml(formatDuration(data.eating_duration_h))}</strong>
+                    </div>
+                    <div class="chrono-row">
+                        <span>Fenêtre de jeûne</span>
+                        <strong>${escapeHtml(data.fast_start || "--:--")} - ${escapeHtml(data.fast_end || "--:--")}</strong>
+                    </div>
+                    <div class="chrono-row">
+                        <span>Durée du jeûne</span>
+                        <strong>${escapeHtml(formatDuration(data.fast_duration_h))}</strong>
+                    </div>
+                </div>
+                ${data.disclaimer ? `<p class="chrono-disclaimer-inline">${escapeHtml(data.disclaimer)}</p>` : ""}
+            </div>
         `;
     }
 
-    function renderNutrients(data) {
-        return `
-            <div>
-                <h4>Matin</h4>
-                <p>Nutriments : ${data.morning.nutrients.join(", ")}</p>
-                <p>Conseil : ${data.morning.tip}</p>
-            </div>
-            <div>
-                <h4>Midi</h4>
-                <p>Nutriments : ${data.noon.nutrients.join(", ")}</p>
-                <p>Conseil : ${data.noon.tip}</p>
-            </div>
-            <div>
-                <h4>Soir</h4>
-                <p>Nutriments : ${data.evening.nutrients.join(", ")}</p>
-                <p>Conseil : ${data.evening.tip}</p>
+    function renderNutrients(periods) {
+        if (!Array.isArray(periods) || periods.length === 0) {
+            renderEmptyState(blocks.nutrients, "Nutriments par moment", "Aucun conseil de repartition nutritionnelle n est disponible.");
+            return;
+        }
+
+        blocks.nutrients.innerHTML = `
+            <div class="chrono-panel">
+                <h2 class="chrono-panel__title">Nutriments selon le moment</h2>
+                <p class="chrono-panel__intro">Les priorites changent legerement entre matin, midi et soir pour garder une lecture plus pratique.</p>
+                <div class="chrono-nutrient-grid">
+                    ${periods.map((period) => `
+                        <article class="chrono-subcard">
+                            <span class="chrono-badge ${periodBadgeClass(period.key)}">
+                                ${escapeHtml(period.label || "--")}
+                            </span>
+                            <h3>${escapeHtml(period.label || "--")}</h3>
+                            <div class="chrono-badges">
+                                ${(Array.isArray(period.nutrients) ? period.nutrients : []).map((nutrient) => `
+                                    <span class="chrono-badge">${escapeHtml(nutrient)}</span>
+                                `).join("")}
+                            </div>
+                            <p>${escapeHtml(period.tip || "")}</p>
+                        </article>
+                    `).join("")}
+                </div>
             </div>
         `;
     }
 
     function renderSleep(data) {
-        return data.recommendations.map(rec => `
-            <div class="recommendation">
-                <span class="badge ${rec.priority}">${rec.priority}</span>
-                <h4>${rec.title}</h4>
-                <p>${rec.description}</p>
+        const recommendations = Array.isArray(data.recommendations) ? data.recommendations : [];
+
+        if (recommendations.length === 0) {
+            renderEmptyState(blocks.sleep, "Synchronisation sommeil", "Aucune recommandation sommeil n est disponible pour le moment.");
+            return;
+        }
+
+        blocks.sleep.innerHTML = `
+            <div class="chrono-panel">
+                <div class="chrono-section-head">
+                    <div>
+                        <h2 class="chrono-panel__title">Synchronisation sommeil</h2>
+                        <p class="chrono-panel__intro">${escapeHtml(data.summary || "")}</p>
+                    </div>
+                    <span class="chrono-highlight">Sommeil ${escapeHtml(data.sleep_quality_label || "--")}</span>
+                </div>
+                <div class="chrono-sleep-grid">
+                    ${recommendations.map((recommendation) => `
+                        <article class="chrono-subcard">
+                            <span class="chrono-badge ${priorityBadgeClass(recommendation.priority)}">
+                                ${escapeHtml(recommendation.priority_label || "Priorite moyenne")}
+                            </span>
+                            <h3>${escapeHtml(recommendation.title || "--")}</h3>
+                            <p>${escapeHtml(recommendation.description || "")}</p>
+                        </article>
+                    `).join("")}
+                </div>
             </div>
-        `).join("");
+        `;
+    }
+
+    function renderLoadingState(block, title) {
+        block.innerHTML = `
+            <div class="chrono-state">
+                <div class="chrono-state__content">
+                    <div class="spinner"></div>
+                    <h3>${escapeHtml(title)}</h3>
+                    <p>Chargement des donnees...</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderEmptyState(block, title, message) {
+        block.innerHTML = `
+            <div class="chrono-state">
+                <div class="chrono-state__content">
+                    <h3>${escapeHtml(title)}</h3>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderErrorState(block, title, message) {
+        block.innerHTML = `
+            <div class="chrono-state">
+                <div class="chrono-state__content">
+                    <h3>${escapeHtml(title)}</h3>
+                    <p class="error">${escapeHtml(message)}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderEmptyModule(message) {
+        renderEmptyState(blocks.summary, "Resume chrono", message);
+        renderEmptyState(blocks.timing, "Horaires recommandes", message);
+        renderEmptyState(blocks.personalization, "Personnalisation chrono", message);
+        renderEmptyState(blocks.fasting, "Jeûne intermittent", message);
+        renderEmptyState(blocks.nutrients, "Nutriments par moment", message);
+        renderEmptyState(blocks.sleep, "Synchronisation sommeil", message);
+        setDisclaimer("");
+    }
+
+    function renderModuleError(message) {
+        renderErrorState(blocks.summary, "Resume chrono", message);
+        renderErrorState(blocks.timing, "Horaires recommandes", message);
+        renderErrorState(blocks.personalization, "Personnalisation chrono", message);
+        renderErrorState(blocks.fasting, "Jeûne intermittent", message);
+        renderErrorState(blocks.nutrients, "Nutriments par moment", message);
+        renderErrorState(blocks.sleep, "Synchronisation sommeil", message);
+        setDisclaimer("");
+    }
+
+    function applyProfileToForm(profile) {
+        form.chronotype.value = profile.chronotype || "standard";
+        form.wake_time.value = profile.wake_time || "07:00";
+        form.sleep_time.value = profile.sleep_time || "23:00";
+        form.sleep_quality.value = profile.sleep_quality || "moyenne";
+        form.energy_peak.value = profile.energy_peak || "";
+        form.energy_dip.value = profile.energy_dip || "aucun";
+        form.workout_time.value = profile.workout_time || "aucun";
+        form.last_caffeine_time.value = profile.last_caffeine_time || "aucun";
+        form.preferred_meals_count.value = String(profile.preferred_meals_count || 3);
+    }
+
+    function setSavingState(isSaving) {
+        saveButton.disabled = isSaving;
+        saveButton.textContent = isSaving ? "Sauvegarde..." : "Sauvegarder mon profil";
+    }
+
+    function showFeedback(message, tone) {
+        feedback.hidden = false;
+        feedback.className = `chrono-feedback is-${tone}`;
+        feedback.textContent = message;
+    }
+
+    function hideFeedback() {
+        feedback.hidden = true;
+        feedback.className = "chrono-feedback";
+        feedback.textContent = "";
+    }
+
+    function setDisclaimer(message) {
+        if (!message) {
+            disclaimer.hidden = true;
+            disclaimer.textContent = "";
+            return;
+        }
+
+        disclaimer.hidden = false;
+        disclaimer.textContent = message;
+    }
+
+    function priorityBadgeClass(priority) {
+        if (priority === "high") {
+            return "chrono-badge--priority-high";
+        }
+
+        if (priority === "low") {
+            return "chrono-badge--priority-low";
+        }
+
+        return "chrono-badge--priority-medium";
+    }
+
+    function periodBadgeClass(key) {
+        if (key === "breakfast" || key === "morning") {
+            return "chrono-badge--period-morning";
+        }
+
+        if (key === "lunch" || key === "noon" || key === "first_main") {
+            return "chrono-badge--period-noon";
+        }
+
+        if (key === "dinner" || key === "evening") {
+            return "chrono-badge--period-evening";
+        }
+
+        return "chrono-badge--period-neutral";
+    }
+
+    function periodLabel(key) {
+        if (key === "breakfast" || key === "morning") {
+            return "Matin";
+        }
+
+        if (key === "lunch" || key === "noon" || key === "first_main") {
+            return "Midi";
+        }
+
+        if (key === "dinner" || key === "evening") {
+            return "Soir";
+        }
+
+        return "Repere";
+    }
+
+    function formatDuration(duration) {
+        if (duration === null || duration === undefined || duration === "") {
+            return "--";
+        }
+
+        const parsedDuration = Number(duration);
+
+        if (Number.isNaN(parsedDuration)) {
+            return String(duration);
+        }
+
+        const totalMinutes = Math.round(parsedDuration * 60);
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        if (minutes === 0) {
+            return `${hours} h`;
+        }
+
+        return `${hours} h ${minutes}`;
+    }
+
+    async function fetchJson(url, options = {}) {
+        const response = await fetch(url, options);
+
+        if (!response.ok) {
+            throw new Error("Le service chrono-nutrition ne repond pas correctement.");
+        }
+
+        return response.json();
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
     }
 });
