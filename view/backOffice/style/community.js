@@ -248,3 +248,123 @@ function togglePostImage(id) {
     const img = document.querySelector(`#post-image-${id}`);
     if (img) img.style.display = img.style.display === 'none' ? 'block' : 'none';
 }
+
+// ===== News Carousel (auto + manual) =====
+function initNewsCarousel() {
+    const carousel = document.getElementById('newsCarousel');
+    if (!carousel) return;
+    if (carousel.dataset.carouselReady === 'true') return;
+    carousel.dataset.carouselReady = 'true';
+
+    const track = carousel.querySelector('.news-carousel-track');
+    const slides = Array.from(carousel.querySelectorAll('.news-carousel-slide'));
+    if (!track || slides.length === 0) return;
+
+    const prevBtn = carousel.querySelector('[data-carousel-direction="prev"]');
+    const nextBtn = carousel.querySelector('[data-carousel-direction="next"]');
+    const dotsWrap = carousel.querySelector('.news-carousel-dots');
+
+    const interval = Number(carousel.dataset.interval || 4000);
+
+    let index = 0;
+    let timer = null;
+
+    function renderDots() {
+        if (!dotsWrap) return;
+        dotsWrap.innerHTML = '';
+
+        slides.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'news-carousel-dot' + (i === index ? ' is-active' : '');
+            dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+            dot.addEventListener('click', () => goTo(i, true));
+            dotsWrap.appendChild(dot);
+        });
+    }
+
+
+    function updateUI() {
+        if (dotsWrap) {
+            const dots = Array.from(dotsWrap.querySelectorAll('.news-carousel-dot'));
+            dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
+        }
+    }
+
+    function goTo(i, fromUser) {
+        index = (i + slides.length) % slides.length;
+
+        const viewport = carousel.querySelector('.news-carousel-viewport');
+        // Slide width is exactly the viewport width (CSS sets slide flex-basis 100%).
+        const slideWidth = viewport ? viewport.getBoundingClientRect().width : carousel.getBoundingClientRect().width;
+        const offsetPx = index * slideWidth;
+
+        track.style.transform = `translateX(-${offsetPx}px)`;
+        updateUI();
+
+        if (fromUser) {
+            pause();
+            play();
+        }
+    }
+
+
+    function updateLayoutTransform() {
+        const viewport = carousel.querySelector('.news-carousel-viewport');
+        const viewportWidth = viewport ? viewport.clientWidth : carousel.clientWidth;
+        const offsetPx = index * viewportWidth;
+        track.style.transform = `translateX(-${offsetPx}px)`;
+        updateUI();
+    }
+
+
+    function next() {
+        goTo(index + 1, true);
+    }
+
+    function prev() {
+        goTo(index - 1, true);
+    }
+
+    function play() {
+        if (timer) return;
+        if (slides.length <= 1) return;
+        timer = window.setInterval(() => {
+            // Don't move if user is actively interacting (e.g. hovering or modal open)
+            if (carousel.matches(':hover')) return;
+            goTo(index + 1, false);
+        }, interval);
+    }
+
+
+    function pause() {
+        if (!timer) return;
+        window.clearInterval(timer);
+        timer = null;
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', prev);
+    if (nextBtn) nextBtn.addEventListener('click', next);
+
+    carousel.addEventListener('mouseenter', pause);
+    carousel.addEventListener('mouseleave', play);
+    window.addEventListener('resize', updateLayoutTransform);
+
+    window.addEventListener('visibilitychange', () => {
+        if (document.hidden) pause();
+        else play();
+    });
+
+    // initial state
+    renderDots();
+    updateUI();
+    goTo(0, false);
+    play();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNewsCarousel);
+} else {
+    initNewsCarousel();
+}
+

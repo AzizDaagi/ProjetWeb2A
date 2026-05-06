@@ -2,6 +2,7 @@
 require_once '../../model/connection.php';
 require_once '../../model/Post.php';
 require_once '../../model/Comment.php';
+require_once '../../model/News.php';
 
 $myId = 1;
 $sessionUserName = $_SESSION['user_name'] ?? 'User';
@@ -10,6 +11,73 @@ $isLoggedIn = isset($_SESSION['user_id']) || $myId === 1;
 $postModel = new Post(config::getConnexion());
 $posts = $postModel->getAllPosts();
 $commentModel = new Comment(config::getConnexion());
+
+// Load news articles
+$newsModel = new News(config::getConnexion());
+News::createTableIfNotExists(config::getConnexion());
+// Show only up to 3 items. Prefer nutrition and healthy meals, then add fitness.
+$featuredNewsNutrition = $newsModel->getNewsByCategory('nutrition', 3);
+$featuredNewsHealthTips = $newsModel->getNewsByCategory('health_tips', 1);
+$featuredNewsFitness = $newsModel->getNewsByCategory('fitness', 1);
+
+// Merge and keep only 3.
+$featuredNews = array_merge($featuredNewsNutrition, $featuredNewsHealthTips, $featuredNewsFitness);
+$featuredNews = array_slice($featuredNews, 0, 3);
+
+$fallbackNews = [
+    [
+        'id' => 'fallback-healthy-meal-prep',
+        'title' => 'Build Balanced Meal Prep Bowls for Busy Days',
+        'summary' => 'Use lean protein, colorful vegetables, whole grains, and healthy fats to create filling meals that support steady energy.',
+        'content' => '<p>A balanced meal prep bowl is easiest when you build it in layers. Start with a fiber-rich base like brown rice, quinoa, lentils, or roasted sweet potato. Add a protein such as grilled chicken, tuna, eggs, tofu, beans, or chickpeas. Then fill half the bowl with vegetables for volume, color, and micronutrients.</p><p>Finish with a healthy fat like avocado, olive oil dressing, nuts, or seeds. This mix helps meals feel satisfying while keeping energy more stable through the day.</p>',
+        'image_url' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80',
+        'category' => 'nutrition',
+        'source' => 'Smart Nutrition',
+        'source_url' => '',
+        'created_at' => date('Y-m-d H:i:s')
+    ],
+    [
+        'id' => 'fallback-protein-breakfast',
+        'title' => 'Simple High-Protein Breakfast Ideas That Feel Fresh',
+        'summary' => 'Greek yogurt bowls, eggs with vegetables, oats with nuts, or smoothies can make breakfast more nourishing.',
+        'content' => '<p>A good breakfast does not need to be complicated. Aim for protein, fiber, and a fruit or vegetable. Greek yogurt with berries and seeds, eggs with spinach and tomatoes, oatmeal with peanut butter, or a smoothie with milk, banana, and protein-rich yogurt can all work well.</p><p>Protein in the morning can help with fullness, while fiber supports digestion and more steady energy.</p>',
+        'image_url' => 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80',
+        'category' => 'nutrition',
+        'source' => 'Smart Nutrition',
+        'source_url' => '',
+        'created_at' => date('Y-m-d H:i:s', strtotime('-1 day'))
+    ],
+    [
+        'id' => 'fallback-hydration-meals',
+        'title' => 'Hydrating Foods to Add to Healthy Meals',
+        'summary' => 'Cucumber, citrus, berries, tomatoes, leafy greens, and soups can support hydration alongside water.',
+        'content' => '<p>Water is still the main hydration tool, but meals can help too. Foods like cucumber, oranges, berries, tomatoes, zucchini, leafy greens, and broth-based soups add fluid plus useful vitamins and minerals.</p><p>Try adding a side salad, fruit snack, or vegetable soup to meals when you want something light, fresh, and supportive of hydration.</p>',
+        'image_url' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80',
+        'category' => 'nutrition',
+        'source' => 'Smart Nutrition',
+        'source_url' => '',
+        'created_at' => date('Y-m-d H:i:s', strtotime('-2 days'))
+    ]
+];
+
+$existingNewsKeys = [];
+foreach ($featuredNews as $newsArticle) {
+    $existingNewsKeys[] = strtolower(trim($newsArticle['title'] ?? ''));
+}
+
+foreach ($fallbackNews as $fallbackArticle) {
+    if (count($featuredNews) >= 3) {
+        break;
+    }
+
+    $fallbackKey = strtolower($fallbackArticle['title']);
+    if (in_array($fallbackKey, $existingNewsKeys, true)) {
+        continue;
+    }
+
+    $featuredNews[] = $fallbackArticle;
+    $existingNewsKeys[] = $fallbackKey;
+}
 
 function resolvePostImageSrc($image)
 {
@@ -71,7 +139,7 @@ function getReportReasonOptions()
 <head>
     <meta charset="UTF-8">
     <title>Communauté</title>
-    <link rel="stylesheet" href="/Web/view/backoffice/style/community.css">
+    <link rel="stylesheet" href="/Web/view/backoffice/style/community.css?v=<?= filemtime(__DIR__ . '/../backoffice/style/community.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
@@ -119,6 +187,73 @@ function getReportReasonOptions()
                     </div>
                     <button onclick="submitPost()" class="btn">Publier</button>
                 </div>
+            </div>
+
+            <!-- News & Tips Section -->
+            <div class="news-section mb-5">
+                <h2 class="section-title mb-4"><i class="fas fa-newspaper"></i> Nutrition & Fitness News</h2>
+
+                <?php if (!empty($featuredNews)): ?>
+                    <div class="news-carousel" id="newsCarousel" data-interval="4000" aria-label="Nutrition and fitness news slideshow">
+                        <div class="news-carousel-viewport">
+                            <div class="news-carousel-track" aria-live="polite">
+                                <?php foreach ($featuredNews as $index => $newsArticle): ?>
+                                    <div class="news-carousel-slide" aria-label="News slide <?= $index + 1 ?> of <?= count($featuredNews) ?>">
+                                        <div class="news-card shadow-sm">
+                                            <div class="news-image-container">
+                                                <?php if ($newsArticle['image_url']): ?>
+                                                    <img src="<?= htmlspecialchars($newsArticle['image_url']) ?>" alt="<?= htmlspecialchars($newsArticle['title']) ?>" class="news-image" onerror="this.src='https://via.placeholder.com/400x250?text=Article'">
+                                                <?php else: ?>
+                                                    <div class="news-image-placeholder"><i class="fas fa-image"></i></div>
+                                                <?php endif; ?>
+                                                <span class="news-category-badge badge"><?= htmlspecialchars($newsArticle['category']) ?></span>
+                                            </div>
+                                            <div class="news-card-body">
+                                                <h5 class="news-title"><?= htmlspecialchars($newsArticle['title']) ?></h5>
+                                                <p class="news-summary text-muted"><?= htmlspecialchars($newsArticle['summary'] ?? substr(strip_tags($newsArticle['content']), 0, 100)) ?>...</p>
+                                                <div class="news-meta">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-calendar"></i> <?= date('M d, Y', strtotime($newsArticle['created_at'])) ?>
+                                                    </small>
+                                                    <?php if ($newsArticle['source'] !== 'AI Generated'): ?>
+                                                        <small class="text-muted ml-2">
+                                                            <i class="fas fa-source"></i> <?= htmlspecialchars($newsArticle['source']) ?>
+                                                        </small>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="news-actions mt-3">
+                                                    <button class="btn btn-sm btn-outline-primary" onclick='viewNewsArticle(<?= json_encode((string) $newsArticle['id']) ?>)'>
+                                                        <i class="fas fa-eye"></i> Read More
+                                                    </button>
+                                                    <?php if ($newsArticle['source_url']): ?>
+                                                        <a href="<?= htmlspecialchars($newsArticle['source_url']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="fas fa-external-link-alt"></i> Original
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <?php if (count($featuredNews) > 1): ?>
+                            <div class="news-carousel-controls">
+                                <button type="button" class="news-carousel-btn" id="newsPrev" data-carousel-direction="prev" aria-label="Previous news article">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div class="news-carousel-dots" id="newsDots" aria-label="News slide navigation"></div>
+                                <button type="button" class="news-carousel-btn" id="newsNext" data-carousel-direction="next" aria-label="Next news article">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No news articles available yet. Check back soon!
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div id="posts-container">
@@ -320,7 +455,7 @@ function getReportReasonOptions()
         </div>
     </div>
 
-    <script src="/Web/view/backoffice/style/community.js"></script>
+    <script src="/Web/view/backoffice/style/community.js?v=<?= filemtime(__DIR__ . '/../backoffice/style/community.js') ?>"></script>
     <script>
         function submitPost() {
             const title = document.getElementById('new-title').value;
@@ -606,6 +741,90 @@ function getReportReasonOptions()
                         alert(data.message || 'Erreur suppression');
                     }
                 });
+        }
+
+        const fallbackNewsArticles = <?= json_encode(array_column($fallbackNews, null, 'id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+
+        // News Functions
+        function viewNewsArticle(newsId) {
+            if (fallbackNewsArticles[newsId]) {
+                showNewsModal(fallbackNewsArticles[newsId]);
+                return;
+            }
+
+            fetch(`../../controller/newsController.php?action=getById&id=${newsId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showNewsModal(data.data);
+                    } else {
+                        alert(data.message || 'Error loading article');
+                    }
+                });
+        }
+
+        function showNewsModal(article) {
+            const oldModal = document.getElementById('newsModal');
+            if (oldModal) {
+                oldModal.remove();
+            }
+
+            const modal = document.createElement('div');
+            const articleContent = formatArticleContent(article.content || article.summary || 'No article content available.');
+
+            modal.className = 'modal-overlay news-modal-overlay';
+            modal.id = 'newsModal';
+            modal.innerHTML = `
+                <div class="news-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsModalTitle">
+                    <button type="button" class="modal-close" onclick="this.closest('.modal-overlay').remove()" aria-label="Close article">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="modal-header">
+                        <h2 id="newsModalTitle">${htmlEscape(article.title)}</h2>
+                        <div class="modal-meta">
+                            <span class="badge">${htmlEscape(article.category)}</span>
+                            <span class="text-muted ml-2">
+                                <i class="fas fa-calendar"></i> ${new Date(article.created_at).toLocaleDateString()}
+                            </span>
+                            ${article.source ? `<span class="text-muted ml-2"><i class="fas fa-source"></i> ${htmlEscape(article.source)}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="modal-body">
+                        ${article.image_url ? `<img src="${htmlEscape(article.image_url)}" alt="${htmlEscape(article.title)}" class="modal-image" onerror="this.src='https://via.placeholder.com/600x400?text=Article'">` : ''}
+                        <div class="article-content mt-4">
+                            ${articleContent}
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+        }
+
+        function htmlEscape(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return String(text || '').replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function formatArticleContent(content) {
+            const text = String(content || '').trim();
+            if (!text) {
+                return '<p>No article content available.</p>';
+            }
+
+            if (/<[a-z][\s\S]*>/i.test(text)) {
+                return text;
+            }
+
+            return '<p>' + htmlEscape(text).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
         }
     </script>
 </body>
