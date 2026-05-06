@@ -15,6 +15,8 @@ class PostController {
         'image/webp' => 'webp'
     ];
     private const MAX_UPLOAD_SIZE = 5242880;
+    private const ALLOWED_REACTIONS = ['love', 'laugh', 'sad', 'angry'];
+    private const ALLOWED_REPORT_REASONS = ['spam', 'harassment', 'false_information', 'inappropriate_content', 'other'];
 
     public function __construct($db) {
         $this->postModel = new Post($db);
@@ -25,7 +27,7 @@ class PostController {
     public function getAll() {
         require_once 'model/Comment.php';
         $commentModel = new Comment($this->postModel->database);
-        
+
         $posts = $this->postModel->getAllPosts();
         require_once 'view/frontOffice/community.php';
     }
@@ -33,7 +35,6 @@ class PostController {
     public function create() {
         $title = $_POST['title'] ?? '';
         $content = $_POST['content'] ?? '';
-
         $userId = 1;
 
         if (empty($title) || empty($content)) {
@@ -62,7 +63,7 @@ class PostController {
 
         echo json_encode([
             'success' => $result,
-            'message' => $result ? 'Post publié avec succès' : 'Erreur lors de la publication'
+            'message' => $result ? 'Post publie avec succes' : 'Erreur lors de la publication'
         ]);
         exit;
     }
@@ -75,7 +76,7 @@ class PostController {
         if (!$id || empty($title) || empty($content)) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Données invalides'
+                'message' => 'Donnees invalides'
             ]);
             exit;
         }
@@ -109,7 +110,7 @@ class PostController {
 
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Post modifié' : 'Erreur modification'
+            'message' => $success ? 'Post modifie' : 'Erreur modification'
         ]);
         exit;
     }
@@ -126,6 +127,7 @@ class PostController {
         }
 
         $currentPost = $this->postModel->getPostById($id);
+        $this->postModel->deleteReactionsForPost($id);
         $success = $this->postModel->deletePost($id);
 
         if ($success && $currentPost) {
@@ -134,7 +136,56 @@ class PostController {
 
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Post supprimé' : 'Erreur suppression'
+            'message' => $success ? 'Post supprime' : 'Erreur suppression'
+        ]);
+        exit;
+    }
+
+    public function react() {
+        $postId = $_POST['post_id'] ?? null;
+        $reactionType = $_POST['reaction_type'] ?? '';
+        $userId = 1;
+
+        if (!$postId || !in_array($reactionType, self::ALLOWED_REACTIONS, true)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Reaction invalide'
+            ]);
+            exit;
+        }
+
+        $success = $this->postModel->reactToPost($postId, $userId, $reactionType);
+        $summary = $this->postModel->getReactionSummary($postId, $userId);
+
+        echo json_encode([
+            'success' => $success,
+            'message' => $success ? 'Reaction mise a jour' : 'Erreur reaction',
+            'reactionSummary' => $summary
+        ]);
+        exit;
+    }
+
+    public function report() {
+        $postId = $_POST['post_id'] ?? null;
+        $reason = $_POST['reason'] ?? '';
+        $details = $_POST['details'] ?? '';
+        $userId = 1;
+
+        if (!$postId || !in_array($reason, self::ALLOWED_REPORT_REASONS, true)) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Signalement invalide'
+            ]);
+            exit;
+        }
+
+        $success = $this->postModel->reportPost($postId, $userId, $reason, $details);
+        $report = $this->postModel->getUserReportForPost($postId, $userId);
+
+        echo json_encode([
+            'success' => $success,
+            'message' => $success ? 'Post signale avec succes' : 'Erreur lors du signalement',
+            'report' => $report ?: null
         ]);
         exit;
     }
@@ -219,6 +270,9 @@ if ($action == 'create') {
     $controller->delete();
 } elseif ($action == 'update') {
     $controller->update();
+} elseif ($action == 'react') {
+    $controller->react();
+} elseif ($action == 'report') {
+    $controller->report();
 }
 ?>
-

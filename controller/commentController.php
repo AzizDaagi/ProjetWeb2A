@@ -14,7 +14,16 @@ class CommentController {
     public function add() {
         $postId = $_POST['post_id'] ?? null;
         $content = $_POST['content'] ?? '';
+        $parentCommentId = $_POST['parent_comment_id'] ?? null;
         $userId = 1; // temporary (replace with session later)
+
+        if ($parentCommentId === '') {
+            $parentCommentId = null;
+        }
+
+        if ($parentCommentId !== null) {
+            $parentCommentId = (int) $parentCommentId;
+        }
 
         if (!$postId || empty($content)) {
             header('Content-Type: application/json');
@@ -25,12 +34,12 @@ class CommentController {
             exit;
         }
 
-        $success = $this->commentModel->addComment($postId, $userId, $content);
+        $success = $this->commentModel->addComment($postId, $userId, $content, $parentCommentId);
 
         header('Content-Type: application/json');
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Commentaire ajouté' : 'Erreur ajout'
+            'message' => $success ? 'Commentaire ajoute' : 'Impossible d\'ajouter la reponse ou le commentaire'
         ]);
         exit;
     }
@@ -45,7 +54,7 @@ class CommentController {
             header('Content-Type: application/json');
             echo json_encode([
                 'success' => false,
-                'message' => 'Données invalides'
+                'message' => 'Donnees invalides'
             ]);
             exit;
         }
@@ -55,7 +64,7 @@ class CommentController {
         header('Content-Type: application/json');
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Commentaire modifié' : 'Erreur modification'
+            'message' => $success ? 'Commentaire modifie' : 'Erreur modification'
         ]);
         exit;
     }
@@ -78,7 +87,52 @@ class CommentController {
         header('Content-Type: application/json');
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Commentaire supprimé' : 'Erreur suppression'
+            'message' => $success ? 'Commentaire supprime' : 'Erreur suppression'
+        ]);
+        exit;
+    }
+
+    public function adminUpdate() {
+        $id = $_POST['id'] ?? null;
+        $content = $_POST['content'] ?? '';
+
+        if (!$id || empty($content)) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Donnees invalides'
+            ]);
+            exit;
+        }
+
+        $success = $this->commentModel->updateCommentAsAdmin($id, $content);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $success,
+            'message' => $success ? 'Commentaire modifie' : 'Erreur modification'
+        ]);
+        exit;
+    }
+
+    public function adminDelete() {
+        $id = $_POST['id'] ?? null;
+
+        if (!$id) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'ID manquant'
+            ]);
+            exit;
+        }
+
+        $success = $this->commentModel->deleteCommentAsAdmin($id);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $success,
+            'message' => $success ? 'Commentaire supprime' : 'Erreur suppression'
         ]);
         exit;
     }
@@ -97,4 +151,8 @@ if ($action == 'add') {
     $controller->update();
 } elseif ($action == 'delete') {
     $controller->delete();
+} elseif ($action == 'admin_update') {
+    $controller->adminUpdate();
+} elseif ($action == 'admin_delete') {
+    $controller->adminDelete();
 }
