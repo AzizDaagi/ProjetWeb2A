@@ -46,7 +46,7 @@ if (isset($_SESSION['user_id'])) {
 
 $action = $_GET['action'] ?? $defaultAction;
 
-$publicActions = ['login', 'register', 'face-login', 'forgot', 'reset-password'];
+$publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
     header('Location: /smart_nutrition/index.php?action=login');
     exit;
@@ -72,6 +72,14 @@ if ($action === 'home') {
     $auth = new AuthController();
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $auth->loginWithFace();
+    } else {
+        $auth->showLogin();
+    }
+
+} elseif ($action === 'google-login') {
+    $auth = new AuthController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $auth->loginWithGoogle();
     } else {
         $auth->showLogin();
     }
