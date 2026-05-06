@@ -1,10 +1,18 @@
 <?php
 require_once '../../model/connection.php';
 require_once '../../model/Post.php';
+require_once '../../model/AiModeration.php';
+require_once '../../model/ImageModeration.php';
 
 $adminName = $_SESSION['user_name'] ?? 'Admin';
 $postModel = new Post(config::getConnexion());
+$aiModeration = new AiModeration(config::getConnexion());
+$imageModeration = new ImageModeration(config::getConnexion());
 $reports = $postModel->getAllReports();
+$postModerationResults = $aiModeration->getResultsForContentType('post');
+$postImageModerationResults = $imageModeration->getResultsForContentType('post');
+$moderationCounts = $aiModeration->getStatusCounts();
+$imageModerationCounts = $imageModeration->getStatusCounts();
 
 $pendingReports = 0;
 $resolvedReports = 0;
@@ -24,7 +32,7 @@ foreach ($reports as $report) {
     <link rel="stylesheet" href="style/community.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body class="backoffice-page">
     <nav class="navbar">
         <div class="navbar-brand">
             <a href="community.php" class="brand-link">
@@ -62,6 +70,18 @@ foreach ($reports as $report) {
                     <h3><?= $resolvedReports ?></h3>
                     <p>Resolved</p>
                 </div>
+                <div class="admin-card ai-card-review">
+                    <h3><?= (int) ($moderationCounts['review'] ?? 0) ?></h3>
+                    <p>AI review needed</p>
+                </div>
+                <div class="admin-card ai-card-error">
+                    <h3><?= (int) ($moderationCounts['error'] ?? 0) ?></h3>
+                    <p>AI errors</p>
+                </div>
+                <div class="admin-card ai-card-review">
+                    <h3><?= (int) ($imageModerationCounts['review'] ?? 0) ?></h3>
+                    <p>Image review needed</p>
+                </div>
             </div>
 
             <div class="card card-primary shadow-sm">
@@ -77,6 +97,8 @@ foreach ($reports as $report) {
                                         <th>ID</th>
                                         <th>Status</th>
                                         <th>Reason</th>
+                                        <th>AI</th>
+                                        <th>Image AI</th>
                                         <th>Post</th>
                                         <th>Reporter</th>
                                         <th>Date</th>
@@ -93,6 +115,26 @@ foreach ($reports as $report) {
                                                 </span>
                                             </td>
                                             <td><?= htmlspecialchars(ucwords(str_replace('_', ' ', $report['reason'] ?? ''))) ?></td>
+                                            <td>
+                                                <?php $ai = $postModerationResults[(int) ($report['post_id'] ?? 0)] ?? null; ?>
+                                                <?php if ($ai): ?>
+                                                    <span class="ai-badge ai-badge-<?= htmlspecialchars($ai['status']) ?>">
+                                                        <?= htmlspecialchars(ucfirst($ai['status'])) ?> <?= (int) round(((float) $ai['score']) * 100) ?>%
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="ai-badge ai-badge-missing">Not checked</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <?php $imageAi = $postImageModerationResults[(int) ($report['post_id'] ?? 0)] ?? null; ?>
+                                                <?php if ($imageAi): ?>
+                                                    <span class="ai-badge ai-badge-<?= htmlspecialchars($imageAi['status']) ?>">
+                                                        <?= htmlspecialchars(ucfirst($imageAi['status'])) ?> <?= (int) round(((float) $imageAi['score']) * 100) ?>%
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="ai-badge ai-badge-missing">Not checked</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td><?= htmlspecialchars($report['post_title'] ?? '[Deleted post]') ?></td>
                                             <td><?= htmlspecialchars($report['reporter_username'] ?? 'Unknown') ?></td>
                                             <td><?= htmlspecialchars($report['created_at'] ?? '-') ?></td>

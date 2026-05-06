@@ -1,10 +1,14 @@
 <?php
 require_once '../model/Post.php';
 require_once '../model/connection.php';
+require_once '../model/AiModeration.php';
+require_once '../model/ImageModeration.php';
 
 class PostController {
 
     private $postModel;
+    private $aiModeration;
+    private $imageModeration;
     private $projectRoot;
     private $postImageDirectory;
 
@@ -20,6 +24,8 @@ class PostController {
 
     public function __construct($db) {
         $this->postModel = new Post($db);
+        $this->aiModeration = new AiModeration($db);
+        $this->imageModeration = new ImageModeration($db);
         $this->projectRoot = realpath(__DIR__ . '/..');
         $this->postImageDirectory = $this->projectRoot . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR . 'post_uploads' . DIRECTORY_SEPARATOR . 'posts';
     }
@@ -61,9 +67,18 @@ class PostController {
             $this->respondToDatabaseImageError($e);
         }
 
+        $moderation = null;
+        $imageModeration = null;
+        if ($result) {
+            $moderation = $this->moderatePostText((int) $result, $title, $content);
+            $imageModeration = $this->moderatePostImage((int) $result, $image);
+        }
+
         echo json_encode([
-            'success' => $result,
-            'message' => $result ? 'Post publie avec succes' : 'Erreur lors de la publication'
+            'success' => (bool) $result,
+            'message' => $result ? 'Post publie avec succes' : 'Erreur lors de la publication',
+            'moderation' => $moderation,
+            'imageModeration' => $imageModeration
         ]);
         exit;
     }
@@ -108,9 +123,18 @@ class PostController {
             $this->respondToDatabaseImageError($e);
         }
 
+        $moderation = null;
+        $imageModeration = null;
+        if ($success) {
+            $moderation = $this->moderatePostText((int) $id, $title, $content);
+            $imageModeration = $this->moderatePostImage((int) $id, $image);
+        }
+
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Post modifie' : 'Erreur modification'
+            'message' => $success ? 'Post modifie' : 'Erreur modification',
+            'moderation' => $moderation,
+            'imageModeration' => $imageModeration
         ]);
         exit;
     }
@@ -238,6 +262,37 @@ class PostController {
         }
 
         throw $e;
+    }
+
+    private function moderatePostText(int $postId, string $title, string $content): ?array {
+        try {
+            return $this->aiModeration->analyzeAndStore('post', $postId, trim($title . "\n\n" . $content));
+        } catch (Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    private function moderatePostImage(int $postId, ?string $image): ?array {
+        try {
+            return $this->imageModeration->analyzeAndStore('post', $postId, $this->resolveManagedImagePath($image));
+        } catch (Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
+
+    private function resolveManagedImagePath(?string $image): ?string {
+        if (!$this->isManagedUploadPath($image)) {
+            return null;
+        }
+
+        $relativePath = ltrim(str_replace('/Web/', '', $image), '/');
+        return $this->projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
     }
 
     private function deleteStoredImage($image) {

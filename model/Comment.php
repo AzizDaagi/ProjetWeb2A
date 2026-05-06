@@ -50,7 +50,7 @@ class Comment {
                 VALUES (?, ?, ?, ?)";
 
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$postId, $userId, $content, $parentCommentId]);
+        return $stmt->execute([$postId, $userId, $content, $parentCommentId]) ? (int) $this->db->lastInsertId() : false;
     }
 
     // UPDATE comment

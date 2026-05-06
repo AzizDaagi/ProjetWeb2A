@@ -1,24 +1,32 @@
 <?php
-// Inclusion des fichiers nécessaires pour l'affichage initial
 require_once '../../model/connection.php';
 require_once '../../model/Post.php';
 require_once '../../model/Comment.php';
+require_once '../../model/AiModeration.php';
+require_once '../../model/ImageModeration.php';
 
-
-// Simulation de l'utilisateur connecté (À remplacer par $_SESSION['user_id'] plus tard)
 $adminName = $_SESSION['user_name'] ?? 'Admin';
 $myId = 1;
-$sessionUserName = $adminName;
-$isLoggedIn = true;
 
-$postModel = new Post(config::getConnexion());
+$db = config::getConnexion();
+$postModel = new Post($db);
+$commentModel = new Comment($db);
+$aiModeration = new AiModeration($db);
+$imageModeration = new ImageModeration($db);
+
 $posts = $postModel->getAllPosts();
-$commentModel = new Comment(config::getConnexion());
+$postModerationResults = $aiModeration->getResultsForContentType('post');
+$postImageModerationResults = $imageModeration->getResultsForContentType('post');
+$commentModerationResults = $aiModeration->getResultsForContentType('comment');
+$moderationCounts = $aiModeration->getStatusCounts();
+$imageModerationCounts = $imageModeration->getStatusCounts();
 
-$totalPosts = count($posts);
+$postCommentData = [];
 $totalComments = 0;
 foreach ($posts as $post) {
-    $totalComments += count($commentModel->getComments($post['id']));
+    $comments = $commentModel->getComments((int) $post['id']);
+    $postCommentData[(int) $post['id']] = $comments;
+    $totalComments += count($comments);
 }
 
 function resolvePostImageSrc($image)
@@ -34,33 +42,40 @@ function resolvePostImageSrc($image)
     return null;
 }
 
-function organizeCommentsByThread($comments)
+function renderAiModerationBadge($moderation)
 {
-    $topLevelComments = [];
-    $repliesByParent = [];
-
-    foreach ($comments as $comment) {
-        $parentCommentId = $comment['parent_comment_id'] ?? null;
-
-        if (empty($parentCommentId)) {
-            $topLevelComments[] = $comment;
-            continue;
-        }
-
-        $repliesByParent[(int) $parentCommentId][] = $comment;
+    if (!$moderation) {
+        return '<span class="ai-badge ai-badge-missing"><i class="fa-solid fa-circle-question"></i> AI: Not checked</span>';
     }
 
-    return [$topLevelComments, $repliesByParent];
+    $status = strtolower((string) ($moderation['status'] ?? 'error'));
+    $label = (string) ($moderation['label'] ?? 'unknown');
+    $score = isset($moderation['score']) ? round(((float) $moderation['score']) * 100) : 0;
+
+    return '<span class="ai-badge ai-badge-' . htmlspecialchars($status) . '"><i class="fa-solid fa-wand-magic-sparkles"></i> AI: ' . htmlspecialchars(ucfirst($status)) . ' - ' . htmlspecialchars($label) . ' ' . $score . '%</span>';
 }
 
-function getReactionOptions()
+function renderImageModerationBadge($moderation)
 {
-    return [
-        'love' => ['label' => 'Love', 'icon' => 'fa-heart'],
-        'laugh' => ['label' => 'Laugh', 'icon' => 'fa-face-laugh-squint'],
-        'sad' => ['label' => 'Sad', 'icon' => 'fa-face-sad-tear'],
-        'angry' => ['label' => 'Angry', 'icon' => 'fa-face-angry']
-    ];
+    if (!$moderation) {
+        return '<span class="ai-badge ai-badge-missing"><i class="fa-solid fa-image"></i> Image: Not checked</span>';
+    }
+
+    $status = strtolower((string) ($moderation['status'] ?? 'error'));
+    $label = (string) ($moderation['label'] ?? 'unknown');
+    $score = isset($moderation['score']) ? round(((float) $moderation['score']) * 100) : 0;
+
+    return '<span class="ai-badge ai-badge-' . htmlspecialchars($status) . '"><i class="fa-solid fa-image"></i> Image: ' . htmlspecialchars(ucfirst($status)) . ' - ' . htmlspecialchars($label) . ' ' . $score . '%</span>';
+}
+
+function postExcerpt($text, $limit = 120)
+{
+    $text = trim((string) $text);
+    if (strlen($text) <= $limit) {
+        return $text;
+    }
+
+    return substr($text, 0, $limit - 3) . '...';
 }
 ?>
 
@@ -74,18 +89,13 @@ function getReactionOptions()
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
-<body>
+<body class="backoffice-page">
     <nav class="navbar">
         <div class="navbar-brand">
             <a href="community.php" class="brand-link">
-                <img
-                    src="style/logo.png"
-                    alt="Smart Nutrition"
-                    class="brand-logo navbar-preview-logo"
-                    onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                <img src="style/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
                 <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
             </a>
-            <img src="style/logo.png" alt="Communauté Blog" class="brand-logo">
         </div>
         <ul class="navbar-menu">
             <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
@@ -99,253 +109,195 @@ function getReactionOptions()
             <p class="user-info">Admin: <strong><?= htmlspecialchars($adminName) ?></strong></p>
         </div>
     </nav>
+
     <div class="main-content">
-
-
         <div class="container">
-            <h1 class="mb-4"><i class="fas fa-user-shield"></i> Community Back Office</h1>
+            <h1 class="mb-4"><i class="fas fa-user-shield"></i> Community Moderation</h1>
 
             <div class="admin-cards" id="moderation-panel">
                 <div class="admin-card">
-                    <h3><?= $totalPosts ?></h3>
+                    <h3><?= count($posts) ?></h3>
                     <p>Total posts</p>
                 </div>
                 <div class="admin-card">
                     <h3><?= $totalComments ?></h3>
                     <p>Total comments</p>
                 </div>
-                <div class="admin-card">
-                    <h3><?= $totalPosts > 0 ? htmlspecialchars($posts[0]['username']) : '-' ?></h3>
-                    <p>Latest author</p>
+                <div class="admin-card ai-card-review">
+                    <h3><?= (int) ($moderationCounts['review'] ?? 0) ?></h3>
+                    <p>AI review needed</p>
+                </div>
+                <div class="admin-card ai-card-allowed">
+                    <h3><?= (int) ($moderationCounts['allowed'] ?? 0) ?></h3>
+                    <p>AI allowed</p>
+                </div>
+                <div class="admin-card ai-card-error">
+                    <h3><?= (int) ($moderationCounts['error'] ?? 0) ?></h3>
+                    <p>AI errors</p>
+                </div>
+                <div class="admin-card ai-card-review">
+                    <h3><?= (int) ($imageModerationCounts['review'] ?? 0) ?></h3>
+                    <p>Image review needed</p>
                 </div>
             </div>
 
-            <div class="card card-primary shadow-sm mb-5" id="new-post-panel">
-                <div class="card-header">
-                    <h3 class="card-title">Quoi de neuf ?</h3>
+            <div class="card card-primary shadow-sm admin-community-card">
+                <div class="card-header admin-list-header">
+                    <h3 class="card-title">Posts moderation list</h3>
+                    <span class="text-muted"><?= count($posts) ?> item(s)</span>
                 </div>
                 <div class="card-body">
-                    <div class="form-group">
-                        <input type="text" id="new-title" class="form-control mb-2" placeholder="Titre de votre publication">
-                        <textarea id="new-content" class="form-control" rows="3" placeholder="Écrivez votre message ici..."></textarea>
-                        <div class="form-group mt-3">
-                            <label class="form-label">📷 Image (optionnel)</label>
-                            <input type="file" id="new-image" class="form-control" accept="image/*">
-                        </div>
-                    </div>
-                    <button onclick="submitPost()" class="btn">Publier</button>
-                </div>
-            </div>
-        </div>
+                    <?php if (!empty($posts)): ?>
+                        <div class="reports-table-wrap">
+                            <table class="reports-table admin-community-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Post</th>
+                                        <th>Author</th>
+                                        <th>AI</th>
+                                        <th>Image AI</th>
+                                        <th>Comments</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($posts as $post): ?>
+                                        <?php
+                                        $postId = (int) $post['id'];
+                                        $postImageSrc = resolvePostImageSrc($post['image'] ?? null);
+                                        $comments = $postCommentData[$postId] ?? [];
+                                        $postModeration = $postModerationResults[$postId] ?? null;
+                                        ?>
+                                        <tr id="post-<?= $postId ?>">
+                                            <td>#<?= $postId ?></td>
+                                            <td class="admin-post-cell">
+                                                <strong id="display-title-<?= $postId ?>"><?= htmlspecialchars($post['title']) ?></strong>
+                                                <p id="display-content-<?= $postId ?>"><?= htmlspecialchars(postExcerpt($post['content'])) ?></p>
+                                                <?php if ($postImageSrc): ?>
+                                                    <span class="admin-media-chip"><i class="fa-solid fa-image"></i> Image</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?= htmlspecialchars($post['username'] ?? 'Unknown') ?></td>
+                                            <td><?= renderAiModerationBadge($postModeration) ?></td>
+                                            <td><?= renderImageModerationBadge($postImageModerationResults[$postId] ?? null) ?></td>
+                                            <td><?= count($comments) ?></td>
+                                            <td><?= htmlspecialchars($post['created_at'] ?? '-') ?></td>
+                                            <td class="admin-row-actions">
+                                                <button class="btn btn-sm btn-outline-info" onclick="toggleEdit(<?= $postId ?>)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deletePost(<?= $postId ?>)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr class="admin-details-row">
+                                            <td colspan="7">
+                                                <details class="admin-post-details">
+                                                    <summary>
+                                                        <span><i class="fa-solid fa-clipboard-list"></i> Review details</span>
+                                                        <span class="text-muted">Edit post, inspect comments</span>
+                                                    </summary>
 
+                                                    <div class="admin-details-grid">
+                                                        <section class="admin-detail-panel">
+                                                            <h4>Full post</h4>
+                                                            <p><?= nl2br(htmlspecialchars($post['content'])) ?></p>
+                                                            <?php if ($postImageSrc): ?>
+                                                                <img src="<?= htmlspecialchars($postImageSrc) ?>" alt="Post image" class="admin-post-thumbnail">
+                                                                <div class="ai-inline-status"><?= renderImageModerationBadge($postImageModerationResults[$postId] ?? null) ?></div>
+                                                            <?php endif; ?>
+                                                        </section>
 
-        <div id="posts-container">
-            <?php if (!empty($posts)): ?>
-                <?php foreach ($posts as $post): ?>
-                    <?php $postImageSrc = resolvePostImageSrc($post['image'] ?? null); ?>
-                    <?php $reactionSummary = $postModel->getReactionSummary($post['id'], $myId); ?>
-                    <?php $reactionOptions = getReactionOptions(); ?>
-                    <div class="post-card" id="post-<?php echo $post['id']; ?>">
-
-                        <div class="post-header">
-                            <div>
-                                <strong><i class="fas fa-user text-muted"></i> <?php echo htmlspecialchars($post['username']); ?></strong>
-                                <small class="text-muted ml-2"><?php echo $post['created_at']; ?></small>
-                            </div>
-
-                            <?php if ($post['user_id'] == $myId): ?>
-                                <div class="btn-group ml-auto">
-                                    <button class="btn btn-sm btn-outline-info" onclick="toggleEdit(<?php echo $post['id']; ?>)">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deletePost(<?php echo $post['id']; ?>)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="card-body">
-                            <h5 id="display-title-<?php echo $post['id']; ?>"><?php echo htmlspecialchars($post['title']); ?></h5>
-                            <p id="display-content-<?php echo $post['id']; ?>"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
-                            <?php if ($postImageSrc): ?>
-                                <img src="<?= htmlspecialchars($postImageSrc) ?>" alt="Post image" class="post-image mb-3 rounded" style="max-height: 250px; width: auto; max-width: 100%; height: auto; object-fit: contain;">
-                            <?php endif; ?>
-
-                            <div class="post-reactions" id="post-reactions-<?php echo $post['id']; ?>">
-                                <?php foreach ($reactionOptions as $reactionType => $reactionMeta): ?>
-                                    <?php $isActiveReaction = ($reactionSummary['user_reaction'] ?? null) === $reactionType; ?>
-                                    <button
-                                        type="button"
-                                        class="reaction-btn<?php echo $isActiveReaction ? ' is-active reaction-' . $reactionType : ' reaction-' . $reactionType; ?>"
-                                        onclick="reactToPost(<?php echo $post['id']; ?>, '<?php echo $reactionType; ?>')"
-                                        data-post-id="<?php echo $post['id']; ?>"
-                                        data-reaction-type="<?php echo $reactionType; ?>"
-                                        aria-pressed="<?php echo $isActiveReaction ? 'true' : 'false'; ?>">
-                                        <i class="fa-solid <?php echo $reactionMeta['icon']; ?>"></i>
-                                        <span><?php echo $reactionMeta['label']; ?></span>
-                                        <span class="reaction-count" id="reaction-count-<?php echo $post['id']; ?>-<?php echo $reactionType; ?>"><?php echo (int) ($reactionSummary['counts'][$reactionType] ?? 0); ?></span>
-                                    </button>
-                                <?php endforeach; ?>
-                            </div>
-
-                            <div id="edit-block-<?php echo $post['id']; ?>" class="edit-form mt-3" style="display: none;">
-                                <input type="text" id="edit-title-<?php echo $post['id']; ?>" class="form-control mb-2" value="<?php echo htmlspecialchars($post['title']); ?>">
-                                <textarea id="edit-content-<?php echo $post['id']; ?>" class="form-control mb-2"><?php echo htmlspecialchars($post['content']); ?></textarea>
-                                <?php if ($postImageSrc): ?>
-                                    <div class="mb-2 d-flex align-items-center" id="post-image-container-<?php echo $post['id']; ?>">
-                                        <img src="<?= htmlspecialchars($postImageSrc) ?>" class="img-thumbnail me-2" style="max-width: 80px; max-height: 80px; object-fit: contain;" alt="Post image">
-                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage(<?php echo $post['id']; ?>)">
-                                            <i class="fas fa-trash"></i> Supprimer image
-                                        </button>
-                                    </div>
-                                <?php endif; ?>
-                                <div class="form-group">
-                                    <label class="form-label">📷 Nouvelle image (optionnel)</label>
-                                    <input type="file" id="edit-image-<?php echo $post['id']; ?>" class="form-control" accept="image/*">
-                                </div>
-                                <button class="btn btn-success btn-sm" onclick="saveEdit(<?php echo $post['id']; ?>)">Enregistrer</button>
-                                <button class="btn btn-secondary btn-sm" onclick="toggleEdit(<?php echo $post['id']; ?>)">Annuler</button>
-                            </div>
-
-                            <!-- Comments Section -->
-                            <div class="comments-section mt-4">
-                                <?php
-                                $comments = $commentModel->getComments($post['id']);
-                                [$topLevelComments, $repliesByParent] = organizeCommentsByThread($comments);
-                                ?>
-                                <h6><i class="fas fa-comments"></i> Commentaires (<?php echo count($comments); ?>)</h6>
-                                <div id="comments-list-<?php echo $post['id']; ?>">
-                                    <?php if (!empty($topLevelComments)): ?>
-                                        <?php foreach ($topLevelComments as $comment): ?>
-                                            <div class="comment-item mb-2 p-3 border-bottom position-relative" id="comment-<?php echo $comment['id']; ?>">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <small class="text-muted"><i class="fas fa-user"></i> <?php echo htmlspecialchars($comment['username']); ?></small>
-                                                    <div class="btn-group btn-group-sm">
-                                                        <button class="btn btn-outline-secondary btn-sm" onclick="toggleReplyForm(<?php echo $comment['id']; ?>)" title="Repondre">
-                                                            <i class="fas fa-reply"></i>
-                                                        </button>
-                                                        <?php if ($comment['user_id'] == $myId): ?>
-                                                            <button class="btn btn-outline-info btn-sm" onclick="toggleCommentEdit(<?php echo $comment['id']; ?>)" title="Modifier">
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                            <button class="btn btn-outline-danger btn-sm" onclick="deleteComment(<?php echo $comment['id']; ?>)" title="Supprimer">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </div>
-                                                <div id="display-comment-text-<?php echo $comment['id']; ?>"><?php echo nl2br(htmlspecialchars($comment['comment_text'])); ?></div>
-
-                                                <div id="edit-comment-block-<?php echo $comment['id']; ?>" class="comment-edit-form mt-2" style="display: none;">
-                                                    <textarea id="edit-comment-text-<?php echo $comment['id']; ?>" class="form-control form-control-sm" rows="2"><?php echo htmlspecialchars($comment['comment_text']); ?></textarea>
-                                                    <div class="mt-1">
-                                                        <button class="btn btn-success btn-sm" onclick="saveCommentEdit(<?php echo $comment['id']; ?>)">Enregistrer</button>
-                                                        <button class="btn btn-secondary btn-sm" onclick="toggleCommentEdit(<?php echo $comment['id']; ?>)">Annuler</button>
-                                                    </div>
-                                                </div>
-
-                                                <div id="reply-form-<?php echo $comment['id']; ?>" class="comment-edit-form mt-2" style="display: none;">
-                                                    <textarea id="reply-content-<?php echo $comment['id']; ?>" class="form-control form-control-sm" rows="2" placeholder="Ecrire une reponse..."></textarea>
-                                                    <div class="mt-1">
-                                                        <button class="btn btn-success btn-sm" onclick="addReply(<?php echo $post['id']; ?>, <?php echo $comment['id']; ?>)">Repondre</button>
-                                                        <button class="btn btn-secondary btn-sm" onclick="toggleReplyForm(<?php echo $comment['id']; ?>)">Annuler</button>
-                                                    </div>
-                                                </div>
-
-                                                <?php if (!empty($repliesByParent[$comment['id']])): ?>
-                                                    <div class="mt-3" style="margin-left: 28px;">
-                                                        <?php foreach ($repliesByParent[$comment['id']] as $reply): ?>
-                                                            <div class="comment-item mb-2 p-3 position-relative" id="comment-<?php echo $reply['id']; ?>">
-                                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                                    <small class="text-muted"><i class="fas fa-user"></i> <?php echo htmlspecialchars($reply['username']); ?></small>
-                                                                    <?php if ($reply['user_id'] == $myId): ?>
-                                                                        <div class="btn-group btn-group-sm">
-                                                                            <button class="btn btn-outline-info btn-sm" onclick="toggleCommentEdit(<?php echo $reply['id']; ?>)" title="Modifier">
-                                                                                <i class="fas fa-edit"></i>
-                                                                            </button>
-                                                                            <button class="btn btn-outline-danger btn-sm" onclick="deleteComment(<?php echo $reply['id']; ?>)" title="Supprimer">
-                                                                                <i class="fas fa-trash"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    <?php endif; ?>
-                                                                </div>
-                                                                <div id="display-comment-text-<?php echo $reply['id']; ?>"><?php echo nl2br(htmlspecialchars($reply['comment_text'])); ?></div>
-
-                                                                <div id="edit-comment-block-<?php echo $reply['id']; ?>" class="comment-edit-form mt-2" style="display: none;">
-                                                                    <textarea id="edit-comment-text-<?php echo $reply['id']; ?>" class="form-control form-control-sm" rows="2"><?php echo htmlspecialchars($reply['comment_text']); ?></textarea>
-                                                                    <div class="mt-1">
-                                                                        <button class="btn btn-success btn-sm" onclick="saveCommentEdit(<?php echo $reply['id']; ?>)">Enregistrer</button>
-                                                                        <button class="btn btn-secondary btn-sm" onclick="toggleCommentEdit(<?php echo $reply['id']; ?>)">Annuler</button>
+                                                        <section class="admin-detail-panel">
+                                                            <h4>Edit post</h4>
+                                                            <div id="edit-block-<?= $postId ?>" class="edit-form">
+                                                                <input type="text" id="edit-title-<?= $postId ?>" class="form-control mb-2" value="<?= htmlspecialchars($post['title']) ?>">
+                                                                <textarea id="edit-content-<?= $postId ?>" class="form-control mb-2"><?= htmlspecialchars($post['content']) ?></textarea>
+                                                                <?php if ($postImageSrc): ?>
+                                                                    <div class="mb-2 d-flex align-items-center" id="post-image-container-<?= $postId ?>">
+                                                                        <img src="<?= htmlspecialchars($postImageSrc) ?>" class="img-thumbnail me-2" style="max-width: 80px; max-height: 80px; object-fit: contain;" alt="Post image">
+                                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage(<?= $postId ?>)">
+                                                                            <i class="fas fa-trash"></i> Remove image
+                                                                        </button>
                                                                     </div>
+                                                                <?php endif; ?>
+                                                                <label class="form-label">Replace image</label>
+                                                                <input type="file" id="edit-image-<?= $postId ?>" class="form-control" accept="image/*">
+                                                                <div class="admin-form-actions">
+                                                                    <button class="btn btn-success btn-sm" onclick="saveEdit(<?= $postId ?>)">Save</button>
                                                                 </div>
                                                             </div>
-                                                        <?php endforeach; ?>
+                                                        </section>
                                                     </div>
-                                                <?php endif; ?>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
-                                        <p class="text-muted">Aucun commentaire pour le moment.</p>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="comment-form mt-3">
-                                    <textarea id="comment-content-<?php echo $post['id']; ?>" class="form-control" rows="2" placeholder="Ajoutez un commentaire..."></textarea>
-                                    <button onclick="addComment(<?php echo $post['id']; ?>)" class="btn btn-outline-secondary btn-sm mt-2">Commenter</button>
-                                </div>
-                            </div>
+
+                                                    <section class="admin-comments-list">
+                                                        <h4>Comments</h4>
+                                                        <?php if (!empty($comments)): ?>
+                                                            <?php foreach ($comments as $comment): ?>
+                                                                <?php $commentId = (int) $comment['id']; ?>
+                                                                <div class="admin-comment-row" id="comment-<?= $commentId ?>">
+                                                                    <div>
+                                                                        <strong><?= htmlspecialchars($comment['username'] ?? 'Unknown') ?></strong>
+                                                                        <span class="text-muted"><?= htmlspecialchars($comment['created_at'] ?? '-') ?></span>
+                                                                        <div><?= renderAiModerationBadge($commentModerationResults[$commentId] ?? null) ?></div>
+                                                                    </div>
+                                                                    <div class="admin-comment-text" id="display-comment-text-<?= $commentId ?>"><?= nl2br(htmlspecialchars($comment['comment_text'])) ?></div>
+                                                                    <div class="admin-row-actions">
+                                                                        <button class="btn btn-outline-info btn-sm" onclick="toggleCommentEdit(<?= $commentId ?>)" title="Edit">
+                                                                            <i class="fas fa-edit"></i>
+                                                                        </button>
+                                                                        <button class="btn btn-outline-danger btn-sm" onclick="deleteComment(<?= $commentId ?>)" title="Delete">
+                                                                            <i class="fas fa-trash"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div id="edit-comment-block-<?= $commentId ?>" class="comment-edit-form admin-comment-edit" style="display: none;">
+                                                                        <textarea id="edit-comment-text-<?= $commentId ?>" class="form-control form-control-sm" rows="2"><?= htmlspecialchars($comment['comment_text']) ?></textarea>
+                                                                        <button class="btn btn-success btn-sm" onclick="saveCommentEdit(<?= $commentId ?>)">Save</button>
+                                                                        <button class="btn btn-secondary btn-sm" onclick="toggleCommentEdit(<?= $commentId ?>)">Cancel</button>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        <?php else: ?>
+                                                            <p class="text-muted">No comments.</p>
+                                                        <?php endif; ?>
+                                                    </section>
+                                                </details>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p class="text-center text-muted">Aucune publication pour le moment.</p>
-            <?php endif; ?>
+                    <?php else: ?>
+                        <p class="text-center text-muted">No posts yet.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="style/community.js"></script>
     <script>
-        // --- AJOUTER ---
-        function submitPost() {
-            const title = document.getElementById('new-title').value;
-            const content = document.getElementById('new-content').value;
-            const imageInput = document.getElementById('new-image');
-
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('content', content);
-            if (imageInput.files[0]) {
-                formData.append('image', imageInput.files[0]);
-            }
-
-            fetch('../../controller/postController.php?action=create', {
-                    method: 'POST',
-                    body: formData // No Content-Type - browser sets multipart
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.message || "Erreur lors de la publication");
-                    }
-                });
-        }
-
-        // --- MODIFIER (UI) ---
-        function toggleEdit(id) {
-            const block = document.getElementById(`edit-block-${id}`);
-            block.style.display = (block.style.display === 'block') ? 'none' : 'block';
-        }
-
-        // --- ENREGISTRER MODIF ---
         let imageToRemove = {};
 
+        function toggleEdit(id) {
+            const block = document.getElementById(`edit-block-${id}`);
+            if (!block) return;
+            const details = block.closest('details');
+            if (details) details.open = true;
+            block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
         function removeImage(id) {
-            if (confirm("Supprimer définitivement l'image ?")) {
+            if (confirm("Remove this image?")) {
                 imageToRemove[id] = true;
                 const container = document.getElementById(`post-image-container-${id}`);
-                container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image supprimée (sera effacée à l\'enregistrement)</small>';
+                if (container) {
+                    container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image will be removed when saved</small>';
+                }
             }
         }
 
@@ -374,14 +326,13 @@ function getReactionOptions()
                     if (data.success) {
                         location.reload();
                     } else {
-                        alert(data.message || "Erreur lors de la modification");
+                        alert(data.message || "Update failed");
                     }
                 });
         }
 
-        // --- SUPPRIMER ---
         function deletePost(id) {
-            if (!confirm("Voulez-vous vraiment supprimer ce post ?")) return;
+            if (!confirm("Delete this post?")) return;
 
             fetch('../../controller/postController.php?action=delete', {
                     method: 'POST',
@@ -393,114 +344,26 @@ function getReactionOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById(`post-${id}`).style.opacity = '0';
-                        setTimeout(() => document.getElementById(`post-${id}`).remove(), 300);
-                    }
-                });
-        }
-
-        function reactToPost(postId, reactionType) {
-            fetch('../../controller/postController.php?action=react', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `post_id=${postId}&reaction_type=${encodeURIComponent(reactionType)}`
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        updateReactionButtons(postId, data.reactionSummary || null);
-                    } else {
-                        alert(data.message || "Erreur reaction");
-                    }
-                });
-        }
-
-        function updateReactionButtons(postId, reactionSummary) {
-            if (!reactionSummary || !reactionSummary.counts) return;
-
-            document.querySelectorAll(`#post-reactions-${postId} .reaction-btn`).forEach((button) => {
-                const reactionType = button.dataset.reactionType;
-                const countElement = document.getElementById(`reaction-count-${postId}-${reactionType}`);
-                const isActive = reactionSummary.user_reaction === reactionType;
-
-                if (countElement) {
-                    countElement.textContent = reactionSummary.counts[reactionType] ?? 0;
-                }
-
-                button.classList.toggle('is-active', isActive);
-                button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            });
-        }
-
-        // --- COMMENTER ---
-        function addComment(postId) {
-            const content = document.getElementById(`comment-content-${postId}`).value.trim();
-            if (!content) return alert("Le commentaire ne peut pas être vide");
-
-            fetch('../../controller/commentController.php?action=add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `post_id=${postId}&content=${encodeURIComponent(content)}`
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        // Clear form
-                        document.getElementById(`comment-content-${postId}`).value = '';
-                        // Reload post to show new comment (simple approach)
                         location.reload();
                     } else {
-                        alert(data.message || "Erreur lors de l'ajout du commentaire");
+                        alert(data.message || "Delete failed");
                     }
                 });
         }
 
-        // --- COMMENT EDIT ---
         function toggleCommentEdit(id) {
             const block = document.getElementById(`edit-comment-block-${id}`);
             const display = document.getElementById(`display-comment-text-${id}`);
+            if (!block || !display) return;
             block.style.display = block.style.display === 'block' ? 'none' : 'block';
             display.style.display = block.style.display === 'block' ? 'none' : 'block';
         }
 
-        function toggleReplyForm(commentId) {
-            const block = document.getElementById(`reply-form-${commentId}`);
-            if (!block) return;
-            block.style.display = block.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function addReply(postId, parentCommentId) {
-            const contentField = document.getElementById(`reply-content-${parentCommentId}`);
-            const content = contentField.value.trim();
-            if (!content) return alert("La reponse ne peut pas etre vide");
-
-            fetch('../../controller/commentController.php?action=add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
-                    body: `post_id=${postId}&parent_comment_id=${parentCommentId}&content=${encodeURIComponent(content)}`
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        contentField.value = '';
-                        location.reload();
-                    } else {
-                        alert(data.message || "Erreur lors de l'ajout de la reponse");
-                    }
-                });
-        }
-
         function saveCommentEdit(id) {
             const content = document.getElementById(`edit-comment-text-${id}`).value;
-            if (!content.trim()) return alert("Le commentaire ne peut pas être vide");
+            if (!content.trim()) return alert("Comment cannot be empty");
 
-            fetch('../../controller/commentController.php?action=update', {
+            fetch('../../controller/commentController.php?action=admin_update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -510,22 +373,17 @@ function getReactionOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById(`display-comment-text-${id}`).innerHTML = content.replace(/\n/g, '<br>');
-                        toggleCommentEdit(id);
+                        location.reload();
                     } else {
-                        alert(data.message || "Erreur modification");
+                        alert(data.message || "Update failed");
                     }
-                })
-                .catch(error => {
-                    console.error('Erreur saveCommentEdit:', error);
-                    alert("Erreur réseau ou serveur");
                 });
         }
 
         function deleteComment(id) {
-            if (!confirm("Supprimer ce commentaire ?")) return;
+            if (!confirm("Delete this comment?")) return;
 
-            fetch('../../controller/commentController.php?action=delete', {
+            fetch('../../controller/commentController.php?action=admin_delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -535,16 +393,13 @@ function getReactionOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        document.getElementById(`comment-${id}`).style.opacity = '0';
-                        setTimeout(() => document.getElementById(`comment-${id}`).remove(), 300);
+                        document.getElementById(`comment-${id}`).remove();
                     } else {
-                        alert(data.message || 'Erreur suppression');
+                        alert(data.message || 'Delete failed');
                     }
                 });
         }
     </script>
-
 </body>
 
 </html>
-

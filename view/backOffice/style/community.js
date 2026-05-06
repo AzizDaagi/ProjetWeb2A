@@ -28,7 +28,9 @@ function applyTheme(theme) {
     document.body.classList.toggle('theme-light', isLight);
     document.querySelectorAll('#themeToggle, #themeToggleFloating').forEach(btn => {
         btn.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i> Light' : '<i class="fa-solid fa-moon"></i> Dark';
-        btn.title = isLight ? 'Dark mode' : 'Light mode';
+        btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+        btn.setAttribute('aria-pressed', String(!isLight));
+        btn.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
     });
 }
 

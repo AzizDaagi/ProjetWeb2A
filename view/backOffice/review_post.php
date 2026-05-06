@@ -56,7 +56,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
     <link rel="stylesheet" href="style/community.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body class="backoffice-page">
     <nav class="navbar">
         <div class="navbar-brand">
             <a href="community.php" class="brand-link">
@@ -65,7 +65,8 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             </a>
         </div>
         <ul class="navbar-menu">
-            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-user-shield"></i> Community</a></li>
+            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Community</a></li>
             <li><a href="reports.php" class="nav-link active"><i class="fa-solid fa-flag"></i> Reports</a></li>
         </ul>
         <div class="navbar-footer">

@@ -36,11 +36,11 @@ class Post {
         if ($image) {
             $sql = "INSERT INTO posts (user_id, title, content, image) VALUES (?, ?, ?, ?)";
             $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$userId, $title, $content, $image]);
+            return $stmt->execute([$userId, $title, $content, $image]) ? (int) $this->db->lastInsertId() : false;
         } else {
             $sql = "INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)";
             $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$userId, $title, $content]);
+            return $stmt->execute([$userId, $title, $content]) ? (int) $this->db->lastInsertId() : false;
         }
     }
 
@@ -305,4 +305,3 @@ class Post {
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 }
-
