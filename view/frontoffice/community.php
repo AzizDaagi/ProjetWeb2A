@@ -5,7 +5,7 @@ require_once '../../model/Comment.php';
 require_once '../../model/News.php';
 
 $myId = 1;
-$sessionUserName = $_SESSION['user_name'] ?? 'User';
+$sessionUserName = $_SESSION['user_name'] ?? 'Utilisateur';
 $isLoggedIn = isset($_SESSION['user_id']) || $myId === 1;
 
 $postModel = new Post(config::getConnexion());
@@ -27,9 +27,9 @@ $featuredNews = array_slice($featuredNews, 0, 3);
 $fallbackNews = [
     [
         'id' => 'fallback-healthy-meal-prep',
-        'title' => 'Build Balanced Meal Prep Bowls for Busy Days',
-        'summary' => 'Use lean protein, colorful vegetables, whole grains, and healthy fats to create filling meals that support steady energy.',
-        'content' => '<p>A balanced meal prep bowl is easiest when you build it in layers. Start with a fiber-rich base like brown rice, quinoa, lentils, or roasted sweet potato. Add a protein such as grilled chicken, tuna, eggs, tofu, beans, or chickpeas. Then fill half the bowl with vegetables for volume, color, and micronutrients.</p><p>Finish with a healthy fat like avocado, olive oil dressing, nuts, or seeds. This mix helps meals feel satisfying while keeping energy more stable through the day.</p>',
+        'title' => 'Composer des bols repas equilibres pour les journees chargees',
+        'summary' => 'Associez proteines maigres, legumes colores, cereales completes et bonnes graisses pour des repas rassasiants.',
+        'content' => '<p>Un bol repas equilibre se construit simplement par couches. Commencez par une base riche en fibres comme le riz complet, le quinoa, les lentilles ou la patate douce rotie. Ajoutez une source de proteines comme le poulet grille, le thon, les oeufs, le tofu, les haricots ou les pois chiches. Completez avec des legumes pour la couleur, le volume et les micronutriments.</p><p>Terminez avec une bonne graisse comme l avocat, une vinaigrette a l huile d olive, des noix ou des graines. Ce melange aide a rester rassasie tout en gardant une energie plus stable dans la journee.</p>',
         'image_url' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80',
         'category' => 'nutrition',
         'source' => 'Smart Nutrition',
@@ -38,9 +38,9 @@ $fallbackNews = [
     ],
     [
         'id' => 'fallback-protein-breakfast',
-        'title' => 'Simple High-Protein Breakfast Ideas That Feel Fresh',
-        'summary' => 'Greek yogurt bowls, eggs with vegetables, oats with nuts, or smoothies can make breakfast more nourishing.',
-        'content' => '<p>A good breakfast does not need to be complicated. Aim for protein, fiber, and a fruit or vegetable. Greek yogurt with berries and seeds, eggs with spinach and tomatoes, oatmeal with peanut butter, or a smoothie with milk, banana, and protein-rich yogurt can all work well.</p><p>Protein in the morning can help with fullness, while fiber supports digestion and more steady energy.</p>',
+        'title' => 'Idees simples de petits-dejeuners riches en proteines',
+        'summary' => 'Yaourt grec, oeufs aux legumes, flocons d avoine aux noix ou smoothies peuvent rendre le petit-dejeuner plus nourrissant.',
+        'content' => '<p>Un bon petit-dejeuner n a pas besoin d etre complique. Essayez d associer proteines, fibres et un fruit ou un legume. Un yaourt grec avec des fruits rouges et des graines, des oeufs avec epinards et tomates, des flocons d avoine avec du beurre de cacahuete ou un smoothie au lait, banane et yaourt peuvent tres bien fonctionner.</p><p>Les proteines le matin favorisent la satiete, tandis que les fibres soutiennent la digestion et une energie plus reguliere.</p>',
         'image_url' => 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80',
         'category' => 'nutrition',
         'source' => 'Smart Nutrition',
@@ -49,9 +49,9 @@ $fallbackNews = [
     ],
     [
         'id' => 'fallback-hydration-meals',
-        'title' => 'Hydrating Foods to Add to Healthy Meals',
-        'summary' => 'Cucumber, citrus, berries, tomatoes, leafy greens, and soups can support hydration alongside water.',
-        'content' => '<p>Water is still the main hydration tool, but meals can help too. Foods like cucumber, oranges, berries, tomatoes, zucchini, leafy greens, and broth-based soups add fluid plus useful vitamins and minerals.</p><p>Try adding a side salad, fruit snack, or vegetable soup to meals when you want something light, fresh, and supportive of hydration.</p>',
+        'title' => 'Aliments hydratants a ajouter aux repas sains',
+        'summary' => 'Concombre, agrumes, fruits rouges, tomates, legumes verts et soupes peuvent aider l hydratation en complement de l eau.',
+        'content' => '<p>L eau reste essentielle pour s hydrater, mais les repas peuvent aussi aider. Le concombre, les oranges, les fruits rouges, les tomates, les courgettes, les legumes verts et les soupes a base de bouillon apportent de l eau ainsi que des vitamines et mineraux utiles.</p><p>Ajoutez une salade, un fruit ou une soupe de legumes lorsque vous voulez un repas leger, frais et favorable a l hydratation.</p>',
         'image_url' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80',
         'category' => 'nutrition',
         'source' => 'Smart Nutrition',
@@ -114,10 +114,10 @@ function organizeCommentsByThread($comments)
 function getReactionOptions()
 {
     return [
-        'love' => ['label' => 'Love', 'icon' => 'fa-heart'],
-        'laugh' => ['label' => 'Laugh', 'icon' => 'fa-face-laugh-squint'],
-        'sad' => ['label' => 'Sad', 'icon' => 'fa-face-sad-tear'],
-        'angry' => ['label' => 'Angry', 'icon' => 'fa-face-angry']
+        'love' => ['label' => 'J aime', 'icon' => 'fa-heart'],
+        'laugh' => ['label' => 'Drole', 'icon' => 'fa-face-laugh-squint'],
+        'sad' => ['label' => 'Triste', 'icon' => 'fa-face-sad-tear'],
+        'angry' => ['label' => 'En colere', 'icon' => 'fa-face-angry']
     ];
 }
 
@@ -125,11 +125,30 @@ function getReportReasonOptions()
 {
     return [
         'spam' => 'Spam',
-        'harassment' => 'Harassment',
-        'false_information' => 'False information',
-        'inappropriate_content' => 'Inappropriate content',
-        'other' => 'Other'
+        'harassment' => 'Harcelement',
+        'false_information' => 'Fausse information',
+        'inappropriate_content' => 'Contenu inapproprie',
+        'other' => 'Autre'
     ];
+}
+
+function getNewsCategoryLabel($category)
+{
+    $labels = [
+        'nutrition' => 'Nutrition',
+        'healthy_meals' => 'Repas sains',
+        'fitness' => 'Fitness',
+        'wellness' => 'Bien-etre',
+        'health_tips' => 'Conseils sante'
+    ];
+
+    return $labels[$category] ?? ucfirst(str_replace('_', ' ', (string) $category));
+}
+
+function decodeProductAnalysis($json)
+{
+    $data = json_decode((string) $json, true);
+    return is_array($data) ? $data : null;
 }
 ?>
 
@@ -156,14 +175,32 @@ function getReportReasonOptions()
             </a>
         </div>
         <ul class="navbar-menu">
-            <li><a href="community.php" class="nav-link active"><i class="fa-solid fa-users"></i> Community</a></li>
+            <li><a href="community.php" class="nav-link active"><i class="fa-solid fa-users"></i> Communaute</a></li>
         </ul>
         <div class="navbar-footer">
+            <?php if ($isLoggedIn): ?>
+                <div class="notification-center" data-notification-endpoint="/Web/controller/notificationController.php">
+                    <button type="button" id="notificationToggle" class="notification-toggle" aria-label="Notifications" aria-expanded="false">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="notificationBadge" class="notification-badge" hidden>0</span>
+                    </button>
+                    <div id="notificationDropdown" class="notification-dropdown" hidden>
+                        <div class="notification-header">
+                            <strong>Notifications</strong>
+                            <button type="button" id="notificationMarkAll" class="notification-mark-all">Tout marquer comme lu</button>
+                        </div>
+                        <div id="notificationList" class="notification-list">
+                            <p class="notification-empty">Aucune notification pour le moment.</p>
+                        </div>
+                        <button type="button" id="notificationShowOlder" class="notification-show-older" hidden>Voir les anciennes notifications</button>
+                    </div>
+                </div>
+            <?php endif; ?>
             <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Dark
+                <i class="fa-solid fa-moon"></i> Sombre
             </button>
             <?php if ($isLoggedIn): ?>
-                <p class="user-info">Connected: <strong><?= htmlspecialchars($sessionUserName) ?></strong></p>
+                <p class="user-info">Connecte : <strong><?= htmlspecialchars($sessionUserName) ?></strong></p>
             <?php endif; ?>
         </div>
     </nav>
@@ -180,6 +217,18 @@ function getReportReasonOptions()
                     <div class="form-group">
                         <input type="text" id="new-title" class="form-control mb-2" placeholder="Titre de votre publication">
                         <textarea id="new-content" class="form-control" rows="3" placeholder="Écrivez votre message ici..."></textarea>
+                        <div class="product-analysis-box mt-3">
+                            <label class="form-label" for="product-query">Analyse nutritionnelle (optionnel)</label>
+                            <div class="product-analysis-controls">
+                                <input type="text" id="product-query" class="form-control" placeholder="Nom ou code-barres du produit">
+                                <input type="hidden" id="product-analysis-json" value="">
+                                <button type="button" class="btn btn-outline-secondary" onclick="analyzeProduct()">
+                                    <i class="fa-solid fa-magnifying-glass-chart"></i> Analyser
+                                </button>
+                            </div>
+                            <p class="product-analysis-hint">Recherche dans Open Food Facts, avec priorite aux produits vendus en Tunisie.</p>
+                            <div id="product-analysis-result" class="product-analysis-result" hidden></div>
+                        </div>
                         <div class="form-group mt-3">
                             <label class="form-label">Image (optionnel)</label>
                             <input type="file" id="new-image" class="form-control" accept="image/*">
@@ -189,16 +238,16 @@ function getReportReasonOptions()
                 </div>
             </div>
 
-            <!-- News & Tips Section -->
+            <!-- Section actualites et conseils -->
             <div class="news-section mb-5">
-                <h2 class="section-title mb-4"><i class="fas fa-newspaper"></i> Nutrition & Fitness News</h2>
+                <h2 class="section-title mb-4"><i class="fas fa-newspaper"></i> Actualites nutrition et fitness</h2>
 
                 <?php if (!empty($featuredNews)): ?>
-                    <div class="news-carousel" id="newsCarousel" data-interval="4000" aria-label="Nutrition and fitness news slideshow">
+                    <div class="news-carousel" id="newsCarousel" data-interval="4000" aria-label="Diaporama des actualites nutrition et fitness">
                         <div class="news-carousel-viewport">
                             <div class="news-carousel-track" aria-live="polite">
                                 <?php foreach ($featuredNews as $index => $newsArticle): ?>
-                                    <div class="news-carousel-slide" aria-label="News slide <?= $index + 1 ?> of <?= count($featuredNews) ?>">
+                                    <div class="news-carousel-slide" aria-label="Actualite <?= $index + 1 ?> sur <?= count($featuredNews) ?>">
                                         <div class="news-card shadow-sm">
                                             <div class="news-image-container">
                                                 <?php if ($newsArticle['image_url']): ?>
@@ -206,16 +255,16 @@ function getReportReasonOptions()
                                                 <?php else: ?>
                                                     <div class="news-image-placeholder"><i class="fas fa-image"></i></div>
                                                 <?php endif; ?>
-                                                <span class="news-category-badge badge"><?= htmlspecialchars($newsArticle['category']) ?></span>
+                                                <span class="news-category-badge badge"><?= htmlspecialchars(getNewsCategoryLabel($newsArticle['category'] ?? '')) ?></span>
                                             </div>
                                             <div class="news-card-body">
                                                 <h5 class="news-title"><?= htmlspecialchars($newsArticle['title']) ?></h5>
                                                 <p class="news-summary text-muted"><?= htmlspecialchars($newsArticle['summary'] ?? substr(strip_tags($newsArticle['content']), 0, 100)) ?>...</p>
                                                 <div class="news-meta">
                                                     <small class="text-muted">
-                                                        <i class="fas fa-calendar"></i> <?= date('M d, Y', strtotime($newsArticle['created_at'])) ?>
+                                                        <i class="fas fa-calendar"></i> <?= date('d/m/Y', strtotime($newsArticle['created_at'])) ?>
                                                     </small>
-                                                    <?php if ($newsArticle['source'] !== 'AI Generated'): ?>
+                                                    <?php if ($newsArticle['source'] !== 'Genere par IA'): ?>
                                                         <small class="text-muted ml-2">
                                                             <i class="fas fa-source"></i> <?= htmlspecialchars($newsArticle['source']) ?>
                                                         </small>
@@ -223,11 +272,11 @@ function getReportReasonOptions()
                                                 </div>
                                                 <div class="news-actions mt-3">
                                                     <button class="btn btn-sm btn-outline-primary" onclick='viewNewsArticle(<?= json_encode((string) $newsArticle['id']) ?>)'>
-                                                        <i class="fas fa-eye"></i> Read More
+                                                        <i class="fas fa-eye"></i> Lire la suite
                                                     </button>
                                                     <?php if ($newsArticle['source_url']): ?>
                                                         <a href="<?= htmlspecialchars($newsArticle['source_url']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                                            <i class="fas fa-external-link-alt"></i> Original
+                                                            <i class="fas fa-external-link-alt"></i> Source
                                                         </a>
                                                     <?php endif; ?>
                                                 </div>
@@ -239,11 +288,11 @@ function getReportReasonOptions()
                         </div>
                         <?php if (count($featuredNews) > 1): ?>
                             <div class="news-carousel-controls">
-                                <button type="button" class="news-carousel-btn" id="newsPrev" data-carousel-direction="prev" aria-label="Previous news article">
+                                <button type="button" class="news-carousel-btn" id="newsPrev" data-carousel-direction="prev" aria-label="Actualite precedente">
                                     <i class="fas fa-chevron-left"></i>
                                 </button>
-                                <div class="news-carousel-dots" id="newsDots" aria-label="News slide navigation"></div>
-                                <button type="button" class="news-carousel-btn" id="newsNext" data-carousel-direction="next" aria-label="Next news article">
+                                <div class="news-carousel-dots" id="newsDots" aria-label="Navigation des actualites"></div>
+                                <button type="button" class="news-carousel-btn" id="newsNext" data-carousel-direction="next" aria-label="Actualite suivante">
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>
@@ -251,7 +300,7 @@ function getReportReasonOptions()
                     </div>
                 <?php else: ?>
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> No news articles available yet. Check back soon!
+                        <i class="fas fa-info-circle"></i> Aucune actualite disponible pour le moment. Revenez bientot !
                     </div>
                 <?php endif; ?>
             </div>
@@ -264,6 +313,7 @@ function getReportReasonOptions()
                         <?php $reactionOptions = getReactionOptions(); ?>
                         <?php $reportReasonOptions = getReportReasonOptions(); ?>
                         <?php $userReport = $postModel->getUserReportForPost($post['id'], $myId); ?>
+                        <?php $productAnalysis = decodeProductAnalysis($post['product_analysis_json'] ?? null); ?>
                         <div class="post-card" id="post-<?php echo $post['id']; ?>">
                             <div class="post-header">
                                 <div>
@@ -287,7 +337,60 @@ function getReportReasonOptions()
                                 <h5 id="display-title-<?php echo $post['id']; ?>"><?php echo htmlspecialchars($post['title']); ?></h5>
                                 <p id="display-content-<?php echo $post['id']; ?>"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
                                 <?php if ($postImageSrc): ?>
-                                    <img src="<?= htmlspecialchars($postImageSrc) ?>" alt="Post image" class="post-image mb-3 rounded" style="max-height: 250px; width: auto; max-width: 100%; height: auto; object-fit: contain;">
+                                    <img src="<?= htmlspecialchars($postImageSrc) ?>" alt="Image de la publication" class="post-image mb-3 rounded" style="max-height: 250px; width: auto; max-width: 100%; height: auto; object-fit: contain;">
+                                <?php endif; ?>
+
+                                <?php if ($productAnalysis): ?>
+                                    <div class="post-product-analysis">
+                                        <button type="button" class="product-analysis-toggle" onclick="toggleProductAnalysis(<?php echo (int) $post['id']; ?>)">
+                                            <i class="fa-solid fa-chart-pie"></i>
+                                            Voir l analyse nutritionnelle
+                                            <span class="nutrition-score nutrition-score-<?php echo htmlspecialchars(strtolower((string) ($productAnalysis['nutriScore'] ?? ''))); ?>">
+                                                Nutri-Score <?php echo htmlspecialchars($productAnalysis['nutriScore'] ?? 'N/A'); ?>
+                                            </span>
+                                        </button>
+                                        <div id="product-analysis-panel-<?php echo (int) $post['id']; ?>" class="product-analysis-result post-product-panel" hidden>
+                                            <div class="product-analysis-card">
+                                                <?php if (!empty($productAnalysis['image'])): ?>
+                                                    <img src="<?php echo htmlspecialchars($productAnalysis['image']); ?>" alt="<?php echo htmlspecialchars($productAnalysis['name'] ?? 'Produit'); ?>" class="product-analysis-image">
+                                                <?php else: ?>
+                                                    <div class="product-analysis-image product-analysis-placeholder"><i class="fa-solid fa-bowl-food"></i></div>
+                                                <?php endif; ?>
+                                                <div class="product-analysis-content">
+                                                    <div class="product-analysis-title-row">
+                                                        <div>
+                                                            <strong><?php echo htmlspecialchars($productAnalysis['name'] ?? 'Produit alimentaire'); ?></strong>
+                                                            <?php if (!empty($productAnalysis['brand'])): ?>
+                                                                <small><?php echo htmlspecialchars($productAnalysis['brand']); ?></small>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                        <span class="nutrition-score nutrition-score-<?php echo htmlspecialchars(strtolower((string) ($productAnalysis['nutriScore'] ?? ''))); ?>">
+                                                            Nutri-Score <?php echo htmlspecialchars($productAnalysis['nutriScore'] ?? 'N/A'); ?>
+                                                        </span>
+                                                    </div>
+                                                    <div class="nutrition-metrics">
+                                                        <span><b><?php echo htmlspecialchars($productAnalysis['calories'] ?? '-'); ?></b> kcal</span>
+                                                        <span><b><?php echo htmlspecialchars($productAnalysis['sugar'] ?? '-'); ?></b> sucres</span>
+                                                        <span><b><?php echo htmlspecialchars($productAnalysis['fat'] ?? '-'); ?></b> matieres grasses</span>
+                                                        <span><b><?php echo htmlspecialchars($productAnalysis['salt'] ?? '-'); ?></b> sel</span>
+                                                    </div>
+                                                    <div class="product-allergens">
+                                                        <?php if (!empty($productAnalysis['allergens']) && is_array($productAnalysis['allergens'])): ?>
+                                                            <?php foreach (array_slice($productAnalysis['allergens'], 0, 6) as $allergen): ?>
+                                                                <span><?php echo htmlspecialchars($allergen); ?></span>
+                                                            <?php endforeach; ?>
+                                                        <?php else: ?>
+                                                            <span>Aucun allergene renseigne</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <?php if (!empty($productAnalysis['ingredients'])): ?>
+                                                        <p class="product-ingredients"><strong>Ingredients :</strong> <?php echo htmlspecialchars($productAnalysis['ingredients']); ?></p>
+                                                    <?php endif; ?>
+                                                    <small class="text-muted">Source : Open Food Facts</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
 
                                 <div class="post-reactions" id="post-reactions-<?php echo $post['id']; ?>">
@@ -313,18 +416,18 @@ function getReportReasonOptions()
                                         class="report-toggle-btn<?php echo $userReport ? ' is-reported' : ''; ?>"
                                         onclick="toggleReportForm(<?php echo $post['id']; ?>)">
                                         <i class="fa-solid fa-flag"></i>
-                                        <span id="report-toggle-label-<?php echo $post['id']; ?>"><?php echo $userReport ? 'Reported' : 'Report'; ?></span>
+                                        <span id="report-toggle-label-<?php echo $post['id']; ?>"><?php echo $userReport ? 'Signale' : 'Signaler'; ?></span>
                                     </button>
                                     <span class="report-status-text" id="report-status-<?php echo $post['id']; ?>">
                                         <?php if ($userReport): ?>
-                                            You reported this post for <?php echo htmlspecialchars(str_replace('_', ' ', $userReport['reason'])); ?>.
+                                            Vous avez signale cette publication pour : <?php echo htmlspecialchars(str_replace('_', ' ', $userReport['reason'])); ?>.
                                         <?php endif; ?>
                                     </span>
                                 </div>
 
                                 <div id="report-form-<?php echo $post['id']; ?>" class="report-form-panel" style="display: none;">
                                     <div class="form-group">
-                                        <label class="form-label" for="report-reason-<?php echo $post['id']; ?>">Reason</label>
+                                        <label class="form-label" for="report-reason-<?php echo $post['id']; ?>">Raison</label>
                                         <select id="report-reason-<?php echo $post['id']; ?>" class="form-control form-control-sm">
                                             <?php foreach ($reportReasonOptions as $reasonValue => $reasonLabel): ?>
                                                 <option value="<?php echo $reasonValue; ?>" <?php echo (($userReport['reason'] ?? '') === $reasonValue) ? 'selected' : ''; ?>>
@@ -332,12 +435,12 @@ function getReportReasonOptions()
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <label class="form-label" for="report-details-<?php echo $post['id']; ?>">Details (optional)</label>
-                                        <textarea id="report-details-<?php echo $post['id']; ?>" class="form-control form-control-sm" rows="3" placeholder="Add a short note if needed..."><?php echo htmlspecialchars($userReport['details'] ?? ''); ?></textarea>
+                                        <label class="form-label" for="report-details-<?php echo $post['id']; ?>">Details (optionnels)</label>
+                                        <textarea id="report-details-<?php echo $post['id']; ?>" class="form-control form-control-sm" rows="3" placeholder="Ajoutez une courte explication si necessaire..."><?php echo htmlspecialchars($userReport['details'] ?? ''); ?></textarea>
                                     </div>
                                     <div class="report-form-actions">
-                                        <button class="btn btn-sm btn-outline-danger" onclick="submitReport(<?php echo $post['id']; ?>)">Send report</button>
-                                        <button class="btn btn-secondary btn-sm" onclick="toggleReportForm(<?php echo $post['id']; ?>)">Cancel</button>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="submitReport(<?php echo $post['id']; ?>)">Envoyer le signalement</button>
+                                        <button class="btn btn-secondary btn-sm" onclick="toggleReportForm(<?php echo $post['id']; ?>)">Annuler</button>
                                     </div>
                                 </div>
 
@@ -346,7 +449,7 @@ function getReportReasonOptions()
                                     <textarea id="edit-content-<?php echo $post['id']; ?>" class="form-control mb-2"><?php echo htmlspecialchars($post['content']); ?></textarea>
                                     <?php if ($postImageSrc): ?>
                                         <div class="mb-2 d-flex align-items-center" id="post-image-container-<?php echo $post['id']; ?>">
-                                            <img src="<?= htmlspecialchars($postImageSrc) ?>" class="img-thumbnail me-2" style="max-width: 80px; max-height: 80px; object-fit: contain;" alt="Post image">
+                                            <img src="<?= htmlspecialchars($postImageSrc) ?>" class="img-thumbnail me-2" style="max-width: 80px; max-height: 80px; object-fit: contain;" alt="Image de la publication">
                                             <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage(<?php echo $post['id']; ?>)">
                                                 <i class="fas fa-trash"></i> Supprimer image
                                             </button>
@@ -355,6 +458,21 @@ function getReportReasonOptions()
                                     <div class="form-group">
                                         <label class="form-label">Nouvelle image (optionnel)</label>
                                         <input type="file" id="edit-image-<?php echo $post['id']; ?>" class="form-control" accept="image/*">
+                                    </div>
+                                    <div class="product-analysis-box mt-3">
+                                        <label class="form-label" for="edit-product-query-<?php echo $post['id']; ?>">Analyse nutritionnelle</label>
+                                        <div class="product-analysis-controls">
+                                            <input type="text" id="edit-product-query-<?php echo $post['id']; ?>" class="form-control" placeholder="Nom ou code-barres du produit">
+                                            <input type="hidden" id="edit-product-analysis-json-<?php echo $post['id']; ?>" value="<?php echo htmlspecialchars($post['product_analysis_json'] ?? '', ENT_QUOTES); ?>">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="analyzeProductForEdit(<?php echo (int) $post['id']; ?>)">
+                                                <i class="fa-solid fa-magnifying-glass-chart"></i> Analyser
+                                            </button>
+                                        </div>
+                                        <div id="edit-product-analysis-result-<?php echo $post['id']; ?>" class="product-analysis-result" <?php echo $productAnalysis ? '' : 'hidden'; ?>>
+                                            <?php if ($productAnalysis): ?>
+                                                Analyse deja associee a cette publication.
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                     <button class="btn btn-success btn-sm" onclick="saveEdit(<?php echo $post['id']; ?>)">Enregistrer</button>
                                     <button class="btn btn-secondary btn-sm" onclick="toggleEdit(<?php echo $post['id']; ?>)">Annuler</button>
@@ -457,14 +575,179 @@ function getReportReasonOptions()
 
     <script src="/Web/view/backoffice/style/community.js?v=<?= filemtime(__DIR__ . '/../backoffice/style/community.js') ?>"></script>
     <script>
+        let currentProductAnalysis = null;
+
+        function analyzeProduct() {
+            const queryField = document.getElementById('product-query');
+            const resultBox = document.getElementById('product-analysis-result');
+            const hiddenField = document.getElementById('product-analysis-json');
+            const query = queryField ? queryField.value.trim() : '';
+
+            if (!query) {
+                alert('Veuillez saisir un nom de produit ou un code-barres.');
+                return;
+            }
+
+            resultBox.hidden = false;
+            resultBox.className = 'product-analysis-result is-loading';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyse du produit en cours...';
+
+            fetch('../../controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
+                    cache: 'no-store'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        currentProductAnalysis = null;
+                        if (hiddenField) hiddenField.value = '';
+                        resultBox.className = 'product-analysis-result is-error';
+                        resultBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${htmlEscape(data.message || 'Produit non trouve.')}`;
+                        return;
+                    }
+
+                    currentProductAnalysis = data.product;
+                    if (hiddenField) hiddenField.value = JSON.stringify(data.product);
+                    resultBox.className = 'product-analysis-result is-ready';
+                    resultBox.innerHTML = renderProductAnalysis(data.product);
+                })
+                .catch(() => {
+                    currentProductAnalysis = null;
+                    if (hiddenField) hiddenField.value = '';
+                    resultBox.className = 'product-analysis-result is-error';
+                    resultBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Impossible de contacter Open Food Facts pour le moment.';
+                });
+        }
+
+        function analyzeProductForEdit(postId) {
+            const queryField = document.getElementById(`edit-product-query-${postId}`);
+            const resultBox = document.getElementById(`edit-product-analysis-result-${postId}`);
+            const hiddenField = document.getElementById(`edit-product-analysis-json-${postId}`);
+            const query = queryField ? queryField.value.trim() : '';
+
+            if (!query) {
+                alert('Veuillez saisir un nom de produit ou un code-barres.');
+                return;
+            }
+
+            resultBox.hidden = false;
+            resultBox.className = 'product-analysis-result is-loading';
+            resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyse du produit en cours...';
+
+            fetch('../../controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
+                    cache: 'no-store'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        if (hiddenField) hiddenField.value = '';
+                        resultBox.className = 'product-analysis-result is-error';
+                        resultBox.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${htmlEscape(data.message || 'Produit non trouve.')}`;
+                        return;
+                    }
+
+                    if (hiddenField) hiddenField.value = JSON.stringify(data.product);
+                    resultBox.className = 'product-analysis-result is-ready';
+                    resultBox.innerHTML = renderProductAnalysis(data.product).replace('onclick="insertProductAnalysisInPost()"', 'disabled');
+                })
+                .catch(() => {
+                    if (hiddenField) hiddenField.value = '';
+                    resultBox.className = 'product-analysis-result is-error';
+                    resultBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> Impossible de contacter Open Food Facts pour le moment.';
+                });
+        }
+
+        function renderProductAnalysis(product) {
+            const image = product.image
+                ? `<img src="${htmlEscape(product.image)}" alt="${htmlEscape(product.name)}" class="product-analysis-image">`
+                : '<div class="product-analysis-image product-analysis-placeholder"><i class="fa-solid fa-bowl-food"></i></div>';
+
+            const allergens = Array.isArray(product.allergens) && product.allergens.length
+                ? product.allergens.slice(0, 4).map(item => `<span>${htmlEscape(item)}</span>`).join('')
+                : '<span>Aucun allergene renseigne</span>';
+
+            return `
+                <div class="product-analysis-card">
+                    ${image}
+                    <div class="product-analysis-content">
+                        <div class="product-analysis-title-row">
+                            <div>
+                                <strong>${htmlEscape(product.name)}</strong>
+                                ${product.brand ? `<small>${htmlEscape(product.brand)}</small>` : ''}
+                            </div>
+                            <span class="nutrition-score nutrition-score-${htmlEscape(String(product.nutriScore || '').toLowerCase())}">
+                                Nutri-Score ${htmlEscape(product.nutriScore || 'N/A')}
+                            </span>
+                        </div>
+                        <div class="nutrition-metrics">
+                            <span><b>${formatMetric(product.calories)}</b> kcal</span>
+                            <span><b>${formatMetric(product.sugar)}</b> sucres</span>
+                            <span><b>${formatMetric(product.fat)}</b> matieres grasses</span>
+                            <span><b>${formatMetric(product.salt)}</b> sel</span>
+                        </div>
+                        <div class="product-allergens">${allergens}</div>
+                        <button type="button" class="btn btn-sm btn-success" onclick="insertProductAnalysisInPost()">
+                            <i class="fa-solid fa-plus"></i> Ajouter au message
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatMetric(value) {
+            if (value === null || value === undefined || value === '') {
+                return '-';
+            }
+            return htmlEscape(String(value));
+        }
+
+        function insertProductAnalysisInPost() {
+            if (!currentProductAnalysis) return;
+
+            const contentField = document.getElementById('new-content');
+            if (!contentField) return;
+
+            const product = currentProductAnalysis;
+            const allergens = Array.isArray(product.allergens) && product.allergens.length
+                ? product.allergens.join(', ')
+                : 'non renseignes';
+
+            const summary = [
+                '',
+                'Analyse nutritionnelle du produit :',
+                '- Produit : ' + (product.name || 'Non renseigne'),
+                '- Marque : ' + (product.brand || 'Non renseignee'),
+                '- Nutri-Score : ' + (product.nutriScore || 'Non disponible'),
+                '- Calories : ' + (product.calories ?? '-') + ' kcal / 100g',
+                '- Sucres : ' + (product.sugar ?? '-') + ' g / 100g',
+                '- Sel : ' + (product.salt ?? '-') + ' g / 100g',
+                '- Allergenes : ' + allergens,
+                'Source : Open Food Facts'
+            ].join('\n');
+
+            contentField.value = contentField.value.trim()
+                ? contentField.value.trim() + '\n' + summary
+                : summary.trim();
+            contentField.focus();
+        }
+
+        function toggleProductAnalysis(postId) {
+            const panel = document.getElementById(`product-analysis-panel-${postId}`);
+            if (!panel) return;
+            panel.hidden = !panel.hidden;
+        }
+
         function submitPost() {
             const title = document.getElementById('new-title').value;
             const content = document.getElementById('new-content').value;
             const imageInput = document.getElementById('new-image');
+            const productAnalysisInput = document.getElementById('product-analysis-json');
 
             const formData = new FormData();
             formData.append('title', title);
             formData.append('content', content);
+            if (productAnalysisInput && productAnalysisInput.value) {
+                formData.append('product_analysis_json', productAnalysisInput.value);
+            }
             if (imageInput.files[0]) {
                 formData.append('image', imageInput.files[0]);
             }
@@ -476,6 +759,9 @@ function getReportReasonOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.moderationQueued && typeof triggerModerationJobs === 'function') {
+                            triggerModerationJobs();
+                        }
                         location.reload();
                     } else {
                         alert(data.message || "Erreur lors de la publication");
@@ -502,11 +788,15 @@ function getReportReasonOptions()
             const title = document.getElementById(`edit-title-${id}`).value;
             const content = document.getElementById(`edit-content-${id}`).value;
             const imageInput = document.getElementById(`edit-image-${id}`);
+            const productAnalysisInput = document.getElementById(`edit-product-analysis-json-${id}`);
 
             const formData = new FormData();
             formData.append('id', id);
             formData.append('title', title);
             formData.append('content', content);
+            if (productAnalysisInput) {
+                formData.append('product_analysis_json', productAnalysisInput.value);
+            }
             if (imageToRemove[id]) {
                 formData.append('remove_image', '1');
             }
@@ -521,6 +811,9 @@ function getReportReasonOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.moderationQueued && typeof triggerModerationJobs === 'function') {
+                            triggerModerationJobs();
+                        }
                         location.reload();
                     } else {
                         alert(data.message || "Erreur lors de la modification");
@@ -529,7 +822,7 @@ function getReportReasonOptions()
         }
 
         function deletePost(id) {
-            if (!confirm("Voulez-vous vraiment supprimer ce post ?")) return;
+            if (!confirm("Voulez-vous vraiment supprimer cette publication ?")) return;
 
             fetch('../../controller/postController.php?action=delete', {
                     method: 'POST',
@@ -623,8 +916,8 @@ function getReportReasonOptions()
 
             if (report) {
                 const reasonText = String(report.reason || '').replaceAll('_', ' ');
-                statusElement.textContent = `You reported this post for ${reasonText}.`;
-                labelElement.textContent = 'Reported';
+                statusElement.textContent = `Vous avez signale cette publication pour : ${reasonText}.`;
+                labelElement.textContent = 'Signale';
                 toggleButton.classList.add('is-reported');
                 if (detailsField) {
                     detailsField.value = report.details || '';
@@ -634,7 +927,7 @@ function getReportReasonOptions()
                 }
             } else {
                 statusElement.textContent = '';
-                labelElement.textContent = 'Report';
+                labelElement.textContent = 'Signaler';
                 toggleButton.classList.remove('is-reported');
             }
         }
@@ -653,6 +946,9 @@ function getReportReasonOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.moderationQueued && typeof triggerModerationJobs === 'function') {
+                            triggerModerationJobs();
+                        }
                         document.getElementById(`comment-content-${postId}`).value = '';
                         location.reload();
                     } else {
@@ -689,6 +985,9 @@ function getReportReasonOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.moderationQueued && typeof triggerModerationJobs === 'function') {
+                            triggerModerationJobs();
+                        }
                         contentField.value = '';
                         location.reload();
                     } else {
@@ -711,6 +1010,9 @@ function getReportReasonOptions()
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        if (data.moderationQueued && typeof triggerModerationJobs === 'function') {
+                            triggerModerationJobs();
+                        }
                         document.getElementById(`display-comment-text-${id}`).innerHTML = content.replace(/\n/g, '<br>');
                         toggleCommentEdit(id);
                     } else {
@@ -745,7 +1047,7 @@ function getReportReasonOptions()
 
         const fallbackNewsArticles = <?= json_encode(array_column($fallbackNews, null, 'id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 
-        // News Functions
+        // Fonctions actualites
         function viewNewsArticle(newsId) {
             if (fallbackNewsArticles[newsId]) {
                 showNewsModal(fallbackNewsArticles[newsId]);
@@ -758,7 +1060,7 @@ function getReportReasonOptions()
                     if (data.success) {
                         showNewsModal(data.data);
                     } else {
-                        alert(data.message || 'Error loading article');
+                        alert(data.message || 'Erreur lors du chargement de l article');
                     }
                 });
         }
@@ -770,13 +1072,13 @@ function getReportReasonOptions()
             }
 
             const modal = document.createElement('div');
-            const articleContent = formatArticleContent(article.content || article.summary || 'No article content available.');
+            const articleContent = formatArticleContent(article.content || article.summary || 'Aucun contenu disponible pour cet article.');
 
             modal.className = 'modal-overlay news-modal-overlay';
             modal.id = 'newsModal';
             modal.innerHTML = `
                 <div class="news-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="newsModalTitle">
-                    <button type="button" class="modal-close" onclick="this.closest('.modal-overlay').remove()" aria-label="Close article">
+                    <button type="button" class="modal-close" onclick="this.closest('.modal-overlay').remove()" aria-label="Fermer l article">
                         <i class="fas fa-times"></i>
                     </button>
                     <div class="modal-header">
@@ -817,7 +1119,7 @@ function getReportReasonOptions()
         function formatArticleContent(content) {
             const text = String(content || '').trim();
             if (!text) {
-                return '<p>No article content available.</p>';
+                return '<p>Aucun contenu disponible pour cet article.</p>';
             }
 
             if (/<[a-z][\s\S]*>/i.test(text)) {

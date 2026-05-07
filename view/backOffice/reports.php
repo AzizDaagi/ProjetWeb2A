@@ -28,8 +28,8 @@ foreach ($reports as $report) {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Back Office - Reports</title>
-    <link rel="stylesheet" href="style/community.css">
+    <title>Back Office - Signalements</title>
+    <link rel="stylesheet" href="style/community.css?v=<?= filemtime(__DIR__ . '/style/community.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="backoffice-page">
@@ -41,13 +41,13 @@ foreach ($reports as $report) {
             </a>
         </div>
         <ul class="navbar-menu">
-            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Community</a></li>
-            <li><a href="reports.php" class="nav-link active"><i class="fa-solid fa-flag"></i> Reports</a></li>
+            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
+            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Communaute</a></li>
+            <li><a href="reports.php" class="nav-link active"><i class="fa-solid fa-flag"></i> Signalements</a></li>
         </ul>
         <div class="navbar-footer">
             <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Dark
+                <i class="fa-solid fa-moon"></i> Sombre
             </button>
             <p class="user-info">Admin: <strong><?= htmlspecialchars($adminName) ?></strong></p>
         </div>
@@ -55,92 +55,147 @@ foreach ($reports as $report) {
 
     <div class="main-content">
         <div class="container">
-            <h1 class="mb-4"><i class="fa-solid fa-flag"></i> Report Center</h1>
+            <h1 class="mb-4"><i class="fa-solid fa-flag"></i> Centre des signalements</h1>
 
             <div class="admin-cards">
                 <div class="admin-card">
                     <h3><?= count($reports) ?></h3>
-                    <p>Total reports</p>
+                    <p>Total des signalements</p>
                 </div>
                 <div class="admin-card">
                     <h3><?= $pendingReports ?></h3>
-                    <p>Pending</p>
+                    <p>En attente</p>
                 </div>
                 <div class="admin-card">
                     <h3><?= $resolvedReports ?></h3>
-                    <p>Resolved</p>
+                    <p>Resolus</p>
                 </div>
                 <div class="admin-card ai-card-review">
                     <h3><?= (int) ($moderationCounts['review'] ?? 0) ?></h3>
-                    <p>AI review needed</p>
+                    <p>Revision IA requise</p>
                 </div>
                 <div class="admin-card ai-card-error">
                     <h3><?= (int) ($moderationCounts['error'] ?? 0) ?></h3>
-                    <p>AI errors</p>
+                    <p>Erreurs IA</p>
                 </div>
                 <div class="admin-card ai-card-review">
                     <h3><?= (int) ($imageModerationCounts['review'] ?? 0) ?></h3>
-                    <p>Image review needed</p>
+                    <p>Revision image requise</p>
                 </div>
             </div>
 
             <div class="card card-primary shadow-sm">
-                <div class="card-header">
-                    <h3 class="card-title">All Reports</h3>
+                <div class="card-header admin-list-header">
+                    <h3 class="card-title">Tous les signalements</h3>
+                    <span class="text-muted"><span data-table-count="reports-list"><?= count($reports) ?></span> item(s)</span>
                 </div>
                 <div class="card-body">
                     <?php if (!empty($reports)): ?>
+                        <div class="admin-table-tools" data-table-controls="reports-list">
+                            <label class="admin-search-field">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="search" class="form-control" data-table-search placeholder="Rechercher par raison, publication, utilisateur...">
+                            </label>
+                            <label class="admin-select-field">
+                                <span>Statut</span>
+                                <select class="form-control" data-table-filter="status">
+                                    <option value="">Tous</option>
+                                    <option value="pending">En attente</option>
+                                    <option value="resolved">Resolus</option>
+                                </select>
+                            </label>
+                            <label class="admin-select-field">
+                                <span>Trier par</span>
+                                <select class="form-control" data-table-sort>
+                                    <option value="date_desc">Plus recents</option>
+                                    <option value="date_asc">Plus anciens</option>
+                                    <option value="status_asc">Statut</option>
+                                    <option value="reason_asc">Raison A-Z</option>
+                                    <option value="reporter_asc">Utilisateur A-Z</option>
+                                    <option value="title_asc">Publication A-Z</option>
+                                    <option value="ai_review">Revision IA d'abord</option>
+                                </select>
+                            </label>
+                        </div>
                         <div class="reports-table-wrap">
-                            <table class="reports-table">
+                            <table class="reports-table" data-filter-table="reports-list">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Status</th>
-                                        <th>Reason</th>
+                                        <th>Statut</th>
+                                        <th>Raison</th>
                                         <th>AI</th>
-                                        <th>Image AI</th>
-                                        <th>Post</th>
-                                        <th>Reporter</th>
+                                        <th>IA image</th>
+                                        <th>Publication</th>
+                                        <th>Signale par</th>
                                         <th>Date</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($reports as $report): ?>
-                                        <tr>
+                                        <?php
+                                        $reportId = (int) $report['id'];
+                                        $reportStatus = (string) ($report['status'] ?: 'pending');
+                                        $reportPostId = (int) ($report['post_id'] ?? 0);
+                                        $reportAi = $postModerationResults[$reportPostId] ?? null;
+                                        $reportImageAi = $postImageModerationResults[$reportPostId] ?? null;
+                                        $reportAiStatus = strtolower((string) ($reportAi['status'] ?? 'missing'));
+                                        $reportImageAiStatus = strtolower((string) ($reportImageAi['status'] ?? 'missing'));
+                                        $reportReason = ucwords(str_replace('_', ' ', $report['reason'] ?? ''));
+                                        $reportTitle = $report['post_title'] ?? '[Publication supprimee]';
+                                        $reporterName = $report['reporter_username'] ?? 'Inconnu';
+                                        $reportSearchText = trim(implode(' ', [
+                                            $reportId,
+                                            $reportStatus,
+                                            $reportReason,
+                                            $reportTitle,
+                                            $reporterName,
+                                            $report['created_at'] ?? '',
+                                            $reportAiStatus,
+                                            $reportImageAiStatus
+                                        ]));
+                                        ?>
+                                        <tr class="js-filter-row"
+                                            data-search="<?= htmlspecialchars($reportSearchText, ENT_QUOTES) ?>"
+                                            data-status="<?= htmlspecialchars($reportStatus, ENT_QUOTES) ?>"
+                                            data-reason="<?= htmlspecialchars($reportReason, ENT_QUOTES) ?>"
+                                            data-title="<?= htmlspecialchars($reportTitle, ENT_QUOTES) ?>"
+                                            data-reporter="<?= htmlspecialchars($reporterName, ENT_QUOTES) ?>"
+                                            data-date="<?= htmlspecialchars($report['created_at'] ?? '', ENT_QUOTES) ?>"
+                                            data-ai="<?= htmlspecialchars($reportAiStatus, ENT_QUOTES) ?>"
+                                            data-image-ai="<?= htmlspecialchars($reportImageAiStatus, ENT_QUOTES) ?>">
                                             <td>#<?= (int) $report['id'] ?></td>
                                             <td>
-                                                <span class="status-pill status-<?= htmlspecialchars($report['status'] ?: 'pending') ?>">
-                                                    <?= htmlspecialchars(ucfirst($report['status'] ?: 'pending')) ?>
+                                                <span class="status-pill status-<?= htmlspecialchars($reportStatus) ?>">
+                                                    <?= htmlspecialchars($reportStatus === 'resolved' ? 'Resolu' : 'En attente') ?>
                                                 </span>
                                             </td>
-                                            <td><?= htmlspecialchars(ucwords(str_replace('_', ' ', $report['reason'] ?? ''))) ?></td>
+                                            <td><?= htmlspecialchars($reportReason) ?></td>
                                             <td>
-                                                <?php $ai = $postModerationResults[(int) ($report['post_id'] ?? 0)] ?? null; ?>
-                                                <?php if ($ai): ?>
-                                                    <span class="ai-badge ai-badge-<?= htmlspecialchars($ai['status']) ?>">
-                                                        <?= htmlspecialchars(ucfirst($ai['status'])) ?> <?= (int) round(((float) $ai['score']) * 100) ?>%
+                                                <?php if ($reportAi): ?>
+                                                    <span class="ai-badge ai-badge-<?= htmlspecialchars($reportAi['status']) ?>">
+                                                        <?= htmlspecialchars(ucfirst($reportAi['status'])) ?> <?= (int) round(((float) $reportAi['score']) * 100) ?>%
                                                     </span>
                                                 <?php else: ?>
-                                                    <span class="ai-badge ai-badge-missing">Not checked</span>
+                                                    <span class="ai-badge ai-badge-missing">Non verifie</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <?php $imageAi = $postImageModerationResults[(int) ($report['post_id'] ?? 0)] ?? null; ?>
-                                                <?php if ($imageAi): ?>
-                                                    <span class="ai-badge ai-badge-<?= htmlspecialchars($imageAi['status']) ?>">
-                                                        <?= htmlspecialchars(ucfirst($imageAi['status'])) ?> <?= (int) round(((float) $imageAi['score']) * 100) ?>%
+                                                <?php if ($reportImageAi): ?>
+                                                    <span class="ai-badge ai-badge-<?= htmlspecialchars($reportImageAi['status']) ?>">
+                                                        <?= htmlspecialchars(ucfirst($reportImageAi['status'])) ?> <?= (int) round(((float) $reportImageAi['score']) * 100) ?>%
                                                     </span>
                                                 <?php else: ?>
-                                                    <span class="ai-badge ai-badge-missing">Not checked</span>
+                                                    <span class="ai-badge ai-badge-missing">Non verifie</span>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?= htmlspecialchars($report['post_title'] ?? '[Deleted post]') ?></td>
-                                            <td><?= htmlspecialchars($report['reporter_username'] ?? 'Unknown') ?></td>
+                                            <td><?= htmlspecialchars($reportTitle) ?></td>
+                                            <td><?= htmlspecialchars($reporterName) ?></td>
                                             <td><?= htmlspecialchars($report['created_at'] ?? '-') ?></td>
                                             <td>
                                                 <a class="btn btn-outline-secondary btn-sm" href="report_details.php?id=<?= (int) $report['id'] ?>">
-                                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+                                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir
                                                 </a>
                                             </td>
                                         </tr>
@@ -149,13 +204,13 @@ foreach ($reports as $report) {
                             </table>
                         </div>
                     <?php else: ?>
-                        <p class="text-muted">No reports have been submitted yet.</p>
+                        <p class="text-muted">Aucun signalement n a encore ete envoye.</p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="style/community.js"></script>
+    <script src="style/community.js?v=<?= filemtime(__DIR__ . '/style/community.js') ?>"></script>
 </body>
 </html>

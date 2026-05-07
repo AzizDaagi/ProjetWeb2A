@@ -23,7 +23,10 @@ class Comment {
     }
 
     public function getCommentById($id) {
-        $sql = "SELECT * FROM comments WHERE id = ?";
+        $sql = "SELECT c.*, u.username
+                FROM comments c
+                LEFT JOIN users u ON c.user_id = u.id
+                WHERE c.id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id]);
 

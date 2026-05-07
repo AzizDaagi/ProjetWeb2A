@@ -1,22 +1,32 @@
 <?php
-require_once '../model/Comment.php';
-require_once '../model/connection.php';
-require_once '../model/AiModeration.php';
+require_once __DIR__ . '/../model/Comment.php';
+require_once __DIR__ . '/../model/connection.php';
+require_once __DIR__ . '/../model/AiModeration.php';
+require_once __DIR__ . '/../model/Post.php';
+require_once __DIR__ . '/../model/Notification.php';
+require_once __DIR__ . '/../model/ModerationJob.php';
+require_once __DIR__ . '/../model/InputValidator.php';
 
 class CommentController {
 
     private $commentModel;
     private $aiModeration;
+    private $postModel;
+    private $notificationModel;
+    private $moderationJobModel;
 
     public function __construct($db) {
         $this->commentModel = new Comment($db);
         $this->aiModeration = new AiModeration($db);
+        $this->postModel = new Post($db);
+        $this->notificationModel = new Notification($db);
+        $this->moderationJobModel = new ModerationJob($db);
     }
 
     // CREATE
     public function add() {
         $postId = $_POST['post_id'] ?? null;
-        $content = $_POST['content'] ?? '';
+        $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
         $parentCommentId = $_POST['parent_comment_id'] ?? null;
         $userId = 1; // temporary (replace with session later)
 
@@ -28,27 +38,29 @@ class CommentController {
             $parentCommentId = (int) $parentCommentId;
         }
 
-        if (!$postId || empty($content)) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Contenu requis'
-            ]);
+        $validationError = InputValidator::firstError([
+            InputValidator::validateId($postId, 'Publication'),
+            $parentCommentId !== null ? InputValidator::validateId($parentCommentId, 'Commentaire parent') : null,
+            InputValidator::validateComment($content)
+        ]);
+
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
         $result = $this->commentModel->addComment($postId, $userId, $content, $parentCommentId);
-        $moderation = null;
-
         if ($result) {
-            $moderation = $this->moderateCommentText((int) $result, $content);
+            $this->queueCommentModeration((int) $result, $content);
+            $this->notifyCommentActivity((int) $result, (int) $postId, $userId, $content, $parentCommentId);
         }
 
         header('Content-Type: application/json');
         echo json_encode([
             'success' => (bool) $result,
             'message' => $result ? 'Commentaire ajoute' : 'Impossible d\'ajouter la reponse ou le commentaire',
-            'moderation' => $moderation
+            'moderation' => $result ? ['status' => 'queued'] : null,
+            'moderationQueued' => (bool) $result
         ]);
         exit;
     }
@@ -56,30 +68,30 @@ class CommentController {
     // UPDATE
     public function update() {
         $id = $_POST['id'] ?? null;
-        $content = $_POST['content'] ?? '';
+        $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
         $userId = 1; // temporary
 
-        if (!$id || empty($content)) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Donnees invalides'
-            ]);
+        $validationError = InputValidator::firstError([
+            InputValidator::validateId($id, 'Commentaire'),
+            InputValidator::validateComment($content)
+        ]);
+
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
         $success = $this->commentModel->updateComment($id, $content, $userId);
-        $moderation = null;
-
         if ($success) {
-            $moderation = $this->moderateCommentText((int) $id, $content);
+            $this->queueCommentModeration((int) $id, $content);
         }
 
         header('Content-Type: application/json');
         echo json_encode([
             'success' => $success,
             'message' => $success ? 'Commentaire modifie' : 'Erreur modification',
-            'moderation' => $moderation
+            'moderation' => $success ? ['status' => 'queued'] : null,
+            'moderationQueued' => (bool) $success
         ]);
         exit;
     }
@@ -88,12 +100,9 @@ class CommentController {
     public function delete() {
         $id = $_POST['id'] ?? null;
 
-        if (!$id) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'ID manquant'
-            ]);
+        $validationError = InputValidator::validateId($id, 'Commentaire');
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
@@ -109,29 +118,29 @@ class CommentController {
 
     public function adminUpdate() {
         $id = $_POST['id'] ?? null;
-        $content = $_POST['content'] ?? '';
+        $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
 
-        if (!$id || empty($content)) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Donnees invalides'
-            ]);
+        $validationError = InputValidator::firstError([
+            InputValidator::validateId($id, 'Commentaire'),
+            InputValidator::validateComment($content)
+        ]);
+
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
         $success = $this->commentModel->updateCommentAsAdmin($id, $content);
-        $moderation = null;
-
         if ($success) {
-            $moderation = $this->moderateCommentText((int) $id, $content);
+            $this->queueCommentModeration((int) $id, $content);
         }
 
         header('Content-Type: application/json');
         echo json_encode([
             'success' => $success,
             'message' => $success ? 'Commentaire modifie' : 'Erreur modification',
-            'moderation' => $moderation
+            'moderation' => $success ? ['status' => 'queued'] : null,
+            'moderationQueued' => (bool) $success
         ]);
         exit;
     }
@@ -139,12 +148,9 @@ class CommentController {
     public function adminDelete() {
         $id = $_POST['id'] ?? null;
 
-        if (!$id) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'ID manquant'
-            ]);
+        $validationError = InputValidator::validateId($id, 'Commentaire');
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
@@ -158,15 +164,66 @@ class CommentController {
         exit;
     }
 
-    private function moderateCommentText(int $commentId, string $content): ?array {
-        try {
-            return $this->aiModeration->analyzeAndStore('comment', $commentId, $content);
-        } catch (Throwable $e) {
-            return [
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ];
+    private function queueCommentModeration(int $commentId, string $content): void {
+        $this->moderationJobModel->enqueue('comment', $commentId, 'text', [
+            'text' => $content
+        ]);
+    }
+
+    private function jsonError(string $message): void {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => $message
+        ]);
+    }
+
+    private function notifyCommentActivity(int $commentId, int $postId, int $actorUserId, string $content, $parentCommentId = null): void {
+        $post = $this->postModel->getPostById($postId);
+        if (!$post) {
+            return;
         }
+
+        $actorName = $_SESSION['user_name'] ?? 'Quelqu un';
+        $postTitle = $post['title'] ?? 'votre publication';
+        $messagePreview = $this->shorten($content);
+        $link = '/Web/view/frontoffice/community.php#post-' . $postId;
+
+        if ($parentCommentId !== null) {
+            $parentComment = $this->commentModel->getCommentById((int) $parentCommentId);
+            if ($parentComment) {
+                $this->notificationModel->create(
+                    (int) $parentComment['user_id'],
+                    $actorUserId,
+                    'comment_reply',
+                    'Nouvelle reponse a votre commentaire',
+                    $actorName . ' a repondu a votre commentaire sur "' . $postTitle . '" : ' . $messagePreview,
+                    $link,
+                    $postId,
+                    $commentId
+                );
+            }
+            return;
+        }
+
+        $this->notificationModel->create(
+            (int) $post['user_id'],
+            $actorUserId,
+            'post_comment',
+            'Nouveau commentaire sur votre publication',
+            $actorName . ' a commente "' . $postTitle . '" : ' . $messagePreview,
+            $link,
+            $postId,
+            $commentId
+        );
+    }
+
+    private function shorten(string $text, int $maxLength = 120): string {
+        $text = trim(preg_replace('/\s+/', ' ', $text));
+        if (strlen($text) <= $maxLength) {
+            return $text;
+        }
+        return substr($text, 0, $maxLength - 3) . '...';
     }
 }
 

@@ -1,10 +1,27 @@
-document.addEventListener('DOMContentLoaded', function () {
-    initAnimatedBackground();
-    initThemeToggle();
+function initCommunityPage() {
+    [
+        initBackofficeTables,
+        initThemeToggle,
+        initAutoDismissAlerts,
+        initFormSubmitLock,
+        initNotifications,
+        initAnimatedBackground
+    ].forEach(init => {
+        try {
+            init();
+        } catch (error) {
+            console.error('Erreur initialisation community.js:', error);
+        }
+    });
+
     document.body.classList.add('is-ready');
-    initAutoDismissAlerts();
-    initFormSubmitLock();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCommunityPage);
+} else {
+    initCommunityPage();
+}
 
 function initThemeToggle() {
     const storageKey = 'communityTheme';
@@ -27,10 +44,10 @@ function applyTheme(theme) {
     const isLight = theme === 'light';
     document.body.classList.toggle('theme-light', isLight);
     document.querySelectorAll('#themeToggle, #themeToggleFloating').forEach(btn => {
-        btn.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i> Light' : '<i class="fa-solid fa-moon"></i> Dark';
-        btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+        btn.innerHTML = isLight ? '<i class="fa-solid fa-sun"></i> Clair' : '<i class="fa-solid fa-moon"></i> Sombre';
+        btn.title = isLight ? 'Passer au mode sombre' : 'Passer au mode clair';
         btn.setAttribute('aria-pressed', String(!isLight));
-        btn.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+        btn.setAttribute('aria-label', isLight ? 'Passer au mode sombre' : 'Passer au mode clair');
     });
 }
 
@@ -49,9 +66,383 @@ function initFormSubmitLock() {
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.textContent = 'Processing...';
+                submitBtn.textContent = 'Traitement...';
             }
         });
+    });
+}
+
+function initNotifications() {
+    const center = document.querySelector('.notification-center');
+    if (!center) return;
+
+    const endpoint = center.dataset.notificationEndpoint;
+    const toggle = document.getElementById('notificationToggle');
+    const dropdown = document.getElementById('notificationDropdown');
+    const badge = document.getElementById('notificationBadge');
+    const list = document.getElementById('notificationList');
+    const markAll = document.getElementById('notificationMarkAll');
+    const showOlder = document.getElementById('notificationShowOlder');
+    const initialVisibleCount = 5;
+    let olderVisible = false;
+
+    if (!endpoint || !toggle || !dropdown || !badge || !list) return;
+
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value || '';
+        return div.innerHTML;
+    }
+
+    function getNotificationGroup(createdAt) {
+        if (!createdAt) return 'Plus anciennes';
+
+        const created = new Date(createdAt.replace(' ', 'T'));
+        const now = new Date();
+        const diffMs = now.getTime() - created.getTime();
+        const dayMs = 24 * 60 * 60 * 1000;
+
+        if (diffMs < dayMs && created.getDate() === now.getDate()) {
+            return 'Aujourd hui';
+        }
+        if (diffMs < 7 * dayMs) {
+            return 'Semaine derniere';
+        }
+        if (diffMs < 31 * dayMs) {
+            return 'Mois dernier';
+        }
+        return 'Plus anciennes';
+    }
+
+    function renderNotifications(items) {
+        if (!items || items.length === 0) {
+            list.innerHTML = '<p class="notification-empty">Aucune notification pour le moment.</p>';
+            if (showOlder) showOlder.hidden = true;
+            return;
+        }
+
+        const visibleItems = olderVisible ? items : items.slice(0, initialVisibleCount);
+        const groupedHtml = [];
+        let currentGroup = '';
+
+        visibleItems.forEach(item => {
+            const group = getNotificationGroup(item.created_at);
+            if (group !== currentGroup) {
+                currentGroup = group;
+                groupedHtml.push(`<div class="notification-group-label">${escapeHtml(group)}</div>`);
+            }
+
+            const unreadClass = Number(item.is_read) ? '' : ' is-unread';
+            const time = item.created_at ? new Date(item.created_at.replace(' ', 'T')).toLocaleString() : '';
+            groupedHtml.push(`
+                <button type="button" class="notification-item${unreadClass}" data-id="${item.id}" data-link="${escapeHtml(item.link_url || '')}">
+                    <span class="notification-item-title">${escapeHtml(item.title)}</span>
+                    <span class="notification-item-message">${escapeHtml(item.message)}</span>
+                    <span class="notification-item-time">${escapeHtml(time)}</span>
+                </button>
+            `);
+        });
+
+        list.innerHTML = groupedHtml.join('');
+
+        if (showOlder) {
+            showOlder.hidden = items.length <= initialVisibleCount;
+            showOlder.textContent = olderVisible ? 'Anciennes notifications affichees' : 'Voir les anciennes notifications';
+            showOlder.disabled = olderVisible;
+        }
+    }
+
+    function updateBadge(count) {
+        const unreadCount = Number(count || 0);
+        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        badge.hidden = unreadCount === 0;
+    }
+
+    function positionDropdown() {
+        const rect = toggle.getBoundingClientRect();
+        const dropdownWidth = Math.min(360, window.innerWidth - 28);
+        const right = Math.max(14, window.innerWidth - rect.right);
+        const top = Math.min(rect.bottom + 10, window.innerHeight - 120);
+
+        dropdown.style.width = dropdownWidth + 'px';
+        dropdown.style.right = right + 'px';
+        dropdown.style.top = Math.max(12, top) + 'px';
+    }
+
+    function fetchNotifications() {
+        fetch(endpoint + '?action=list', { cache: 'no-store' })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) return;
+                updateBadge(data.unreadCount);
+                renderNotifications(data.notifications || []);
+            })
+            .catch(() => {});
+    }
+
+    function markRead(id, callback) {
+        fetch(endpoint + '?action=mark_read', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'id=' + encodeURIComponent(id)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    updateBadge(data.unreadCount);
+                    fetchNotifications();
+                }
+                if (callback) callback();
+            })
+            .catch(() => {
+                if (callback) callback();
+            });
+    }
+
+    toggle.addEventListener('click', () => {
+        const isOpen = !dropdown.hidden;
+        dropdown.hidden = isOpen;
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+        if (!isOpen) {
+            positionDropdown();
+            fetchNotifications();
+        }
+    });
+
+    list.addEventListener('click', event => {
+        const item = event.target.closest('.notification-item');
+        if (!item) return;
+
+        const link = item.dataset.link || '';
+        markRead(item.dataset.id, () => {
+            if (link) {
+                window.location.href = link;
+            }
+        });
+    });
+
+    if (markAll) {
+        markAll.addEventListener('click', () => {
+            fetch(endpoint + '?action=mark_all_read', {
+                method: 'POST'
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        updateBadge(data.unreadCount);
+                        fetchNotifications();
+                    }
+                })
+                .catch(() => {});
+        });
+    }
+
+    if (showOlder) {
+        showOlder.addEventListener('click', () => {
+            olderVisible = true;
+            dropdown.classList.add('is-expanded');
+            fetchNotifications();
+        });
+    }
+
+    document.addEventListener('click', event => {
+        if (!center.contains(event.target)) {
+            dropdown.hidden = true;
+            olderVisible = false;
+            dropdown.classList.remove('is-expanded');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (!dropdown.hidden) {
+            positionDropdown();
+        }
+    });
+
+    fetchNotifications();
+    window.setInterval(fetchNotifications, 4000);
+}
+
+function triggerModerationJobs() {
+    fetch('/Web/controller/moderationJobController.php', {
+        method: 'POST',
+        cache: 'no-store'
+    })
+        .then(res => res.json())
+        .then(data => {
+            if (data.hasPending) {
+                window.setTimeout(triggerModerationJobs, 700);
+            }
+        })
+        .catch(() => {});
+}
+
+function initBackofficeTables() {
+    document.querySelectorAll('[data-filter-table]').forEach(table => {
+        const tableId = table.dataset.filterTable;
+        const controls = document.querySelector(`[data-table-controls="${tableId}"]`);
+        const tbody = table.querySelector('tbody');
+        if (!tableId || !controls || !tbody) return;
+
+        const searchInput = controls.querySelector('[data-table-search]');
+        const sortSelect = controls.querySelector('[data-table-sort]');
+        const filterSelects = Array.from(controls.querySelectorAll('[data-table-filter]'));
+        const countTarget = document.querySelector(`[data-table-count="${tableId}"]`);
+        const originalRows = Array.from(tbody.querySelectorAll('.js-filter-row'));
+        const rowGroups = originalRows.map(row => {
+            const details = row.dataset.rowId
+                ? tbody.querySelector(`[data-details-for="${row.dataset.rowId}"]`)
+                : null;
+
+            return {
+                row: row,
+                details: details,
+                originalIndex: originalRows.indexOf(row)
+            };
+        });
+
+        let emptyRow = tbody.querySelector('.admin-empty-row');
+        if (!emptyRow) {
+            emptyRow = document.createElement('tr');
+            emptyRow.className = 'admin-empty-row';
+            emptyRow.hidden = true;
+
+            const cell = document.createElement('td');
+            cell.colSpan = table.querySelectorAll('thead th').length || 1;
+            cell.textContent = 'Aucun resultat trouve.';
+            emptyRow.appendChild(cell);
+        }
+
+        function normalize(value) {
+            return String(value || '')
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim();
+        }
+
+        function getDateValue(row) {
+            const value = row.dataset.date || '';
+            const timestamp = Date.parse(value.replace(' ', 'T'));
+            return Number.isNaN(timestamp) ? 0 : timestamp;
+        }
+
+        function getNumberValue(row, key) {
+            return Number(row.dataset[key] || 0);
+        }
+
+        function aiRank(row) {
+            const status = normalize(row.dataset.ai);
+            const imageStatus = normalize(row.dataset.imageAi);
+            const ranking = {
+                review: 0,
+                error: 1,
+                blocked: 2,
+                missing: 3,
+                allowed: 4
+            };
+
+            return Math.min(
+                ranking[status] ?? 5,
+                ranking[imageStatus] ?? 5
+            );
+        }
+
+        function compareText(a, b, key) {
+            return normalize(a.row.dataset[key]).localeCompare(normalize(b.row.dataset[key]), 'fr');
+        }
+
+        function sortGroups(groups) {
+            const sortValue = sortSelect ? sortSelect.value : '';
+            const sorted = groups.slice();
+
+            sorted.sort((a, b) => {
+                let result = 0;
+
+                if (sortValue === 'date_asc') {
+                    result = getDateValue(a.row) - getDateValue(b.row);
+                } else if (sortValue === 'date_desc') {
+                    result = getDateValue(b.row) - getDateValue(a.row);
+                } else if (sortValue === 'title_asc') {
+                    result = compareText(a, b, 'title');
+                } else if (sortValue === 'author_asc') {
+                    result = compareText(a, b, 'author');
+                } else if (sortValue === 'reporter_asc') {
+                    result = compareText(a, b, 'reporter');
+                } else if (sortValue === 'reason_asc') {
+                    result = compareText(a, b, 'reason');
+                } else if (sortValue === 'status_asc') {
+                    result = compareText(a, b, 'status');
+                } else if (sortValue === 'comments_desc') {
+                    result = getNumberValue(b.row, 'comments') - getNumberValue(a.row, 'comments');
+                } else if (sortValue === 'ai_review') {
+                    result = aiRank(a.row) - aiRank(b.row);
+                }
+
+                return result || a.originalIndex - b.originalIndex;
+            });
+
+            return sorted;
+        }
+
+        function matchesFilters(group) {
+            const searchValue = normalize(searchInput ? searchInput.value : '');
+            const rowSearch = normalize(group.row.dataset.search);
+
+            if (searchValue && !rowSearch.includes(searchValue)) {
+                return false;
+            }
+
+            return filterSelects.every(select => {
+                const key = select.dataset.tableFilter;
+                const selected = normalize(select.value);
+                if (!key || !selected) return true;
+                return normalize(group.row.dataset[key]) === selected;
+            });
+        }
+
+        function render() {
+            const visibleGroups = sortGroups(rowGroups).filter(matchesFilters);
+
+            rowGroups.forEach(group => {
+                group.row.hidden = true;
+                if (group.details) {
+                    group.details.hidden = true;
+                }
+            });
+
+            visibleGroups.forEach(group => {
+                group.row.hidden = false;
+                tbody.appendChild(group.row);
+
+                if (group.details) {
+                    group.details.hidden = false;
+                    tbody.appendChild(group.details);
+                }
+            });
+
+            emptyRow.hidden = visibleGroups.length > 0;
+            tbody.appendChild(emptyRow);
+
+            if (countTarget) {
+                countTarget.textContent = String(visibleGroups.length);
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', render);
+        }
+        if (sortSelect) {
+            sortSelect.addEventListener('change', render);
+        }
+        filterSelects.forEach(select => {
+            select.addEventListener('change', render);
+        });
+
+        render();
     });
 }
 
@@ -277,7 +668,7 @@ function initNewsCarousel() {
             const dot = document.createElement('button');
             dot.type = 'button';
             dot.className = 'news-carousel-dot' + (i === index ? ' is-active' : '');
-            dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+            dot.setAttribute('aria-label', 'Aller a l actualite ' + (i + 1));
             dot.addEventListener('click', () => goTo(i, true));
             dotsWrap.appendChild(dot);
         });

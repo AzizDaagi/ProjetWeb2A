@@ -1,14 +1,19 @@
 <?php
-require_once '../model/Post.php';
-require_once '../model/connection.php';
-require_once '../model/AiModeration.php';
-require_once '../model/ImageModeration.php';
+require_once __DIR__ . '/../model/Post.php';
+require_once __DIR__ . '/../model/connection.php';
+require_once __DIR__ . '/../model/AiModeration.php';
+require_once __DIR__ . '/../model/ImageModeration.php';
+require_once __DIR__ . '/../model/Notification.php';
+require_once __DIR__ . '/../model/ModerationJob.php';
+require_once __DIR__ . '/../model/InputValidator.php';
 
 class PostController {
 
     private $postModel;
     private $aiModeration;
     private $imageModeration;
+    private $notificationModel;
+    private $moderationJobModel;
     private $projectRoot;
     private $postImageDirectory;
 
@@ -26,6 +31,8 @@ class PostController {
         $this->postModel = new Post($db);
         $this->aiModeration = new AiModeration($db);
         $this->imageModeration = new ImageModeration($db);
+        $this->notificationModel = new Notification($db);
+        $this->moderationJobModel = new ModerationJob($db);
         $this->projectRoot = realpath(__DIR__ . '/..');
         $this->postImageDirectory = $this->projectRoot . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR . 'post_uploads' . DIRECTORY_SEPARATOR . 'posts';
     }
@@ -39,15 +46,18 @@ class PostController {
     }
 
     public function create() {
-        $title = $_POST['title'] ?? '';
-        $content = $_POST['content'] ?? '';
+        $title = InputValidator::cleanText($_POST['title'] ?? '');
+        $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
+        $productAnalysisJson = $this->sanitizeProductAnalysisJson($_POST['product_analysis_json'] ?? '');
         $userId = 1;
 
-        if (empty($title) || empty($content)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Titre et contenu requis'
-            ]);
+        $validationError = InputValidator::firstError([
+            InputValidator::validatePostTitle($title),
+            InputValidator::validatePostContent($content)
+        ]);
+
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
@@ -62,42 +72,47 @@ class PostController {
         }
 
         try {
-            $result = $this->postModel->createPost($userId, $title, $content, $image);
+            $result = $this->postModel->createPost($userId, $title, $content, $image, $productAnalysisJson);
         } catch (PDOException $e) {
             $this->respondToDatabaseImageError($e);
         }
 
-        $moderation = null;
-        $imageModeration = null;
         if ($result) {
-            $moderation = $this->moderatePostText((int) $result, $title, $content);
-            $imageModeration = $this->moderatePostImage((int) $result, $image);
+            $this->queuePostModeration((int) $result, $title, $content, $image);
         }
 
         echo json_encode([
             'success' => (bool) $result,
-            'message' => $result ? 'Post publie avec succes' : 'Erreur lors de la publication',
-            'moderation' => $moderation,
-            'imageModeration' => $imageModeration
+            'message' => $result ? 'Publication publiee avec succes' : 'Erreur lors de la publication',
+            'moderation' => $result ? ['status' => 'queued'] : null,
+            'imageModeration' => $result ? ['status' => 'queued'] : null,
+            'moderationQueued' => (bool) $result
         ]);
         exit;
     }
 
     public function update() {
         $id = $_POST['id'] ?? null;
-        $title = $_POST['title'] ?? '';
-        $content = $_POST['content'] ?? '';
+        $title = InputValidator::cleanText($_POST['title'] ?? '');
+        $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
 
-        if (!$id || empty($title) || empty($content)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Donnees invalides'
-            ]);
+        $validationError = InputValidator::firstError([
+            InputValidator::validateId($id, 'Publication'),
+            InputValidator::validatePostTitle($title),
+            InputValidator::validatePostContent($content)
+        ]);
+
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
         $currentPost = $this->postModel->getPostById($id);
         $image = $currentPost ? $currentPost['image'] : null;
+        $productAnalysisJson = $currentPost ? ($currentPost['product_analysis_json'] ?? null) : null;
+        if (array_key_exists('product_analysis_json', $_POST)) {
+            $productAnalysisJson = $this->sanitizeProductAnalysisJson($_POST['product_analysis_json'] ?? '');
+        }
 
         if (isset($_POST['remove_image']) && $_POST['remove_image'] == '1') {
             $this->deleteStoredImage($image);
@@ -118,23 +133,21 @@ class PostController {
 
         $userId = 1;
         try {
-            $success = $this->postModel->updatePost($id, $title, $content, $image, $userId);
+            $success = $this->postModel->updatePost($id, $title, $content, $image, $userId, $productAnalysisJson);
         } catch (PDOException $e) {
             $this->respondToDatabaseImageError($e);
         }
 
-        $moderation = null;
-        $imageModeration = null;
         if ($success) {
-            $moderation = $this->moderatePostText((int) $id, $title, $content);
-            $imageModeration = $this->moderatePostImage((int) $id, $image);
+            $this->queuePostModeration((int) $id, $title, $content, $image);
         }
 
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Post modifie' : 'Erreur modification',
-            'moderation' => $moderation,
-            'imageModeration' => $imageModeration
+            'message' => $success ? 'Publication modifiee' : 'Erreur modification',
+            'moderation' => $success ? ['status' => 'queued'] : null,
+            'imageModeration' => $success ? ['status' => 'queued'] : null,
+            'moderationQueued' => (bool) $success
         ]);
         exit;
     }
@@ -142,11 +155,9 @@ class PostController {
     public function delete() {
         $id = $_POST['id'] ?? null;
 
-        if (!$id) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'ID manquant'
-            ]);
+        $validationError = InputValidator::validateId($id, 'Publication');
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
@@ -160,7 +171,7 @@ class PostController {
 
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Post supprime' : 'Erreur suppression'
+            'message' => $success ? 'Publication supprimee' : 'Erreur suppression'
         ]);
         exit;
     }
@@ -170,16 +181,18 @@ class PostController {
         $reactionType = $_POST['reaction_type'] ?? '';
         $userId = 1;
 
-        if (!$postId || !in_array($reactionType, self::ALLOWED_REACTIONS, true)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Reaction invalide'
-            ]);
+        $validationError = InputValidator::validateId($postId, 'Publication');
+        if ($validationError || !in_array($reactionType, self::ALLOWED_REACTIONS, true)) {
+            $this->jsonError($validationError ?: 'Reaction invalide.');
             exit;
         }
 
         $success = $this->postModel->reactToPost($postId, $userId, $reactionType);
         $summary = $this->postModel->getReactionSummary($postId, $userId);
+
+        if ($success && ($summary['user_reaction'] ?? null) === $reactionType) {
+            $this->notifyReaction((int) $postId, $userId, $reactionType);
+        }
 
         echo json_encode([
             'success' => $success,
@@ -192,14 +205,17 @@ class PostController {
     public function report() {
         $postId = $_POST['post_id'] ?? null;
         $reason = $_POST['reason'] ?? '';
-        $details = $_POST['details'] ?? '';
+        $details = InputValidator::cleanMultiline($_POST['details'] ?? '');
         $userId = 1;
 
-        if (!$postId || !in_array($reason, self::ALLOWED_REPORT_REASONS, true)) {
-            echo json_encode([
-                'success' => false,
-                'message' => 'Signalement invalide'
-            ]);
+        $validationError = InputValidator::firstError([
+            InputValidator::validateId($postId, 'Publication'),
+            in_array($reason, self::ALLOWED_REPORT_REASONS, true) ? null : 'Raison de signalement invalide.',
+            InputValidator::validateReportDetails($details)
+        ]);
+
+        if ($validationError) {
+            $this->jsonError($validationError);
             exit;
         }
 
@@ -208,7 +224,7 @@ class PostController {
 
         echo json_encode([
             'success' => $success,
-            'message' => $success ? 'Post signale avec succes' : 'Erreur lors du signalement',
+            'message' => $success ? 'Publication signalee avec succes' : 'Erreur lors du signalement',
             'report' => $report ?: null
         ]);
         exit;
@@ -250,6 +266,65 @@ class PostController {
         return '/Web/view/post_uploads/posts/' . $filename;
     }
 
+    private function jsonError(string $message): void {
+        echo json_encode([
+            'success' => false,
+            'message' => $message
+        ]);
+    }
+
+    private function sanitizeProductAnalysisJson($value): ?string {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (strlen($value) > 12000) {
+            return null;
+        }
+
+        $data = json_decode($value, true);
+        if (!is_array($data)) {
+            return null;
+        }
+
+        $allowed = [
+            'name',
+            'brand',
+            'image',
+            'nutriScore',
+            'novaGroup',
+            'calories',
+            'sugar',
+            'fat',
+            'salt',
+            'allergens',
+            'ingredients',
+            'sourceUrl'
+        ];
+
+        $clean = [];
+        foreach ($allowed as $key) {
+            if (!array_key_exists($key, $data)) {
+                continue;
+            }
+
+            if ($key === 'allergens') {
+                $clean[$key] = array_values(array_slice(array_filter(array_map('strval', (array) $data[$key])), 0, 8));
+                continue;
+            }
+
+            if (in_array($key, ['calories', 'sugar', 'fat', 'salt'], true)) {
+                $clean[$key] = is_numeric($data[$key]) ? round((float) $data[$key], 2) : null;
+                continue;
+            }
+
+            $clean[$key] = substr(trim((string) $data[$key]), 0, $key === 'ingredients' ? 1200 : 255);
+        }
+
+        return json_encode($clean);
+    }
+
     private function respondToDatabaseImageError(PDOException $e) {
         $message = $e->getMessage();
 
@@ -264,26 +339,14 @@ class PostController {
         throw $e;
     }
 
-    private function moderatePostText(int $postId, string $title, string $content): ?array {
-        try {
-            return $this->aiModeration->analyzeAndStore('post', $postId, trim($title . "\n\n" . $content));
-        } catch (Throwable $e) {
-            return [
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ];
-        }
-    }
+    private function queuePostModeration(int $postId, string $title, string $content, ?string $image): void {
+        $this->moderationJobModel->enqueue('post', $postId, 'text', [
+            'text' => trim($title . "\n\n" . $content)
+        ]);
 
-    private function moderatePostImage(int $postId, ?string $image): ?array {
-        try {
-            return $this->imageModeration->analyzeAndStore('post', $postId, $this->resolveManagedImagePath($image));
-        } catch (Throwable $e) {
-            return [
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ];
-        }
+        $this->moderationJobModel->enqueue('post', $postId, 'image', [
+            'image_path' => $this->resolveManagedImagePath($image)
+        ]);
     }
 
     private function resolveManagedImagePath(?string $image): ?string {
@@ -310,6 +373,27 @@ class PostController {
 
     private function isManagedUploadPath($image) {
         return is_string($image) && strpos($image, '/Web/view/post_uploads/posts/') === 0;
+    }
+
+    private function notifyReaction(int $postId, int $actorUserId, string $reactionType): void {
+        $post = $this->postModel->getPostById($postId);
+        if (!$post || (int) ($post['user_id'] ?? 0) === $actorUserId) {
+            return;
+        }
+
+        $actorName = $_SESSION['user_name'] ?? 'Quelqu un';
+        $reactionLabel = ucfirst($reactionType);
+        $postTitle = $post['title'] ?? 'votre publication';
+
+        $this->notificationModel->create(
+            (int) $post['user_id'],
+            $actorUserId,
+            'post_reaction',
+            'Nouvelle reaction sur votre publication',
+            $actorName . ' a reagi "' . $reactionLabel . '" a votre publication "' . $postTitle . '".',
+            '/Web/view/frontoffice/community.php#post-' . $postId,
+            $postId
+        );
     }
 }
 

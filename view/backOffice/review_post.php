@@ -52,7 +52,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Back Office - Review Post</title>
+    <title>Back Office - Revision de publication</title>
     <link rel="stylesheet" href="style/community.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
@@ -65,13 +65,13 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             </a>
         </div>
         <ul class="navbar-menu">
-            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Community</a></li>
-            <li><a href="reports.php" class="nav-link active"><i class="fa-solid fa-flag"></i> Reports</a></li>
+            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
+            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Communaute</a></li>
+            <li><a href="reports.php" class="nav-link active"><i class="fa-solid fa-flag"></i> Signalements</a></li>
         </ul>
         <div class="navbar-footer">
             <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Dark
+                <i class="fa-solid fa-moon"></i> Sombre
             </button>
             <p class="user-info">Admin: <strong><?= htmlspecialchars($adminName) ?></strong></p>
         </div>
@@ -79,13 +79,13 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
 
     <div class="main-content">
         <div class="container">
-            <h1 class="mb-4"><i class="fa-solid fa-magnifying-glass"></i> Review Reported Post</h1>
+            <h1 class="mb-4"><i class="fa-solid fa-magnifying-glass"></i> Examiner la publication signalee</h1>
 
             <?php if ($report): ?>
                 <div class="review-topbar">
-                    <a href="report_details.php?id=<?= (int) $report['id'] ?>" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to Report</a>
+                    <a href="report_details.php?id=<?= (int) $report['id'] ?>" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour au signalement</a>
                     <span class="status-pill status-<?= htmlspecialchars($report['status'] ?: 'pending') ?>">
-                        Report <?= htmlspecialchars(ucfirst($report['status'] ?: 'pending')) ?>
+                        Signalement <?= htmlspecialchars(($report['status'] ?? 'pending') === 'resolved' ? 'resolu' : 'en attente') ?>
                     </span>
                 </div>
             <?php endif; ?>
@@ -93,59 +93,62 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             <?php if ($post): ?>
                 <div class="card card-primary shadow-sm moderation-card">
                     <div class="card-header">
-                        <h3 class="card-title">Post Moderation</h3>
+                        <h3 class="card-title">Moderation de la publication</h3>
                     </div>
                     <div class="card-body">
                         <div class="detail-grid">
                             <div class="detail-card">
-                                <h4>Report Context</h4>
+                                <h4>Contexte du signalement</h4>
                                 <?php if ($report): ?>
-                                    <p><strong>Reason:</strong> <?= htmlspecialchars(ucwords(str_replace('_', ' ', $report['reason'] ?? ''))) ?></p>
-                                    <p><strong>Reporter:</strong> <?= htmlspecialchars($report['reporter_username'] ?? 'Unknown') ?></p>
-                                    <p><strong>Details:</strong> <?= nl2br(htmlspecialchars($report['details'] ?? 'No extra details provided.')) ?></p>
+                                    <p><strong>Raison :</strong> <?= htmlspecialchars(ucwords(str_replace('_', ' ', $report['reason'] ?? ''))) ?></p>
+                                    <p><strong>Signale par :</strong> <?= htmlspecialchars($report['reporter_username'] ?? 'Inconnu') ?></p>
+                                    <p><strong>Details :</strong> <?= nl2br(htmlspecialchars($report['details'] ?? 'Aucun detail supplementaire.')) ?></p>
                                 <?php else: ?>
-                                    <p class="text-muted">No report details were found for this moderation session.</p>
+                                    <p class="text-muted">Aucun detail de signalement trouve pour cette session de moderation.</p>
                                 <?php endif; ?>
                             </div>
                             <div class="detail-card">
-                                <h4>Post Snapshot</h4>
-                                <p><strong>Post ID:</strong> <?= (int) $post['id'] ?></p>
-                                <p><strong>Title:</strong> <?= htmlspecialchars($post['title']) ?></p>
-                                <p><strong>Content:</strong> <?= nl2br(htmlspecialchars($post['content'])) ?></p>
+                                <h4>Apercu de la publication</h4>
+                                <p><strong>ID publication :</strong> <?= (int) $post['id'] ?></p>
+                                <p><strong>Titre :</strong> <?= htmlspecialchars($post['title']) ?></p>
+                                <p><strong>Contenu :</strong> <?= nl2br(htmlspecialchars($post['content'])) ?></p>
                                 <?php if ($postImageSrc): ?>
-                                    <img src="<?= htmlspecialchars($postImageSrc) ?>" alt="Post image" class="post-image" style="max-height: 320px; width: auto; max-width: 100%; object-fit: contain;">
+                                    <img src="<?= htmlspecialchars($postImageSrc) ?>" alt="Image de la publication" class="post-image" style="max-height: 320px; width: auto; max-width: 100%; object-fit: contain;">
                                 <?php endif; ?>
                             </div>
                         </div>
 
                         <div class="edit-form moderation-edit-form">
-                            <h4>Moderate Post</h4>
+                            <h4>Moderer la publication</h4>
                             <input type="text" id="review-title" class="form-control mb-2" value="<?= htmlspecialchars($post['title']) ?>">
                             <textarea id="review-content" class="form-control mb-2"><?= htmlspecialchars($post['content']) ?></textarea>
                             <?php if ($postImageSrc): ?>
                                 <div class="mb-2 d-flex align-items-center" id="review-post-image-container">
-                                    <img src="<?= htmlspecialchars($postImageSrc) ?>" class="img-thumbnail me-2" style="max-width: 96px; max-height: 96px; object-fit: contain;" alt="Post image">
+                                    <img src="<?= htmlspecialchars($postImageSrc) ?>" class="img-thumbnail me-2" style="max-width: 96px; max-height: 96px; object-fit: contain;" alt="Image de la publication">
                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeReviewImage()">
-                                        <i class="fas fa-trash"></i> Remove image
+                                        <i class="fas fa-trash"></i> Retirer l image
                                     </button>
                                 </div>
                             <?php endif; ?>
                             <div class="form-group">
-                                <label class="form-label">Replace image (optional)</label>
+                                <label class="form-label">Remplacer l image (optionnel)</label>
                                 <input type="file" id="review-image" class="form-control" accept="image/*">
                             </div>
                             <div class="report-action-row">
-                                <button class="btn btn-sm" onclick="saveReviewedPost(<?= (int) $post['id'] ?>)">Save Changes</button>
-                                <button class="btn btn-outline-danger btn-sm" onclick="deleteReviewedPost(<?= (int) $post['id'] ?>)">Delete Post</button>
+                                <button class="btn btn-sm" onclick="saveReviewedPost(<?= (int) $post['id'] ?>)">Enregistrer les modifications</button>
+                                <button class="btn btn-outline-danger btn-sm" onclick="deleteReviewedPost(<?= (int) $post['id'] ?>)">Supprimer la publication</button>
                                 <?php if ($report && ($report['status'] ?? 'pending') !== 'resolved'): ?>
-                                    <button class="btn btn-success btn-sm" onclick="resolveReviewedReport(<?= (int) $report['id'] ?>)">Resolve Report</button>
+                                    <button class="btn btn-success btn-sm" onclick="resolveReviewedReport(<?= (int) $report['id'] ?>)">Resoudre le signalement</button>
                                 <?php endif; ?>
                             </div>
+                            <?php if ($report && ($report['status'] ?? 'pending') !== 'resolved'): ?>
+                                <textarea id="review-resolution-note" class="form-control form-control-sm" rows="3" placeholder="Note de revision optionnelle pour l email de l auteur..."></textarea>
+                            <?php endif; ?>
                             <div id="review-feedback" class="review-feedback"></div>
                         </div>
 
                         <div class="comments-section mt-4">
-                            <h6><i class="fas fa-comments"></i> Comments (<?= count($comments) ?>)</h6>
+                            <h6><i class="fas fa-comments"></i> Commentaires (<?= count($comments) ?>)</h6>
                             <?php if (!empty($topLevelComments)): ?>
                                 <?php foreach ($topLevelComments as $comment): ?>
                                     <div class="comment-item mb-2 p-3 position-relative" id="review-comment-<?= (int) $comment['id'] ?>">
@@ -153,10 +156,10 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                                             <small class="text-muted"><i class="fas fa-user"></i> <?= htmlspecialchars($comment['username']) ?></small>
                                             <div class="btn-group btn-group-sm">
                                                 <span class="text-muted"><?= htmlspecialchars($comment['created_at']) ?></span>
-                                                <button class="btn btn-outline-info btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $comment['id'] ?>)" title="Edit comment">
+                                                <button class="btn btn-outline-info btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $comment['id'] ?>)" title="Modifier le commentaire">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="btn btn-outline-danger btn-sm" onclick="deleteReviewComment(<?= (int) $comment['id'] ?>)" title="Delete comment">
+                                                <button class="btn btn-outline-danger btn-sm" onclick="deleteReviewComment(<?= (int) $comment['id'] ?>)" title="Supprimer le commentaire">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -165,8 +168,8 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                                         <div id="review-comment-edit-<?= (int) $comment['id'] ?>" class="comment-edit-form mt-2" style="display: none;">
                                             <textarea id="review-comment-input-<?= (int) $comment['id'] ?>" class="form-control form-control-sm" rows="2"><?= htmlspecialchars($comment['comment_text']) ?></textarea>
                                             <div class="mt-1">
-                                                <button class="btn btn-success btn-sm" onclick="saveReviewComment(<?= (int) $comment['id'] ?>)">Save</button>
-                                                <button class="btn btn-secondary btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $comment['id'] ?>)">Cancel</button>
+                                                <button class="btn btn-success btn-sm" onclick="saveReviewComment(<?= (int) $comment['id'] ?>)">Enregistrer</button>
+                                                <button class="btn btn-secondary btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $comment['id'] ?>)">Annuler</button>
                                             </div>
                                         </div>
                                         <?php if (!empty($repliesByParent[$comment['id']])): ?>
@@ -177,10 +180,10 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                                                             <small class="text-muted"><i class="fas fa-user"></i> <?= htmlspecialchars($reply['username']) ?></small>
                                                             <div class="btn-group btn-group-sm">
                                                                 <span class="text-muted"><?= htmlspecialchars($reply['created_at']) ?></span>
-                                                                <button class="btn btn-outline-info btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $reply['id'] ?>)" title="Edit reply">
+                                                                <button class="btn btn-outline-info btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $reply['id'] ?>)" title="Modifier la reponse">
                                                                     <i class="fas fa-edit"></i>
                                                                 </button>
-                                                                <button class="btn btn-outline-danger btn-sm" onclick="deleteReviewComment(<?= (int) $reply['id'] ?>)" title="Delete reply">
+                                                                <button class="btn btn-outline-danger btn-sm" onclick="deleteReviewComment(<?= (int) $reply['id'] ?>)" title="Supprimer la reponse">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
                                                             </div>
@@ -189,8 +192,8 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                                                         <div id="review-comment-edit-<?= (int) $reply['id'] ?>" class="comment-edit-form mt-2" style="display: none;">
                                                             <textarea id="review-comment-input-<?= (int) $reply['id'] ?>" class="form-control form-control-sm" rows="2"><?= htmlspecialchars($reply['comment_text']) ?></textarea>
                                                             <div class="mt-1">
-                                                                <button class="btn btn-success btn-sm" onclick="saveReviewComment(<?= (int) $reply['id'] ?>)">Save</button>
-                                                                <button class="btn btn-secondary btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $reply['id'] ?>)">Cancel</button>
+                                                                <button class="btn btn-success btn-sm" onclick="saveReviewComment(<?= (int) $reply['id'] ?>)">Enregistrer</button>
+                                                                <button class="btn btn-secondary btn-sm" onclick="toggleReviewCommentEdit(<?= (int) $reply['id'] ?>)">Annuler</button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -200,7 +203,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                                     </div>
                                 <?php endforeach; ?>
                             <?php else: ?>
-                                <p class="text-muted">This post does not have comments.</p>
+                                <p class="text-muted">Cette publication n a pas encore de commentaires.</p>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -208,9 +211,10 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             <?php else: ?>
                 <div class="card card-primary shadow-sm">
                     <div class="card-body">
-                        <p class="text-muted">The reported post is no longer available.</p>
+                        <p class="text-muted">La publication signalee n est plus disponible.</p>
                         <?php if ($report && ($report['status'] ?? 'pending') !== 'resolved'): ?>
-                            <button class="btn btn-sm" onclick="resolveReviewedReport(<?= (int) $report['id'] ?>)">Resolve Report</button>
+                            <textarea id="review-resolution-note" class="form-control form-control-sm" rows="3" placeholder="Note de revision optionnelle pour l email de l auteur..."></textarea>
+                            <button class="btn btn-sm" onclick="resolveReviewedReport(<?= (int) $report['id'] ?>)">Resoudre le signalement</button>
                         <?php endif; ?>
                         <div id="review-feedback" class="review-feedback"></div>
                     </div>
@@ -231,11 +235,11 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
         }
 
         function removeReviewImage() {
-            if (!confirm("Remove this image from the post?")) return;
+            if (!confirm("Retirer cette image de la publication ?")) return;
             reviewImageToRemove = true;
             const container = document.getElementById('review-post-image-container');
             if (container) {
-                container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image will be removed when you save.</small>';
+                container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> L image sera supprimee lors de l enregistrement.</small>';
             }
         }
 
@@ -255,7 +259,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
 
             const content = input.value.trim();
             if (!content) {
-                setReviewFeedback('Comment content cannot be empty.', true);
+                setReviewFeedback('Le commentaire ne peut pas etre vide.', true);
                 return;
             }
 
@@ -271,15 +275,15 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                     if (data.success) {
                         document.getElementById(`review-comment-text-${commentId}`).innerHTML = content.replace(/\n/g, '<br>');
                         toggleReviewCommentEdit(commentId);
-                        setReviewFeedback('Comment updated successfully.');
+                        setReviewFeedback('Commentaire modifie avec succes.');
                     } else {
-                        setReviewFeedback(data.message || 'Unable to update the comment.', true);
+                        setReviewFeedback(data.message || 'Impossible de modifier le commentaire.', true);
                     }
                 });
         }
 
         function deleteReviewComment(commentId) {
-            if (!confirm('Delete this comment permanently?')) return;
+            if (!confirm('Supprimer definitivement ce commentaire ?')) return;
 
             fetch('../../controller/commentController.php?action=admin_delete', {
                     method: 'POST',
@@ -295,9 +299,9 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                         if (commentElement) {
                             commentElement.remove();
                         }
-                        setReviewFeedback('Comment deleted successfully.');
+                        setReviewFeedback('Commentaire supprime avec succes.');
                     } else {
-                        setReviewFeedback(data.message || 'Unable to delete the comment.', true);
+                        setReviewFeedback(data.message || 'Impossible de supprimer le commentaire.', true);
                     }
                 });
         }
@@ -325,16 +329,16 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        setReviewFeedback('Post updated successfully.');
+                        setReviewFeedback('Publication modifiee avec succes.');
                         window.location.reload();
                     } else {
-                        setReviewFeedback(data.message || 'Unable to update the post.', true);
+                        setReviewFeedback(data.message || 'Impossible de modifier la publication.', true);
                     }
                 });
         }
 
         function deleteReviewedPost(postId) {
-            if (!confirm("Delete this post permanently?")) return;
+            if (!confirm("Supprimer definitivement cette publication ?")) return;
 
             fetch('../../controller/postController.php?action=delete', {
                     method: 'POST',
@@ -346,29 +350,32 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        setReviewFeedback('Post deleted successfully.');
+                        setReviewFeedback('Publication supprimee avec succes.');
                         window.location.reload();
                     } else {
-                        setReviewFeedback(data.message || 'Unable to delete the post.', true);
+                        setReviewFeedback(data.message || 'Impossible de supprimer la publication.', true);
                     }
                 });
         }
 
         function resolveReviewedReport(reportId) {
+            const noteField = document.getElementById('review-resolution-note');
+            const reviewNote = noteField ? noteField.value.trim() : '';
+
             fetch('report_resolve.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
                     },
-                    body: `report_id=${reportId}`
+                    body: `report_id=${reportId}&review_note=${encodeURIComponent(reviewNote)}`
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        setReviewFeedback('Report resolved successfully.');
+                        setReviewFeedback('Signalement resolu avec succes.');
                         window.location.reload();
                     } else {
-                        setReviewFeedback(data.message || 'Unable to resolve the report.', true);
+                        setReviewFeedback(data.message || 'Impossible de resoudre le signalement.', true);
                     }
                 });
         }

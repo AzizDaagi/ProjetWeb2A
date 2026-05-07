@@ -44,16 +44,16 @@ class HuggingFaceClient
     public function imageClassification(string $model, string $imagePath, string $mimeType): array
     {
         if (!$this->isConfigured()) {
-            throw new RuntimeException('Hugging Face token is not configured.');
+            throw new RuntimeException('Le token Hugging Face n est pas configure.');
         }
 
         if (!is_file($imagePath) || !is_readable($imagePath)) {
-            throw new RuntimeException('Image file is not readable.');
+            throw new RuntimeException('Le fichier image n est pas lisible.');
         }
 
         $imageBytes = file_get_contents($imagePath);
         if ($imageBytes === false) {
-            throw new RuntimeException('Could not read image file.');
+            throw new RuntimeException('Impossible de lire le fichier image.');
         }
 
         return $this->requestBinaryModel($model, $imageBytes, $mimeType);
@@ -62,11 +62,11 @@ class HuggingFaceClient
     private function requestModel(string $model, array $payload): array
     {
         if (!$this->isConfigured()) {
-            throw new RuntimeException('Hugging Face token is not configured.');
+            throw new RuntimeException('Le token Hugging Face n est pas configure.');
         }
 
         if (!function_exists('curl_init')) {
-            throw new RuntimeException('PHP cURL extension is required for Hugging Face requests.');
+            throw new RuntimeException('L extension PHP cURL est requise pour les requetes Hugging Face.');
         }
 
         $encodedModel = implode('/', array_map('rawurlencode', explode('/', $model)));
@@ -74,7 +74,7 @@ class HuggingFaceClient
         $jsonPayload = json_encode($payload);
 
         if ($jsonPayload === false) {
-            throw new RuntimeException('Could not encode Hugging Face request payload.');
+            throw new RuntimeException('Impossible d encoder la requete Hugging Face.');
         }
 
         $ch = curl_init($url);
@@ -95,17 +95,17 @@ class HuggingFaceClient
         curl_close($ch);
 
         if ($responseBody === false) {
-            throw new RuntimeException('Hugging Face request failed: ' . $curlError);
+            throw new RuntimeException('La requete Hugging Face a echoue : ' . $curlError);
         }
 
         $decoded = json_decode($responseBody, true);
         if (!is_array($decoded)) {
-            throw new RuntimeException('Hugging Face returned an invalid JSON response.');
+            throw new RuntimeException('Hugging Face a renvoye une reponse JSON invalide.');
         }
 
         if ($statusCode < 200 || $statusCode >= 300) {
             $message = isset($decoded['error']) ? (string) $decoded['error'] : 'HTTP ' . $statusCode;
-            throw new RuntimeException('Hugging Face request failed: ' . $message);
+            throw new RuntimeException('La requete Hugging Face a echoue : ' . $message);
         }
 
         return $decoded;
@@ -114,7 +114,7 @@ class HuggingFaceClient
     private function requestBinaryModel(string $model, string $payload, string $contentType): array
     {
         if (!function_exists('curl_init')) {
-            throw new RuntimeException('PHP cURL extension is required for Hugging Face requests.');
+            throw new RuntimeException('L extension PHP cURL est requise pour les requetes Hugging Face.');
         }
 
         $encodedModel = implode('/', array_map('rawurlencode', explode('/', $model)));
@@ -138,17 +138,17 @@ class HuggingFaceClient
         curl_close($ch);
 
         if ($responseBody === false) {
-            throw new RuntimeException('Hugging Face request failed: ' . $curlError);
+            throw new RuntimeException('La requete Hugging Face a echoue : ' . $curlError);
         }
 
         $decoded = json_decode($responseBody, true);
         if (!is_array($decoded)) {
-            throw new RuntimeException('Hugging Face returned an invalid JSON response.');
+            throw new RuntimeException('Hugging Face a renvoye une reponse JSON invalide.');
         }
 
         if ($statusCode < 200 || $statusCode >= 300) {
             $message = isset($decoded['error']) ? (string) $decoded['error'] : 'HTTP ' . $statusCode;
-            throw new RuntimeException('Hugging Face request failed: ' . $message);
+            throw new RuntimeException('La requete Hugging Face a echoue : ' . $message);
         }
 
         return $decoded;

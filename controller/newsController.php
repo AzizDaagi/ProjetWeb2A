@@ -2,6 +2,7 @@
 require_once '../model/News.php';
 require_once '../model/Connection.php';
 require_once '../model/NewsGenerationService.php';
+require_once '../model/InputValidator.php';
 
 class NewsController {
 
@@ -33,7 +34,7 @@ class NewsController {
         } catch (Exception $e) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Error fetching news: ' . $e->getMessage()
+                'message' => 'Erreur lors du chargement des actualites : ' . $e->getMessage()
             ]);
         }
         exit;
@@ -49,7 +50,7 @@ class NewsController {
             
             $validCategories = ['nutrition', 'fitness', 'wellness', 'health_tips'];
             if (!in_array($category, $validCategories)) {
-                throw new Exception('Invalid category');
+                throw new Exception('Categorie invalide');
             }
 
             $news = $this->newsModel->getNewsByCategory($category, $limit);
@@ -63,7 +64,7 @@ class NewsController {
         } catch (Exception $e) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Erreur : ' . $e->getMessage()
             ]);
         }
         exit;
@@ -77,13 +78,13 @@ class NewsController {
             $id = $_GET['id'] ?? null;
             
             if (!$id) {
-                throw new Exception('ID required');
+                throw new Exception('ID requis');
             }
 
             $news = $this->newsModel->getNewsById($id);
             
             if (!$news) {
-                throw new Exception('Article not found');
+                throw new Exception('Article introuvable');
             }
 
             echo json_encode([
@@ -107,11 +108,17 @@ class NewsController {
         try {
             // Optional authentication check - customize as needed
             if (!$this->isAdminOrAuthorized()) {
-                throw new Exception('Unauthorized');
+                throw new Exception('Non autorise');
             }
 
-            $keywords = trim($_POST['keywords'] ?? '');
+            $keywords = InputValidator::cleanText($_POST['keywords'] ?? '');
             $limit = (int) ($_POST['limit'] ?? 4);
+            if ($limit < 1 || $limit > 10) {
+                throw new Exception('La limite doit etre comprise entre 1 et 10');
+            }
+            if ($keywords !== '' && mb_strlen($keywords) > 160) {
+                throw new Exception('Les mots-cles ne doivent pas depasser 160 caracteres');
+            }
 
             if ($keywords !== '') {
                 $result = $this->newsGenerationService->fetchAndStoreNews(
@@ -130,7 +137,7 @@ class NewsController {
         } catch (Exception $e) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Error syncing news: ' . $e->getMessage()
+                'message' => 'Erreur lors de la synchronisation des actualites : ' . $e->getMessage()
             ]);
         }
         exit;
@@ -142,22 +149,26 @@ class NewsController {
     public function create() {
         try {
             if (!$this->isAdminOrAuthorized()) {
-                throw new Exception('Unauthorized');
+                throw new Exception('Non autorise');
             }
 
-            $title = trim($_POST['title'] ?? '');
-            $content = trim($_POST['content'] ?? '');
-            $summary = trim($_POST['summary'] ?? '');
+            $title = InputValidator::cleanText($_POST['title'] ?? '');
+            $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
+            $summary = InputValidator::cleanMultiline($_POST['summary'] ?? '');
             $image_url = trim($_POST['image_url'] ?? '');
             $category = $_POST['category'] ?? 'health_tips';
             
-            if (empty($title) || empty($content)) {
-                throw new Exception('Title and content required');
-            }
-
             $validCategories = ['nutrition', 'fitness', 'wellness', 'health_tips'];
-            if (!in_array($category, $validCategories)) {
-                throw new Exception('Invalid category');
+            $validationError = InputValidator::firstError([
+                InputValidator::validateNewsTitle($title),
+                InputValidator::validateNewsContent($content),
+                $summary !== '' && mb_strlen($summary) > 500 ? 'Le resume ne doit pas depasser 500 caracteres' : null,
+                InputValidator::validateUrl($image_url, 'URL de l image'),
+                in_array($category, $validCategories, true) ? null : 'Categorie invalide'
+            ]);
+
+            if ($validationError) {
+                throw new Exception($validationError);
             }
 
             if (empty($summary)) {
@@ -177,13 +188,13 @@ class NewsController {
             );
 
             if (!$newsId) {
-                throw new Exception('Failed to create article');
+                throw new Exception('Impossible de creer l article');
             }
 
             echo json_encode([
                 'success' => true,
                 'id' => $newsId,
-                'message' => 'Article created successfully'
+                'message' => 'Article cree avec succes'
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -200,19 +211,30 @@ class NewsController {
     public function update() {
         try {
             if (!$this->isAdminOrAuthorized()) {
-                throw new Exception('Unauthorized');
+                throw new Exception('Non autorise');
             }
 
             $id = (int) ($_POST['id'] ?? 0);
-            $title = trim($_POST['title'] ?? '');
-            $content = trim($_POST['content'] ?? '');
-            $summary = trim($_POST['summary'] ?? '');
+            $title = InputValidator::cleanText($_POST['title'] ?? '');
+            $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
+            $summary = InputValidator::cleanMultiline($_POST['summary'] ?? '');
             $image_url = trim($_POST['image_url'] ?? '');
             $category = $_POST['category'] ?? 'health_tips';
             $is_published = isset($_POST['is_published']) ? (int) $_POST['is_published'] : 1;
 
-            if (!$id || empty($title) || empty($content)) {
-                throw new Exception('Invalid data');
+            $validCategories = ['nutrition', 'fitness', 'wellness', 'health_tips'];
+            $validationError = InputValidator::firstError([
+                InputValidator::validateId($id, 'Article'),
+                InputValidator::validateNewsTitle($title),
+                InputValidator::validateNewsContent($content),
+                $summary !== '' && mb_strlen($summary) > 500 ? 'Le resume ne doit pas depasser 500 caracteres' : null,
+                InputValidator::validateUrl($image_url, 'URL de l image'),
+                in_array($category, $validCategories, true) ? null : 'Categorie invalide',
+                in_array($is_published, [0, 1], true) ? null : 'Statut de publication invalide'
+            ]);
+
+            if ($validationError) {
+                throw new Exception($validationError);
             }
 
             $success = $this->newsModel->updateNews(
@@ -227,7 +249,7 @@ class NewsController {
 
             echo json_encode([
                 'success' => $success,
-                'message' => $success ? 'Article updated' : 'Update failed'
+                'message' => $success ? 'Article modifie' : 'Echec de la modification'
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -244,20 +266,21 @@ class NewsController {
     public function delete() {
         try {
             if (!$this->isAdminOrAuthorized()) {
-                throw new Exception('Unauthorized');
+                throw new Exception('Non autorise');
             }
 
             $id = (int) ($_POST['id'] ?? 0);
 
-            if (!$id) {
-                throw new Exception('ID required');
+            $validationError = InputValidator::validateId($id, 'Article');
+            if ($validationError) {
+                throw new Exception($validationError);
             }
 
             $success = $this->newsModel->deleteNews($id);
 
             echo json_encode([
                 'success' => $success,
-                'message' => $success ? 'Article deleted' : 'Delete failed'
+                'message' => $success ? 'Article supprime' : 'Echec de la suppression'
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -288,7 +311,7 @@ if (method_exists($controller, $action)) {
     http_response_code(404);
     echo json_encode([
         'success' => false,
-        'message' => 'Action not found'
+        'message' => 'Action introuvable'
     ]);
 }
 ?>

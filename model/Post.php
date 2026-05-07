@@ -9,6 +9,8 @@ class Post {
     public function __construct($db) {
         $this->db = $db;
         $this->database = $db;
+        $this->ensureProductAnalysisColumn();
+        $this->ensureReportSnapshotColumns();
     }
 
     public function getAllPosts() {
@@ -22,32 +24,29 @@ class Post {
     }
 
     public function getPostById($id) {
-        $sql = "SELECT * FROM posts WHERE id = ?";
+        $sql = "SELECT p.*, u.username
+                FROM posts p
+                LEFT JOIN users u ON p.user_id = u.id
+                WHERE p.id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function createPost($userId, $title, $content, $image = null) {
+    public function createPost($userId, $title, $content, $image = null, $productAnalysisJson = null) {
         if(empty($title) || empty($content)) {
             return false;
         }
 
-        if ($image) {
-            $sql = "INSERT INTO posts (user_id, title, content, image) VALUES (?, ?, ?, ?)";
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$userId, $title, $content, $image]) ? (int) $this->db->lastInsertId() : false;
-        } else {
-            $sql = "INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)";
-            $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$userId, $title, $content]) ? (int) $this->db->lastInsertId() : false;
-        }
+        $sql = "INSERT INTO posts (user_id, title, content, image, product_analysis_json) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$userId, $title, $content, $image ?: null, $productAnalysisJson ?: null]) ? (int) $this->db->lastInsertId() : false;
     }
 
-    public function updatePost($id, $title, $content, $image, $userId = 1) {
-        $sql = "UPDATE posts SET title = ?, content = ?, image = ? WHERE id = ? AND user_id = ?";
+    public function updatePost($id, $title, $content, $image, $userId = 1, $productAnalysisJson = null) {
+        $sql = "UPDATE posts SET title = ?, content = ?, image = ?, product_analysis_json = ? WHERE id = ? AND user_id = ?";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$title, $content, $image ?: null, $id, $userId]);
+        return $stmt->execute([$title, $content, $image ?: null, $productAnalysisJson ?: null, $id, $userId]);
     }
 
     public function deletePost($id) {
@@ -136,16 +135,17 @@ class Post {
     public function getAllReports() {
         $sql = "SELECT
                     pr.*,
-                    p.title AS post_title,
+                    COALESCE(p.title, pr.post_title_snapshot, '[Deleted post]') AS post_title,
                     p.content AS post_content,
                     p.image AS post_image,
                     p.created_at AS post_created_at,
+                    COALESCE(p.user_id, pr.post_author_user_id) AS post_user_id,
                     reporter.username AS reporter_username,
                     author.username AS post_author_username
                 FROM post_reports pr
                 LEFT JOIN posts p ON pr.post_id = p.id
                 LEFT JOIN users reporter ON pr.user_id = reporter.id
-                LEFT JOIN users author ON p.user_id = author.id
+                LEFT JOIN users author ON COALESCE(p.user_id, pr.post_author_user_id) = author.id
                 ORDER BY
                     CASE WHEN pr.status = 'pending' THEN 0 ELSE 1 END,
                     pr.created_at DESC";
@@ -156,17 +156,17 @@ class Post {
     public function getReportById($reportId) {
         $sql = "SELECT
                     pr.*,
-                    p.title AS post_title,
+                    COALESCE(p.title, pr.post_title_snapshot, '[Deleted post]') AS post_title,
                     p.content AS post_content,
                     p.image AS post_image,
                     p.created_at AS post_created_at,
-                    p.user_id AS post_user_id,
+                    COALESCE(p.user_id, pr.post_author_user_id) AS post_user_id,
                     reporter.username AS reporter_username,
                     author.username AS post_author_username
                 FROM post_reports pr
                 LEFT JOIN posts p ON pr.post_id = p.id
                 LEFT JOIN users reporter ON pr.user_id = reporter.id
-                LEFT JOIN users author ON p.user_id = author.id
+                LEFT JOIN users author ON COALESCE(p.user_id, pr.post_author_user_id) = author.id
                 WHERE pr.id = ?
                 LIMIT 1";
         $stmt = $this->db->prepare($sql);
@@ -181,19 +181,25 @@ class Post {
 
         $details = trim((string) $details);
         $existingReport = $this->getUserReportForPost($postId, $userId);
+        $reportedPost = $this->getPostById($postId);
+        $postAuthorUserId = $reportedPost ? (int) $reportedPost['user_id'] : null;
+        $postTitleSnapshot = $reportedPost ? (string) $reportedPost['title'] : null;
 
         if ($existingReport) {
             $sql = "UPDATE post_reports
-                    SET reason = ?, details = ?, status = 'pending', created_at = CURRENT_TIMESTAMP
+                    SET reason = ?, details = ?, status = 'pending',
+                        post_author_user_id = COALESCE(post_author_user_id, ?),
+                        post_title_snapshot = COALESCE(post_title_snapshot, ?),
+                        created_at = CURRENT_TIMESTAMP
                     WHERE post_id = ? AND user_id = ?";
             $stmt = $this->db->prepare($sql);
-            return $stmt->execute([$reason, $details !== '' ? $details : null, $postId, $userId]);
+            return $stmt->execute([$reason, $details !== '' ? $details : null, $postAuthorUserId, $postTitleSnapshot, $postId, $userId]);
         }
 
-        $sql = "INSERT INTO post_reports (post_id, user_id, reason, details, status)
-                VALUES (?, ?, ?, ?, 'pending')";
+        $sql = "INSERT INTO post_reports (post_id, user_id, reason, details, status, post_author_user_id, post_title_snapshot)
+                VALUES (?, ?, ?, ?, 'pending', ?, ?)";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$postId, $userId, $reason, $details !== '' ? $details : null]);
+        return $stmt->execute([$postId, $userId, $reason, $details !== '' ? $details : null, $postAuthorUserId, $postTitleSnapshot]);
     }
 
     public function deleteReportsForPost($postId) {
@@ -202,10 +208,43 @@ class Post {
         return $stmt->execute([$postId]);
     }
 
-    public function resolveReport($reportId) {
+    public function resolveReport($reportId, $reviewMessage = null) {
         $sql = "UPDATE post_reports SET status = 'resolved' WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$reportId]);
+    }
+
+    private function ensureReportSnapshotColumns() {
+        if (!$this->columnExists('post_reports', 'post_author_user_id')) {
+            $this->db->exec("ALTER TABLE post_reports ADD COLUMN post_author_user_id INT NULL AFTER status");
+        }
+
+        if (!$this->columnExists('post_reports', 'post_title_snapshot')) {
+            $this->db->exec("ALTER TABLE post_reports ADD COLUMN post_title_snapshot VARCHAR(255) NULL AFTER post_author_user_id");
+        }
+
+        $this->db->exec("UPDATE post_reports pr
+            JOIN posts p ON pr.post_id = p.id
+            SET pr.post_author_user_id = COALESCE(pr.post_author_user_id, p.user_id),
+                pr.post_title_snapshot = COALESCE(pr.post_title_snapshot, p.title)
+            WHERE pr.post_author_user_id IS NULL OR pr.post_title_snapshot IS NULL");
+    }
+
+    private function ensureProductAnalysisColumn() {
+        if (!$this->columnExists('posts', 'product_analysis_json')) {
+            $this->db->exec("ALTER TABLE posts ADD COLUMN product_analysis_json LONGTEXT NULL AFTER image");
+        }
+    }
+
+    private function columnExists($tableName, $columnName) {
+        $sql = "SELECT COUNT(*)
+                FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = ?
+                  AND COLUMN_NAME = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$tableName, $columnName]);
+        return (int) $stmt->fetchColumn() > 0;
     }
 
     // ===== Dashboard methods =====

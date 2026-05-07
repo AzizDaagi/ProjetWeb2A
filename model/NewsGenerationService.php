@@ -48,7 +48,7 @@ class NewsGenerationService {
      */
     public function fetchNewsFromAPI($keywords = 'nutrition OR fitness', $sortBy = 'publishedAt', $pageSize = 10) {
         if (empty($this->newsApiKey)) {
-            throw new RuntimeException('NewsAPI key not configured. Set NEWSAPI_KEY in .env');
+            throw new RuntimeException('Cle NewsAPI non configuree. Definissez NEWSAPI_KEY dans .env');
         }
 
         $params = [
@@ -73,7 +73,7 @@ class NewsGenerationService {
         curl_close($ch);
 
         if ($httpCode !== 200) {
-            throw new RuntimeException("NewsAPI request failed with status $httpCode");
+            throw new RuntimeException("La requete NewsAPI a echoue avec le statut $httpCode");
         }
 
         $data = json_decode($response, true);
@@ -194,7 +194,7 @@ class NewsGenerationService {
             $content = $article['description'] ?? $article['content'] ?? '';
             $imageUrl = $article['urlToImage'] ?? '';
             $sourceUrl = $article['url'] ?? '';
-            $source = $article['source']['name'] ?? 'News Source';
+            $source = $article['source']['name'] ?? 'Source d actualite';
 
             if (empty($title) || empty($content)) {
                 return null;
@@ -227,7 +227,7 @@ class NewsGenerationService {
             return $newsId;
 
         } catch (Exception $e) {
-            error_log('Error processing article: ' . $e->getMessage());
+            error_log('Erreur lors du traitement de l article : ' . $e->getMessage());
             return null;
         }
     }
@@ -261,7 +261,7 @@ class NewsGenerationService {
             return null;
 
         } catch (Exception $e) {
-            error_log('Error generating AI news: ' . $e->getMessage());
+            error_log('Erreur lors de la generation d actualite IA : ' . $e->getMessage());
             return null;
         }
     }
@@ -285,14 +285,14 @@ class NewsGenerationService {
             return [
                 'success' => true,
                 'stored' => $stored,
-                'message' => "Successfully stored $stored new articles"
+                'message' => "$stored nouvel article enregistre avec succes"
             ];
 
         } catch (Exception $e) {
             return [
                 'success' => false,
                 'stored' => $stored,
-                'message' => 'Error fetching news: ' . $e->getMessage()
+                'message' => 'Erreur lors du chargement des actualites : ' . $e->getMessage()
             ];
         }
     }
@@ -335,8 +335,8 @@ class NewsGenerationService {
             'stored' => $stored,
             'topics' => $results,
             'message' => $stored > 0
-                ? "Successfully stored $stored new healthy news articles"
-                : 'No new healthy news articles were stored'
+                ? "$stored nouvelles actualites sante enregistrees avec succes"
+                : 'Aucune nouvelle actualite sante n a ete enregistree'
         ];
     }
 }

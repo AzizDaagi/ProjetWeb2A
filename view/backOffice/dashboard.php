@@ -57,7 +57,7 @@ function buildSparkline(array $values, string $colorClass = ''): string {
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Back Office - Dashboard</title>
+    <title>Back Office - Tableau de bord</title>
     <link rel="stylesheet" href="style/community.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
@@ -70,13 +70,13 @@ function buildSparkline(array $values, string $colorClass = ''): string {
             </a>
         </div>
         <ul class="navbar-menu">
-            <li><a href="dashboard.php" class="nav-link active"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
-            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Community</a></li>
-            <li><a href="reports.php" class="nav-link"><i class="fa-solid fa-flag"></i> Reports</a></li>
+            <li><a href="dashboard.php" class="nav-link active"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
+            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Communaute</a></li>
+            <li><a href="reports.php" class="nav-link"><i class="fa-solid fa-flag"></i> Signalements</a></li>
         </ul>
         <div class="navbar-footer">
             <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Dark
+                <i class="fa-solid fa-moon"></i> Sombre
             </button>
             <p class="user-info">Admin: <strong><?= htmlspecialchars($adminName) ?></strong></p>
         </div>
@@ -84,13 +84,13 @@ function buildSparkline(array $values, string $colorClass = ''): string {
 
     <div class="main-content">
         <div class="container">
-            <h1 class="mb-4"><i class="fa-solid fa-chart-line"></i> Dashboard</h1>
+            <h1 class="mb-4"><i class="fa-solid fa-chart-line"></i> Tableau de bord</h1>
 
             <div class="dashboard-grid">
                 <!-- New Posts -->
                 <div class="metric-card">
                     <div class="metric-card-header">
-                        <div class="metric-card-label">New posts in the last 24 hours</div>
+                        <div class="metric-card-label">Nouvelles publications sur les dernieres 24 heures</div>
                         <div class="metric-card-icon"><i class="fa-solid fa-file-pen"></i></div>
                     </div>
                     <div class="metric-card-value"><?= (int) $newPosts ?></div>
@@ -102,7 +102,7 @@ function buildSparkline(array $values, string $colorClass = ''): string {
                 <!-- New Comments -->
                 <div class="metric-card">
                     <div class="metric-card-header">
-                        <div class="metric-card-label">New comments in the last 24 hours</div>
+                        <div class="metric-card-label">Nouveaux commentaires sur les dernieres 24 heures</div>
                         <div class="metric-card-icon accent-green"><i class="fa-solid fa-comments"></i></div>
                     </div>
                     <div class="metric-card-value"><?= (int) $newComments ?></div>
@@ -114,7 +114,7 @@ function buildSparkline(array $values, string $colorClass = ''): string {
                 <!-- New Reports -->
                 <div class="metric-card">
                     <div class="metric-card-header">
-                        <div class="metric-card-label">New reports in the last 24 hours</div>
+                        <div class="metric-card-label">Nouveaux signalements sur les dernieres 24 heures</div>
                         <div class="metric-card-icon accent-orange"><i class="fa-solid fa-flag"></i></div>
                     </div>
                     <div class="metric-card-value"><?= (int) $newReports ?></div>
@@ -126,20 +126,20 @@ function buildSparkline(array $values, string $colorClass = ''): string {
                 <!-- Most Interacted Post -->
                 <div class="metric-card highlight">
                     <div class="metric-card-header">
-                        <div class="metric-card-label">Most interacted post this week</div>
+                        <div class="metric-card-label">Publication la plus active cette semaine</div>
                         <div class="metric-card-icon accent-purple"><i class="fa-solid fa-fire"></i></div>
                     </div>
                     <?php if ($mostInteractedPost): ?>
                         <div class="metric-card-value"><?= (int) $mostInteractedPost['total_interactions'] ?> <span style="font-size:1rem;font-weight:600;color:var(--text-muted);">interactions</span></div>
-                        <div class="metric-card-subtitle"><?= htmlspecialchars($mostInteractedPost['title'] ?? 'Untitled') ?> — <strong>@<?= htmlspecialchars($mostInteractedPost['username'] ?? 'Unknown') ?></strong></div>
+                        <div class="metric-card-subtitle"><?= htmlspecialchars($mostInteractedPost['title'] ?? 'Sans titre') ?> - <strong>@<?= htmlspecialchars($mostInteractedPost['username'] ?? 'Inconnu') ?></strong></div>
                         <div class="interaction-breakdown">
-                            <span><i class="fa-solid fa-comment"></i> <?= (int) $mostInteractedPost['comments_count'] ?> comments</span>
-                            <span><i class="fa-solid fa-reply"></i> <?= (int) $mostInteractedPost['replies_count'] ?> replies</span>
+                            <span><i class="fa-solid fa-comment"></i> <?= (int) $mostInteractedPost['comments_count'] ?> commentaires</span>
+                            <span><i class="fa-solid fa-reply"></i> <?= (int) $mostInteractedPost['replies_count'] ?> reponses</span>
                             <span><i class="fa-solid fa-heart"></i> <?= (int) $mostInteractedPost['reactions_count'] ?> reactions</span>
                         </div>
                     <?php else: ?>
                         <div class="metric-card-value">—</div>
-                        <div class="metric-card-subtitle">No interactions this week</div>
+                        <div class="metric-card-subtitle">Aucune interaction cette semaine</div>
                     <?php endif; ?>
                 </div>
             </div>
