@@ -66,6 +66,14 @@ class InputValidator
         return null;
     }
 
+    public static function validatePostCategory($value): ?string
+    {
+        $allowed = ['question', 'recipe', 'progress', 'advice', 'product_review'];
+        return in_array((string) $value, $allowed, true)
+            ? null
+            : 'Categorie de publication invalide.';
+    }
+
     public static function validateComment($value): ?string
     {
         $value = self::cleanMultiline($value);

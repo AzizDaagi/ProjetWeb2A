@@ -5,18 +5,40 @@ class Post {
     public $database;
     private const ALLOWED_REACTIONS = ['love', 'laugh', 'sad', 'angry'];
     private const ALLOWED_REPORT_REASONS = ['spam', 'harassment', 'false_information', 'inappropriate_content', 'other'];
+    public const ALLOWED_CATEGORIES = ['question', 'recipe', 'progress', 'advice', 'product_review'];
 
     public function __construct($db) {
         $this->db = $db;
         $this->database = $db;
+        $this->ensurePostCategoryColumn();
         $this->ensureProductAnalysisColumn();
+        $this->ensurePostLocationColumns();
         $this->ensureReportSnapshotColumns();
     }
 
     public function getAllPosts() {
-        $sql = "SELECT p.*, u.username 
+        $sql = "SELECT p.*, u.username,
+                    COALESCE(author_posts.posts_count, 0) AS author_posts_count,
+                    COALESCE(author_comments.comments_count, 0) AS author_comments_count,
+                    COALESCE(author_recipes.recipes_count, 0) AS author_recipes_count
                 FROM posts p 
                 JOIN users u ON p.user_id = u.id 
+                LEFT JOIN (
+                    SELECT user_id, COUNT(*) AS posts_count
+                    FROM posts
+                    GROUP BY user_id
+                ) author_posts ON author_posts.user_id = p.user_id
+                LEFT JOIN (
+                    SELECT user_id, COUNT(*) AS comments_count
+                    FROM comments
+                    GROUP BY user_id
+                ) author_comments ON author_comments.user_id = p.user_id
+                LEFT JOIN (
+                    SELECT user_id, COUNT(*) AS recipes_count
+                    FROM posts
+                    WHERE post_category = 'recipe'
+                    GROUP BY user_id
+                ) author_recipes ON author_recipes.user_id = p.user_id
                 ORDER BY p.created_at DESC";
 
         $stmt = $this->db->query($sql);
@@ -33,20 +55,45 @@ class Post {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function createPost($userId, $title, $content, $image = null, $productAnalysisJson = null) {
+    public function createPost($userId, $title, $content, $image = null, $productAnalysisJson = null, $latitude = null, $longitude = null, $locationAccuracy = null, $category = 'advice') {
         if(empty($title) || empty($content)) {
             return false;
         }
 
-        $sql = "INSERT INTO posts (user_id, title, content, image, product_analysis_json) VALUES (?, ?, ?, ?, ?)";
+        $category = in_array($category, self::ALLOWED_CATEGORIES, true) ? $category : 'advice';
+
+        $sql = "INSERT INTO posts (user_id, title, content, image, product_analysis_json, latitude, longitude, location_accuracy, post_category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$userId, $title, $content, $image ?: null, $productAnalysisJson ?: null]) ? (int) $this->db->lastInsertId() : false;
+        return $stmt->execute([
+            $userId,
+            $title,
+            $content,
+            $image ?: null,
+            $productAnalysisJson ?: null,
+            $latitude,
+            $longitude,
+            $locationAccuracy,
+            $category
+        ]) ? (int) $this->db->lastInsertId() : false;
     }
 
-    public function updatePost($id, $title, $content, $image, $userId = 1, $productAnalysisJson = null) {
-        $sql = "UPDATE posts SET title = ?, content = ?, image = ?, product_analysis_json = ? WHERE id = ? AND user_id = ?";
+    public function updatePost($id, $title, $content, $image, $userId = 1, $productAnalysisJson = null, $category = 'advice') {
+        $category = in_array($category, self::ALLOWED_CATEGORIES, true) ? $category : 'advice';
+        $sql = "UPDATE posts SET title = ?, content = ?, image = ?, product_analysis_json = ?, post_category = ?, post_category_source = 'manual', post_category_score = NULL WHERE id = ? AND user_id = ?";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([$title, $content, $image ?: null, $productAnalysisJson ?: null, $id, $userId]);
+        return $stmt->execute([$title, $content, $image ?: null, $productAnalysisJson ?: null, $category, $id, $userId]);
+    }
+
+    public function updatePostCategoryFromAi($id, string $category, float $score): bool {
+        if (!in_array($category, self::ALLOWED_CATEGORIES, true)) {
+            return false;
+        }
+
+        $sql = "UPDATE posts
+                SET post_category = ?, post_category_source = 'ai', post_category_score = ?
+                WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$category, max(0, min(1, $score)), $id]);
     }
 
     public function deletePost($id) {
@@ -230,9 +277,37 @@ class Post {
             WHERE pr.post_author_user_id IS NULL OR pr.post_title_snapshot IS NULL");
     }
 
+    private function ensurePostCategoryColumn() {
+        if (!$this->columnExists('posts', 'post_category')) {
+            $this->db->exec("ALTER TABLE posts ADD COLUMN post_category VARCHAR(32) NOT NULL DEFAULT 'advice' AFTER content");
+        }
+
+        if (!$this->columnExists('posts', 'post_category_source')) {
+            $this->db->exec("ALTER TABLE posts ADD COLUMN post_category_source VARCHAR(20) NOT NULL DEFAULT 'manual' AFTER post_category");
+        }
+
+        if (!$this->columnExists('posts', 'post_category_score')) {
+            $this->db->exec("ALTER TABLE posts ADD COLUMN post_category_score DECIMAL(8, 6) NULL AFTER post_category_source");
+        }
+    }
+
     private function ensureProductAnalysisColumn() {
         if (!$this->columnExists('posts', 'product_analysis_json')) {
             $this->db->exec("ALTER TABLE posts ADD COLUMN product_analysis_json LONGTEXT NULL AFTER image");
+        }
+    }
+
+    private function ensurePostLocationColumns() {
+        if (!$this->columnExists('posts', 'latitude')) {
+            $this->db->exec("ALTER TABLE posts ADD COLUMN latitude DECIMAL(10, 8) NULL AFTER product_analysis_json");
+        }
+
+        if (!$this->columnExists('posts', 'longitude')) {
+            $this->db->exec("ALTER TABLE posts ADD COLUMN longitude DECIMAL(11, 8) NULL AFTER latitude");
+        }
+
+        if (!$this->columnExists('posts', 'location_accuracy')) {
+            $this->db->exec("ALTER TABLE posts ADD COLUMN location_accuracy INT NULL AFTER longitude");
         }
     }
 

@@ -1942,7 +1942,7 @@ body.backoffice-page .admin-list-header {
 }
 
 body.backoffice-page .admin-community-table {
-    min-width: 1040px;
+    min-width: 1140px;
 }
 
 body.backoffice-page .admin-post-cell {
@@ -1973,6 +1973,36 @@ body.backoffice-page .admin-media-chip {
     border: 1px solid var(--admin-border);
     font-size: 0.78rem;
     font-weight: 700;
+}
+
+body.backoffice-page .admin-location-chip,
+body.backoffice-page .admin-location-missing {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--admin-border);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+body.backoffice-page .admin-location-chip {
+    color: #1f6fb2;
+    background: rgba(52, 152, 219, 0.14);
+    border-color: rgba(52, 152, 219, 0.28);
+    cursor: pointer;
+}
+
+body.backoffice-page .admin-location-chip:hover {
+    background: rgba(52, 152, 219, 0.2);
+}
+
+body.backoffice-page .admin-location-missing {
+    color: var(--admin-muted);
+    background: var(--admin-surface-soft);
 }
 
 body.backoffice-page .admin-row-actions {
@@ -2036,6 +2066,276 @@ body.backoffice-page .admin-detail-panel p {
     margin: 0;
     color: var(--admin-text);
     line-height: 1.6;
+}
+
+body.backoffice-page .admin-map-panel {
+    grid-column: 1 / -1;
+}
+
+body.backoffice-page .admin-location-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+    color: var(--admin-muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+body.backoffice-page .admin-location-meta span,
+body.backoffice-page .admin-map-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.backoffice-page .admin-post-map {
+    width: 100%;
+    min-height: 320px;
+    height: min(420px, 42vw);
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--admin-surface-soft);
+}
+
+body.backoffice-page .admin-post-map .leaflet-control-attribution,
+body.backoffice-page .admin-post-map .leaflet-popup-content-wrapper,
+body.backoffice-page .admin-post-map .leaflet-popup-tip {
+    color: #1f2a36;
+}
+
+body.backoffice-page .admin-map-link {
+    width: fit-content;
+    margin-top: 10px;
+    color: #1f6fb2;
+    text-decoration: none;
+    font-weight: 800;
+}
+
+body.backoffice-page .admin-map-link:hover {
+    text-decoration: underline;
+}
+
+.post-location-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--surface-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.035);
+}
+
+.post-location-box .btn {
+    margin-top: 0;
+    white-space: nowrap;
+}
+
+.post-location-status {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.post-meta-row,
+.community-badges,
+.comment-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.post-meta-row {
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.community-badges {
+    margin-top: 6px;
+}
+
+.community-badge,
+.post-category-chip,
+.post-share-btn,
+.comment-like-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--surface-border);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.community-badge,
+.post-category-chip {
+    padding: 7px 10px;
+}
+
+.community-badge {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.community-badge.badge-top {
+    color: #f7c948;
+    border-color: rgba(247, 201, 72, 0.35);
+    background: rgba(247, 201, 72, 0.12);
+}
+
+.community-badge.badge-helpful {
+    color: #5ee0a1;
+    border-color: rgba(94, 224, 161, 0.32);
+    background: rgba(94, 224, 161, 0.12);
+}
+
+.community-badge.badge-recipe {
+    color: #ff9f66;
+    border-color: rgba(255, 159, 102, 0.34);
+    background: rgba(255, 159, 102, 0.12);
+}
+
+.post-category-chip {
+    color: #2f80ed;
+    border-color: rgba(47, 128, 237, 0.3);
+    background: rgba(47, 128, 237, 0.12);
+}
+
+.post-category-chip small {
+    padding-left: 6px;
+    margin-left: 2px;
+    border-left: 1px solid currentColor;
+    opacity: 0.78;
+    font-size: 0.68rem;
+    font-weight: 900;
+}
+
+.post-category-recipe {
+    color: #ff9f66;
+    border-color: rgba(255, 159, 102, 0.34);
+    background: rgba(255, 159, 102, 0.12);
+}
+
+.post-category-progress {
+    color: #5ee0a1;
+    border-color: rgba(94, 224, 161, 0.32);
+    background: rgba(94, 224, 161, 0.12);
+}
+
+.post-category-question {
+    color: #b9a7ff;
+    border-color: rgba(185, 167, 255, 0.34);
+    background: rgba(185, 167, 255, 0.12);
+}
+
+.post-category-product_review {
+    color: #f7c948;
+    border-color: rgba(247, 201, 72, 0.35);
+    background: rgba(247, 201, 72, 0.12);
+}
+
+.post-share-btn,
+.comment-like-btn {
+    padding: 8px 10px;
+    color: var(--text-muted);
+    background: transparent;
+    cursor: pointer;
+    transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.post-share-btn:hover,
+.comment-like-btn:hover,
+.comment-like-btn.is-active {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.075);
+    transform: translateY(-1px);
+}
+
+.comment-actions {
+    margin-top: 10px;
+}
+
+.comment-like-btn.is-active {
+    color: #2f80ed;
+    border-color: rgba(47, 128, 237, 0.34);
+    background: rgba(47, 128, 237, 0.12);
+}
+
+.post-location-preview,
+.post-location-map-panel {
+    margin-top: 12px;
+}
+
+.post-location-map-panel {
+    padding: 12px;
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.post-location-map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    color: var(--text-main);
+    font-weight: 800;
+}
+
+.post-location-map-header small {
+    color: var(--text-muted);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.post-mini-map {
+    width: 100%;
+    min-height: 220px;
+    height: min(260px, 48vw);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.post-mini-map .leaflet-control-attribution,
+.post-mini-map .leaflet-popup-content-wrapper,
+.post-mini-map .leaflet-popup-tip {
+    color: #1f2a36;
+}
+
+.post-map-link {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 10px;
+    color: #1f6fb2;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.post-map-link:hover {
+    text-decoration: underline;
+}
+
+.post-map-place-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 0.86rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+body.backoffice-page .post-map-place-label {
+    color: var(--admin-muted);
 }
 
 body.backoffice-page .admin-post-thumbnail {
@@ -2542,6 +2842,26 @@ body.theme-light .news-modal-dialog {
 
 /* Responsive News Grid */
 @media (max-width: 768px) {
+    .post-location-box {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .post-location-box .btn {
+        width: 100%;
+    }
+
+    .post-location-map-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .post-mini-map {
+        min-height: 200px;
+        height: 240px;
+    }
+
     .product-analysis-controls,
     .product-analysis-card,
     .nutrition-metrics {

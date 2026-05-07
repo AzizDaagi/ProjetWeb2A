@@ -26,6 +26,7 @@ class PostController {
     private const MAX_UPLOAD_SIZE = 5242880;
     private const ALLOWED_REACTIONS = ['love', 'laugh', 'sad', 'angry'];
     private const ALLOWED_REPORT_REASONS = ['spam', 'harassment', 'false_information', 'inappropriate_content', 'other'];
+    private const ALLOWED_CATEGORIES = ['question', 'recipe', 'progress', 'advice', 'product_review'];
 
     public function __construct($db) {
         $this->postModel = new Post($db);
@@ -48,12 +49,15 @@ class PostController {
     public function create() {
         $title = InputValidator::cleanText($_POST['title'] ?? '');
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
+        $category = $this->sanitizePostCategory($_POST['post_category'] ?? 'advice');
         $productAnalysisJson = $this->sanitizeProductAnalysisJson($_POST['product_analysis_json'] ?? '');
+        $location = $this->sanitizePostLocation($_POST['latitude'] ?? null, $_POST['longitude'] ?? null, $_POST['location_accuracy'] ?? null);
         $userId = 1;
 
         $validationError = InputValidator::firstError([
             InputValidator::validatePostTitle($title),
-            InputValidator::validatePostContent($content)
+            InputValidator::validatePostContent($content),
+            InputValidator::validatePostCategory($category)
         ]);
 
         if ($validationError) {
@@ -72,7 +76,17 @@ class PostController {
         }
 
         try {
-            $result = $this->postModel->createPost($userId, $title, $content, $image, $productAnalysisJson);
+            $result = $this->postModel->createPost(
+                $userId,
+                $title,
+                $content,
+                $image,
+                $productAnalysisJson,
+                $location['latitude'],
+                $location['longitude'],
+                $location['accuracy'],
+                $category
+            );
         } catch (PDOException $e) {
             $this->respondToDatabaseImageError($e);
         }
@@ -95,11 +109,13 @@ class PostController {
         $id = $_POST['id'] ?? null;
         $title = InputValidator::cleanText($_POST['title'] ?? '');
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
+        $category = $this->sanitizePostCategory($_POST['post_category'] ?? 'advice');
 
         $validationError = InputValidator::firstError([
             InputValidator::validateId($id, 'Publication'),
             InputValidator::validatePostTitle($title),
-            InputValidator::validatePostContent($content)
+            InputValidator::validatePostContent($content),
+            InputValidator::validatePostCategory($category)
         ]);
 
         if ($validationError) {
@@ -133,7 +149,7 @@ class PostController {
 
         $userId = 1;
         try {
-            $success = $this->postModel->updatePost($id, $title, $content, $image, $userId, $productAnalysisJson);
+            $success = $this->postModel->updatePost($id, $title, $content, $image, $userId, $productAnalysisJson, $category);
         } catch (PDOException $e) {
             $this->respondToDatabaseImageError($e);
         }
@@ -323,6 +339,32 @@ class PostController {
         }
 
         return json_encode($clean);
+    }
+
+    private function sanitizePostCategory($value): string {
+        $category = strtolower(trim((string) $value));
+        return in_array($category, self::ALLOWED_CATEGORIES, true) ? $category : 'advice';
+    }
+
+    private function sanitizePostLocation($latitude, $longitude, $accuracy): array {
+        $lat = filter_var($latitude, FILTER_VALIDATE_FLOAT);
+        $lng = filter_var($longitude, FILTER_VALIDATE_FLOAT);
+
+        if ($lat === false || $lng === false || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            return [
+                'latitude' => null,
+                'longitude' => null,
+                'accuracy' => null
+            ];
+        }
+
+        $cleanAccuracy = filter_var($accuracy, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 100000]]);
+
+        return [
+            'latitude' => round((float) $lat, 8),
+            'longitude' => round((float) $lng, 8),
+            'accuracy' => $cleanAccuracy === false ? null : (int) $cleanAccuracy
+        ];
     }
 
     private function respondToDatabaseImageError(PDOException $e) {

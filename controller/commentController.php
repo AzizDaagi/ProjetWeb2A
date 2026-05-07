@@ -116,6 +116,28 @@ class CommentController {
         exit;
     }
 
+    public function like() {
+        $id = $_POST['id'] ?? null;
+        $userId = 1;
+
+        $validationError = InputValidator::validateId($id, 'Commentaire');
+        if ($validationError) {
+            $this->jsonError($validationError);
+            exit;
+        }
+
+        $success = $this->commentModel->toggleLike((int) $id, $userId);
+        $summary = $this->commentModel->getLikeSummary((int) $id, $userId);
+
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => $success,
+            'message' => $success ? 'Like mis a jour' : 'Erreur like',
+            'likeSummary' => $summary
+        ]);
+        exit;
+    }
+
     public function adminUpdate() {
         $id = $_POST['id'] ?? null;
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
@@ -240,6 +262,8 @@ if ($action == 'add') {
     $controller->update();
 } elseif ($action == 'delete') {
     $controller->delete();
+} elseif ($action == 'like') {
+    $controller->like();
 } elseif ($action == 'admin_update') {
     $controller->adminUpdate();
 } elseif ($action == 'admin_delete') {

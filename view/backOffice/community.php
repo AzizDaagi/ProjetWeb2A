@@ -77,6 +77,30 @@ function postExcerpt($text, $limit = 120)
 
     return substr($text, 0, $limit - 3) . '...';
 }
+
+function hasPostLocation($post)
+{
+    return isset($post['latitude'], $post['longitude'])
+        && is_numeric($post['latitude'])
+        && is_numeric($post['longitude']);
+}
+
+function getPostCategoryOptions()
+{
+    return [
+        'question' => ['label' => 'Question', 'icon' => 'fa-circle-question'],
+        'recipe' => ['label' => 'Recipe', 'icon' => 'fa-utensils'],
+        'progress' => ['label' => 'Progress', 'icon' => 'fa-chart-line'],
+        'advice' => ['label' => 'Advice', 'icon' => 'fa-lightbulb'],
+        'product_review' => ['label' => 'Product Review', 'icon' => 'fa-star-half-stroke']
+    ];
+}
+
+function getPostCategoryMeta($category)
+{
+    $options = getPostCategoryOptions();
+    return $options[$category] ?? $options['advice'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -85,6 +109,7 @@ function postExcerpt($text, $limit = 120)
 <head>
     <meta charset="UTF-8">
     <title>Back Office - Communaute</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="style/community.css?v=<?= filemtime(__DIR__ . '/style/community.css') ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
@@ -175,6 +200,7 @@ function postExcerpt($text, $limit = 120)
                                         <th>AI</th>
                                         <th>IA image</th>
                                         <th>Commentaires</th>
+                                        <th>Lieu</th>
                                         <th>Date</th>
                                         <th>Actions</th>
                                     </tr>
@@ -189,14 +215,26 @@ function postExcerpt($text, $limit = 120)
                                         $imageModeration = $postImageModerationResults[$postId] ?? null;
                                         $postAiStatus = strtolower((string) ($postModeration['status'] ?? 'missing'));
                                         $postImageAiStatus = strtolower((string) ($imageModeration['status'] ?? 'missing'));
+                                        $postHasLocation = hasPostLocation($post);
+                                        $postLatitude = $postHasLocation ? (float) $post['latitude'] : null;
+                                        $postLongitude = $postHasLocation ? (float) $post['longitude'] : null;
+                                        $postCategory = $post['post_category'] ?? 'advice';
+                                        $postCategoryMeta = getPostCategoryMeta($postCategory);
+                                        $postCategoryIsAi = ($post['post_category_source'] ?? '') === 'ai';
+                                        $postCategoryScore = isset($post['post_category_score']) ? round(((float) $post['post_category_score']) * 100) : null;
+                                        $postLocationText = $postHasLocation
+                                            ? number_format($postLatitude, 5) . ', ' . number_format($postLongitude, 5)
+                                            : 'Localisation indisponible';
                                         $postSearchText = trim(implode(' ', [
                                             $postId,
                                             $post['title'] ?? '',
                                             $post['content'] ?? '',
                                             $post['username'] ?? '',
+                                            $postCategoryMeta['label'] ?? '',
                                             $post['created_at'] ?? '',
                                             $postAiStatus,
-                                            $postImageAiStatus
+                                            $postImageAiStatus,
+                                            $postLocationText
                                         ]));
                                         ?>
                                         <tr id="post-<?= $postId ?>"
@@ -213,6 +251,13 @@ function postExcerpt($text, $limit = 120)
                                             <td class="admin-post-cell">
                                                 <strong id="display-title-<?= $postId ?>"><?= htmlspecialchars($post['title']) ?></strong>
                                                 <p id="display-content-<?= $postId ?>"><?= htmlspecialchars(postExcerpt($post['content'])) ?></p>
+                                                <span class="post-category-chip post-category-<?= htmlspecialchars($postCategory) ?>">
+                                                    <i class="fa-solid <?= htmlspecialchars($postCategoryMeta['icon']) ?>"></i>
+                                                    <?= htmlspecialchars($postCategoryMeta['label']) ?>
+                                                    <?php if ($postCategoryIsAi): ?>
+                                                        <small>AI<?= $postCategoryScore !== null ? ' ' . (int) $postCategoryScore . '%' : '' ?></small>
+                                                    <?php endif; ?>
+                                                </span>
                                                 <?php if ($postImageSrc): ?>
                                                     <span class="admin-media-chip"><i class="fa-solid fa-image"></i> Image</span>
                                                 <?php endif; ?>
@@ -221,6 +266,15 @@ function postExcerpt($text, $limit = 120)
                                             <td><?= renderAiModerationBadge($postModeration) ?></td>
                                             <td><?= renderImageModerationBadge($imageModeration) ?></td>
                                             <td><?= count($comments) ?></td>
+                                            <td>
+                                                <?php if ($postHasLocation): ?>
+                                                    <button type="button" class="admin-location-chip" onclick="openPostMap(<?= $postId ?>)">
+                                                        <i class="fa-solid fa-map-location-dot"></i> Carte
+                                                    </button>
+                                                <?php else: ?>
+                                                    <span class="admin-location-missing"><i class="fa-solid fa-location-slash"></i> Non disponible</span>
+                                                <?php endif; ?>
+                                            </td>
                                             <td><?= htmlspecialchars($post['created_at'] ?? '-') ?></td>
                                             <td class="admin-row-actions">
                                                 <button class="btn btn-sm btn-outline-info" onclick="toggleEdit(<?= $postId ?>)">
@@ -232,11 +286,11 @@ function postExcerpt($text, $limit = 120)
                                             </td>
                                         </tr>
                                         <tr class="admin-details-row" data-details-for="<?= $postId ?>">
-                                            <td colspan="8">
+                                            <td colspan="9">
                                                 <details class="admin-post-details">
                                                     <summary>
                                                         <span><i class="fa-solid fa-clipboard-list"></i> Details de revision</span>
-                                                        <span class="text-muted">Modifier la publication, verifier les commentaires</span>
+                                                        <span class="text-muted">Modifier la publication, verifier la carte et les commentaires</span>
                                                     </summary>
 
                                                     <div class="admin-details-grid">
@@ -252,6 +306,14 @@ function postExcerpt($text, $limit = 120)
                                                         <section class="admin-detail-panel">
                                                             <h4>Modifier la publication</h4>
                                                             <div id="edit-block-<?= $postId ?>" class="edit-form">
+                                                                <label class="form-label" for="edit-post-category-<?= $postId ?>">Type de publication</label>
+                                                                <select id="edit-post-category-<?= $postId ?>" class="form-control mb-2">
+                                                                    <?php foreach (getPostCategoryOptions() as $categoryValue => $categoryMeta): ?>
+                                                                        <option value="<?= htmlspecialchars($categoryValue) ?>" <?= $postCategory === $categoryValue ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($categoryMeta['label']) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
                                                                 <input type="text" id="edit-title-<?= $postId ?>" class="form-control mb-2" value="<?= htmlspecialchars($post['title']) ?>">
                                                                 <textarea id="edit-content-<?= $postId ?>" class="form-control mb-2"><?= htmlspecialchars($post['content']) ?></textarea>
                                                                 <?php if ($postImageSrc): ?>
@@ -268,6 +330,31 @@ function postExcerpt($text, $limit = 120)
                                                                     <button class="btn btn-success btn-sm" onclick="saveEdit(<?= $postId ?>)">Enregistrer</button>
                                                                 </div>
                                                             </div>
+                                                        </section>
+
+                                                        <section class="admin-detail-panel admin-map-panel">
+                                                            <h4>Lieu de creation</h4>
+                                                            <?php if ($postHasLocation): ?>
+                                                                <div class="admin-location-meta">
+                                                                    <span><i class="fa-solid fa-location-dot"></i> <?= htmlspecialchars($postLocationText) ?></span>
+                                                                    <?php if (!empty($post['location_accuracy'])): ?>
+                                                                        <span><i class="fa-solid fa-bullseye"></i> Precision ~<?= (int) $post['location_accuracy'] ?> m</span>
+                                                                    <?php endif; ?>
+                                                                </div>
+                                                                <div
+                                                                    id="post-map-<?= $postId ?>"
+                                                                    class="admin-post-map"
+                                                                    data-post-map
+                                                                    data-lat="<?= htmlspecialchars((string) $postLatitude, ENT_QUOTES) ?>"
+                                                                    data-lng="<?= htmlspecialchars((string) $postLongitude, ENT_QUOTES) ?>"
+                                                                    data-title="<?= htmlspecialchars($post['title'] ?? 'Publication #' . $postId, ENT_QUOTES) ?>"
+                                                                    data-accuracy="<?= htmlspecialchars((string) ($post['location_accuracy'] ?? ''), ENT_QUOTES) ?>"></div>
+                                                                <a class="admin-map-link" href="https://www.openstreetmap.org/?mlat=<?= urlencode((string) $postLatitude) ?>&mlon=<?= urlencode((string) $postLongitude) ?>#map=16/<?= urlencode((string) $postLatitude) ?>/<?= urlencode((string) $postLongitude) ?>" target="_blank" rel="noopener">
+                                                                    <i class="fa-solid fa-up-right-from-square"></i> Ouvrir dans OpenStreetMap
+                                                                </a>
+                                                            <?php else: ?>
+                                                                <p class="text-muted">Aucune localisation n a ete enregistree pour cette publication.</p>
+                                                            <?php endif; ?>
                                                         </section>
                                                     </div>
 
@@ -317,15 +404,133 @@ function postExcerpt($text, $limit = 120)
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="style/community.js?v=<?= filemtime(__DIR__ . '/style/community.js') ?>"></script>
     <script>
         let imageToRemove = {};
+        const adminPostMaps = {};
+
+        function initPostMap(mapElement) {
+            if (!mapElement || mapElement.dataset.ready === 'true' || typeof L === 'undefined') return;
+
+            const lat = Number(mapElement.dataset.lat);
+            const lng = Number(mapElement.dataset.lng);
+            const accuracy = Number(mapElement.dataset.accuracy || 0);
+            const title = mapElement.dataset.title || 'Publication';
+
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+            const map = L.map(mapElement, {
+                scrollWheelZoom: false
+            }).setView([lat, lng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+
+            const marker = L.marker([lat, lng]).addTo(map).bindPopup(title);
+
+            if (Number.isFinite(accuracy) && accuracy > 0) {
+                L.circle([lat, lng], {
+                    radius: accuracy,
+                    color: '#3498db',
+                    fillColor: '#3498db',
+                    fillOpacity: 0.12,
+                    weight: 1
+                }).addTo(map);
+            }
+
+            mapElement.dataset.ready = 'true';
+            adminPostMaps[mapElement.id] = map;
+            window.setTimeout(() => map.invalidateSize(), 80);
+
+            reverseGeocodeLocation(lat, lng).then(placeLabel => {
+                marker.bindPopup(`<strong>${mapHtmlEscape(title)}</strong><br>${mapHtmlEscape(placeLabel)}`);
+                setMapPlaceLabel(mapElement, placeLabel);
+            });
+        }
+
+        function mapHtmlEscape(value) {
+            return String(value || '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function reverseGeocodeLocation(lat, lng) {
+            const cacheKey = `osm-place-${lat.toFixed(5)}-${lng.toFixed(5)}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                return Promise.resolve(cached);
+            }
+
+            const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=16&addressdetails=0`;
+            return fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    const label = data && data.display_name ? String(data.display_name) : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                    localStorage.setItem(cacheKey, label);
+                    return label;
+                })
+                .catch(() => `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        }
+
+        function setMapPlaceLabel(mapElement, label) {
+            if (!mapElement || !label) return;
+
+            let labelElement = mapElement.parentElement ? mapElement.parentElement.querySelector('.post-map-place-label') : null;
+            if (!labelElement) {
+                labelElement = document.createElement('div');
+                labelElement.className = 'post-map-place-label';
+                mapElement.insertAdjacentElement('afterend', labelElement);
+            }
+
+            labelElement.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${mapHtmlEscape(label)}`;
+        }
+
+        function refreshVisiblePostMaps(scope) {
+            const root = scope || document;
+            root.querySelectorAll('[data-post-map]').forEach(initPostMap);
+        }
+
+        function openPostMap(id) {
+            const detailsRow = document.querySelector(`[data-details-for="${id}"]`);
+            const details = detailsRow ? detailsRow.querySelector('details') : null;
+            if (details) details.open = true;
+
+            const mapElement = document.getElementById(`post-map-${id}`);
+            if (mapElement) {
+                initPostMap(mapElement);
+                mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                window.setTimeout(() => {
+                    const map = adminPostMaps[mapElement.id];
+                    if (map) map.invalidateSize();
+                }, 180);
+            }
+        }
+
+        document.querySelectorAll('.admin-post-details').forEach(details => {
+            details.addEventListener('toggle', () => {
+                if (details.open) {
+                    refreshVisiblePostMaps(details);
+                }
+            });
+        });
 
         function toggleEdit(id) {
             const block = document.getElementById(`edit-block-${id}`);
             if (!block) return;
             const details = block.closest('details');
             if (details) details.open = true;
+            refreshVisiblePostMaps(details || document);
             block.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
@@ -342,12 +547,14 @@ function postExcerpt($text, $limit = 120)
         function saveEdit(id) {
             const title = document.getElementById(`edit-title-${id}`).value;
             const content = document.getElementById(`edit-content-${id}`).value;
+            const categoryInput = document.getElementById(`edit-post-category-${id}`);
             const imageInput = document.getElementById(`edit-image-${id}`);
 
             const formData = new FormData();
             formData.append('id', id);
             formData.append('title', title);
             formData.append('content', content);
+            formData.append('post_category', categoryInput ? categoryInput.value : 'advice');
             if (imageToRemove[id]) {
                 formData.append('remove_image', '1');
             }

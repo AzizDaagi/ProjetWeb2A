@@ -132,6 +132,43 @@ function getReportReasonOptions()
     ];
 }
 
+function getPostCategoryOptions()
+{
+    return [
+        'question' => ['label' => 'Question', 'icon' => 'fa-circle-question'],
+        'recipe' => ['label' => 'Recipe', 'icon' => 'fa-utensils'],
+        'progress' => ['label' => 'Progress', 'icon' => 'fa-chart-line'],
+        'advice' => ['label' => 'Advice', 'icon' => 'fa-lightbulb'],
+        'product_review' => ['label' => 'Product Review', 'icon' => 'fa-star-half-stroke']
+    ];
+}
+
+function getPostCategoryMeta($category)
+{
+    $options = getPostCategoryOptions();
+    return $options[$category] ?? $options['advice'];
+}
+
+function getCommunityBadges($post)
+{
+    $badges = [];
+    $postsCount = (int) ($post['author_posts_count'] ?? 0);
+    $commentsCount = (int) ($post['author_comments_count'] ?? 0);
+    $recipesCount = (int) ($post['author_recipes_count'] ?? 0);
+
+    if ($postsCount >= 5 || ($postsCount + $commentsCount) >= 10) {
+        $badges[] = ['label' => 'Top Contributor', 'icon' => 'fa-trophy', 'class' => 'badge-top'];
+    }
+    if ($commentsCount >= 5) {
+        $badges[] = ['label' => 'Helpful Member', 'icon' => 'fa-hand-holding-heart', 'class' => 'badge-helpful'];
+    }
+    if ($recipesCount >= 1 || ($post['post_category'] ?? '') === 'recipe') {
+        $badges[] = ['label' => 'Recipe Sharer', 'icon' => 'fa-utensils', 'class' => 'badge-recipe'];
+    }
+
+    return $badges;
+}
+
 function getNewsCategoryLabel($category)
 {
     $labels = [
@@ -150,6 +187,13 @@ function decodeProductAnalysis($json)
     $data = json_decode((string) $json, true);
     return is_array($data) ? $data : null;
 }
+
+function hasPostLocation($post)
+{
+    return isset($post['latitude'], $post['longitude'])
+        && is_numeric($post['latitude'])
+        && is_numeric($post['longitude']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -159,6 +203,7 @@ function decodeProductAnalysis($json)
     <meta charset="UTF-8">
     <title>Communauté</title>
     <link rel="stylesheet" href="/Web/view/backoffice/style/community.css?v=<?= filemtime(__DIR__ . '/../backoffice/style/community.css') ?>">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
@@ -215,6 +260,12 @@ function decodeProductAnalysis($json)
                 </div>
                 <div class="card-body">
                     <div class="form-group">
+                        <label class="form-label" for="new-post-category">Type de publication</label>
+                        <select id="new-post-category" class="form-control mb-2">
+                            <?php foreach (getPostCategoryOptions() as $categoryValue => $categoryMeta): ?>
+                                <option value="<?php echo htmlspecialchars($categoryValue); ?>"><?php echo htmlspecialchars($categoryMeta['label']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                         <input type="text" id="new-title" class="form-control mb-2" placeholder="Titre de votre publication">
                         <textarea id="new-content" class="form-control" rows="3" placeholder="Écrivez votre message ici..."></textarea>
                         <div class="product-analysis-box mt-3">
@@ -232,6 +283,25 @@ function decodeProductAnalysis($json)
                         <div class="form-group mt-3">
                             <label class="form-label">Image (optionnel)</label>
                             <input type="file" id="new-image" class="form-control" accept="image/*">
+                        </div>
+                        <div class="post-location-box mt-3">
+                            <div>
+                                <label class="form-label">Localisation de creation (optionnel)</label>
+                                <p id="post-location-status" class="post-location-status">La position sera demandee au moment de publier.</p>
+                            </div>
+                            <input type="hidden" id="new-latitude" value="">
+                            <input type="hidden" id="new-longitude" value="">
+                            <input type="hidden" id="new-location-accuracy" value="">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="requestCurrentPostLocation(true)">
+                                <i class="fa-solid fa-location-crosshairs"></i> Utiliser ma position
+                            </button>
+                        </div>
+                        <div id="new-post-location-preview" class="post-location-preview" hidden>
+                            <div
+                                id="new-post-map"
+                                class="post-mini-map"
+                                data-location-preview-map
+                                aria-label="Apercu de la position de creation"></div>
                         </div>
                     </div>
                     <button onclick="submitPost()" class="btn">Publier</button>
@@ -314,11 +384,29 @@ function decodeProductAnalysis($json)
                         <?php $reportReasonOptions = getReportReasonOptions(); ?>
                         <?php $userReport = $postModel->getUserReportForPost($post['id'], $myId); ?>
                         <?php $productAnalysis = decodeProductAnalysis($post['product_analysis_json'] ?? null); ?>
+                        <?php $postHasLocation = hasPostLocation($post); ?>
+                        <?php $postLatitude = $postHasLocation ? (float) $post['latitude'] : null; ?>
+                        <?php $postLongitude = $postHasLocation ? (float) $post['longitude'] : null; ?>
+                        <?php $postCategory = $post['post_category'] ?? 'advice'; ?>
+                        <?php $postCategoryMeta = getPostCategoryMeta($postCategory); ?>
+                        <?php $postCategoryIsAi = ($post['post_category_source'] ?? '') === 'ai'; ?>
+                        <?php $postCategoryScore = isset($post['post_category_score']) ? round(((float) $post['post_category_score']) * 100) : null; ?>
+                        <?php $communityBadges = getCommunityBadges($post); ?>
                         <div class="post-card" id="post-<?php echo $post['id']; ?>">
                             <div class="post-header">
                                 <div>
                                     <strong><i class="fas fa-user text-muted"></i> <?php echo htmlspecialchars($post['username']); ?></strong>
                                     <small class="text-muted ml-2"><?php echo $post['created_at']; ?></small>
+                                    <?php if (!empty($communityBadges)): ?>
+                                        <div class="community-badges">
+                                            <?php foreach ($communityBadges as $badge): ?>
+                                                <span class="community-badge <?php echo htmlspecialchars($badge['class']); ?>">
+                                                    <i class="fa-solid <?php echo htmlspecialchars($badge['icon']); ?>"></i>
+                                                    <?php echo htmlspecialchars($badge['label']); ?>
+                                                </span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <?php if ($post['user_id'] == $myId): ?>
@@ -334,6 +422,18 @@ function decodeProductAnalysis($json)
                             </div>
 
                             <div class="card-body">
+                                <div class="post-meta-row">
+                                    <span class="post-category-chip post-category-<?php echo htmlspecialchars($postCategory); ?>">
+                                        <i class="fa-solid <?php echo htmlspecialchars($postCategoryMeta['icon']); ?>"></i>
+                                        <?php echo htmlspecialchars($postCategoryMeta['label']); ?>
+                                        <?php if ($postCategoryIsAi): ?>
+                                            <small>AI<?php echo $postCategoryScore !== null ? ' ' . (int) $postCategoryScore . '%' : ''; ?></small>
+                                        <?php endif; ?>
+                                    </span>
+                                    <button type="button" class="post-share-btn" onclick="copyPostLink(<?php echo (int) $post['id']; ?>, this)">
+                                        <i class="fa-solid fa-link"></i> Copy link
+                                    </button>
+                                </div>
                                 <h5 id="display-title-<?php echo $post['id']; ?>"><?php echo htmlspecialchars($post['title']); ?></h5>
                                 <p id="display-content-<?php echo $post['id']; ?>"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
                                 <?php if ($postImageSrc): ?>
@@ -393,6 +493,28 @@ function decodeProductAnalysis($json)
                                     </div>
                                 <?php endif; ?>
 
+                                <?php if ($postHasLocation): ?>
+                                    <section class="post-location-map-panel" aria-label="Carte de localisation de la publication">
+                                        <div class="post-location-map-header">
+                                            <span><i class="fa-solid fa-map-location-dot"></i> Lieu de creation</span>
+                                            <?php if (!empty($post['location_accuracy'])): ?>
+                                                <small>Precision ~<?php echo (int) $post['location_accuracy']; ?> m</small>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div
+                                            id="front-post-map-<?php echo (int) $post['id']; ?>"
+                                            class="post-mini-map"
+                                            data-front-post-map
+                                            data-lat="<?php echo htmlspecialchars((string) $postLatitude, ENT_QUOTES); ?>"
+                                            data-lng="<?php echo htmlspecialchars((string) $postLongitude, ENT_QUOTES); ?>"
+                                            data-title="<?php echo htmlspecialchars((string) $post['title'], ENT_QUOTES); ?>"
+                                            data-accuracy="<?php echo htmlspecialchars((string) ($post['location_accuracy'] ?? ''), ENT_QUOTES); ?>"></div>
+                                        <a class="post-map-link" href="https://www.openstreetmap.org/?mlat=<?php echo urlencode((string) $postLatitude); ?>&mlon=<?php echo urlencode((string) $postLongitude); ?>#map=16/<?php echo urlencode((string) $postLatitude); ?>/<?php echo urlencode((string) $postLongitude); ?>" target="_blank" rel="noopener">
+                                            Ouvrir dans OpenStreetMap
+                                        </a>
+                                    </section>
+                                <?php endif; ?>
+
                                 <div class="post-reactions" id="post-reactions-<?php echo $post['id']; ?>">
                                     <?php foreach ($reactionOptions as $reactionType => $reactionMeta): ?>
                                         <?php $isActiveReaction = ($reactionSummary['user_reaction'] ?? null) === $reactionType; ?>
@@ -445,6 +567,14 @@ function decodeProductAnalysis($json)
                                 </div>
 
                                 <div id="edit-block-<?php echo $post['id']; ?>" class="edit-form mt-3" style="display: none;">
+                                    <label class="form-label" for="edit-post-category-<?php echo $post['id']; ?>">Type de publication</label>
+                                    <select id="edit-post-category-<?php echo $post['id']; ?>" class="form-control mb-2">
+                                        <?php foreach (getPostCategoryOptions() as $categoryValue => $categoryMeta): ?>
+                                            <option value="<?php echo htmlspecialchars($categoryValue); ?>" <?php echo $postCategory === $categoryValue ? 'selected' : ''; ?>>
+                                                <?php echo htmlspecialchars($categoryMeta['label']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
                                     <input type="text" id="edit-title-<?php echo $post['id']; ?>" class="form-control mb-2" value="<?php echo htmlspecialchars($post['title']); ?>">
                                     <textarea id="edit-content-<?php echo $post['id']; ?>" class="form-control mb-2"><?php echo htmlspecialchars($post['content']); ?></textarea>
                                     <?php if ($postImageSrc): ?>
@@ -480,7 +610,7 @@ function decodeProductAnalysis($json)
 
                                 <div class="comments-section mt-4">
                                     <?php
-                                    $comments = $commentModel->getComments($post['id']);
+                                    $comments = $commentModel->getComments($post['id'], $myId);
                                     [$topLevelComments, $repliesByParent] = organizeCommentsByThread($comments);
                                     ?>
                                     <h6><i class="fas fa-comments"></i> Commentaires (<?php echo count($comments); ?>)</h6>
@@ -505,6 +635,17 @@ function decodeProductAnalysis($json)
                                                         </div>
                                                     </div>
                                                     <div id="display-comment-text-<?php echo $comment['id']; ?>"><?php echo nl2br(htmlspecialchars($comment['comment_text'])); ?></div>
+                                                    <div class="comment-actions">
+                                                        <button
+                                                            type="button"
+                                                            class="comment-like-btn<?php echo !empty($comment['user_liked']) ? ' is-active' : ''; ?>"
+                                                            onclick="likeComment(<?php echo (int) $comment['id']; ?>)"
+                                                            aria-pressed="<?php echo !empty($comment['user_liked']) ? 'true' : 'false'; ?>">
+                                                            <i class="fa-solid fa-thumbs-up"></i>
+                                                            <span>Like</span>
+                                                            <span id="comment-like-count-<?php echo (int) $comment['id']; ?>"><?php echo (int) ($comment['likes_count'] ?? 0); ?></span>
+                                                        </button>
+                                                    </div>
 
                                                     <div id="edit-comment-block-<?php echo $comment['id']; ?>" class="comment-edit-form mt-2" style="display: none;">
                                                         <textarea id="edit-comment-text-<?php echo $comment['id']; ?>" class="form-control form-control-sm" rows="2"><?php echo htmlspecialchars($comment['comment_text']); ?></textarea>
@@ -540,6 +681,17 @@ function decodeProductAnalysis($json)
                                                                         <?php endif; ?>
                                                                     </div>
                                                                     <div id="display-comment-text-<?php echo $reply['id']; ?>"><?php echo nl2br(htmlspecialchars($reply['comment_text'])); ?></div>
+                                                                    <div class="comment-actions">
+                                                                        <button
+                                                                            type="button"
+                                                                            class="comment-like-btn<?php echo !empty($reply['user_liked']) ? ' is-active' : ''; ?>"
+                                                                            onclick="likeComment(<?php echo (int) $reply['id']; ?>)"
+                                                                            aria-pressed="<?php echo !empty($reply['user_liked']) ? 'true' : 'false'; ?>">
+                                                                            <i class="fa-solid fa-thumbs-up"></i>
+                                                                            <span>Like</span>
+                                                                            <span id="comment-like-count-<?php echo (int) $reply['id']; ?>"><?php echo (int) ($reply['likes_count'] ?? 0); ?></span>
+                                                                        </button>
+                                                                    </div>
 
                                                                     <div id="edit-comment-block-<?php echo $reply['id']; ?>" class="comment-edit-form mt-2" style="display: none;">
                                                                         <textarea id="edit-comment-text-<?php echo $reply['id']; ?>" class="form-control form-control-sm" rows="2"><?php echo htmlspecialchars($reply['comment_text']); ?></textarea>
@@ -573,9 +725,152 @@ function decodeProductAnalysis($json)
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/Web/view/backoffice/style/community.js?v=<?= filemtime(__DIR__ . '/../backoffice/style/community.js') ?>"></script>
     <script>
         let currentProductAnalysis = null;
+        const frontPostMaps = {};
+        let newPostPreviewMap = null;
+        let newPostPreviewMarker = null;
+        let newPostPreviewCircle = null;
+
+        function createOpenStreetMapLayer() {
+            return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap'
+            });
+        }
+
+        function reverseGeocodeLocation(lat, lng) {
+            const cacheKey = `osm-place-${lat.toFixed(5)}-${lng.toFixed(5)}`;
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                return Promise.resolve(cached);
+            }
+
+            const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=16&addressdetails=0`;
+            return fetch(url, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    const label = data && data.display_name ? String(data.display_name) : `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                    localStorage.setItem(cacheKey, label);
+                    return label;
+                })
+                .catch(() => `${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+        }
+
+        function setMapPlaceLabel(mapElement, label) {
+            if (!mapElement || !label) return;
+
+            let labelElement = mapElement.parentElement ? mapElement.parentElement.querySelector('.post-map-place-label') : null;
+            if (!labelElement) {
+                labelElement = document.createElement('div');
+                labelElement.className = 'post-map-place-label';
+                mapElement.insertAdjacentElement('afterend', labelElement);
+            }
+
+            labelElement.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${htmlEscape(label)}`;
+        }
+
+        function initFrontPostMap(mapElement) {
+            if (!mapElement || mapElement.dataset.ready === 'true' || typeof L === 'undefined') return;
+
+            const lat = Number(mapElement.dataset.lat);
+            const lng = Number(mapElement.dataset.lng);
+            const accuracy = Number(mapElement.dataset.accuracy || 0);
+            const title = mapElement.dataset.title || 'Publication';
+
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+
+            const map = L.map(mapElement, {
+                scrollWheelZoom: false
+            }).setView([lat, lng], 15);
+
+            createOpenStreetMapLayer().addTo(map);
+            const marker = L.marker([lat, lng]).addTo(map).bindPopup(title);
+
+            if (Number.isFinite(accuracy) && accuracy > 0) {
+                L.circle([lat, lng], {
+                    radius: accuracy,
+                    color: '#2f80ed',
+                    fillColor: '#2f80ed',
+                    fillOpacity: 0.12,
+                    weight: 1
+                }).addTo(map);
+            }
+
+            mapElement.dataset.ready = 'true';
+            frontPostMaps[mapElement.id] = map;
+            window.setTimeout(() => map.invalidateSize(), 100);
+
+            reverseGeocodeLocation(lat, lng).then(placeLabel => {
+                marker.bindPopup(`<strong>${htmlEscape(title)}</strong><br>${htmlEscape(placeLabel)}`);
+                setMapPlaceLabel(mapElement, placeLabel);
+            });
+        }
+
+        function initAllFrontPostMaps() {
+            if (typeof L === 'undefined') return;
+            document.querySelectorAll('[data-front-post-map]').forEach(initFrontPostMap);
+        }
+
+        function updateNewPostLocationPreview(lat, lng, accuracy) {
+            if (typeof L === 'undefined') return;
+
+            const preview = document.getElementById('new-post-location-preview');
+            const mapElement = document.getElementById('new-post-map');
+            if (!preview || !mapElement) return;
+
+            preview.hidden = false;
+
+            if (!newPostPreviewMap) {
+                newPostPreviewMap = L.map(mapElement, {
+                    scrollWheelZoom: false
+                }).setView([lat, lng], 15);
+                createOpenStreetMapLayer().addTo(newPostPreviewMap);
+            } else {
+                newPostPreviewMap.setView([lat, lng], 15);
+            }
+
+            if (newPostPreviewMarker) {
+                newPostPreviewMarker.setLatLng([lat, lng]);
+            } else {
+                newPostPreviewMarker = L.marker([lat, lng]).addTo(newPostPreviewMap).bindPopup('Position de creation');
+            }
+
+            if (newPostPreviewCircle) {
+                newPostPreviewMap.removeLayer(newPostPreviewCircle);
+                newPostPreviewCircle = null;
+            }
+
+            if (Number.isFinite(accuracy) && accuracy > 0) {
+                newPostPreviewCircle = L.circle([lat, lng], {
+                    radius: accuracy,
+                    color: '#2f80ed',
+                    fillColor: '#2f80ed',
+                    fillOpacity: 0.12,
+                    weight: 1
+                }).addTo(newPostPreviewMap);
+            }
+
+            window.setTimeout(() => newPostPreviewMap.invalidateSize(), 100);
+
+            reverseGeocodeLocation(lat, lng).then(placeLabel => {
+                if (newPostPreviewMarker) {
+                    newPostPreviewMarker.bindPopup(`<strong>Position de creation</strong><br>${htmlEscape(placeLabel)}`);
+                }
+                setMapPlaceLabel(mapElement, placeLabel);
+            });
+        }
+
+        function clearNewPostLocationPreview() {
+            const preview = document.getElementById('new-post-location-preview');
+            if (preview) preview.hidden = true;
+        }
 
         function analyzeProduct() {
             const queryField = document.getElementById('product-query');
@@ -736,26 +1031,95 @@ function decodeProductAnalysis($json)
             panel.hidden = !panel.hidden;
         }
 
+        function requestCurrentPostLocation(fromButton) {
+            const status = document.getElementById('post-location-status');
+            const latInput = document.getElementById('new-latitude');
+            const lngInput = document.getElementById('new-longitude');
+            const accuracyInput = document.getElementById('new-location-accuracy');
+
+            if (!navigator.geolocation || !latInput || !lngInput || !accuracyInput) {
+                if (status) status.textContent = 'La geolocalisation n est pas disponible sur ce navigateur ou cette page doit etre ouverte en localhost/HTTPS.';
+                clearNewPostLocationPreview();
+                return Promise.resolve(false);
+            }
+
+            if (latInput.value && lngInput.value && !fromButton) {
+                return Promise.resolve(true);
+            }
+
+            if (status) status.textContent = 'Recherche de votre position...';
+
+            return new Promise(resolve => {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const accuracy = Math.round(position.coords.accuracy || 0);
+
+                        latInput.value = lat.toFixed(8);
+                        lngInput.value = lng.toFixed(8);
+                        accuracyInput.value = accuracy;
+                        if (status) {
+                            status.textContent = 'Position ajoutee. La carte ci-dessous montre le lieu de creation.';
+                        }
+                        updateNewPostLocationPreview(lat, lng, accuracy);
+                        resolve(true);
+                    },
+                    error => {
+                        latInput.value = '';
+                        lngInput.value = '';
+                        accuracyInput.value = '';
+                        if (status) {
+                            const denied = error && error.code === error.PERMISSION_DENIED;
+                            status.textContent = denied
+                                ? 'Acces a la position refuse. Autorisez la localisation du navigateur pour ajouter la carte.'
+                                : 'Position non ajoutee. La publication peut quand meme etre envoyee.';
+                        }
+                        clearNewPostLocationPreview();
+                        resolve(false);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 7000,
+                        maximumAge: 60000
+                    }
+                );
+            });
+        }
+
         function submitPost() {
             const title = document.getElementById('new-title').value;
             const content = document.getElementById('new-content').value;
+            const categoryInput = document.getElementById('new-post-category');
             const imageInput = document.getElementById('new-image');
             const productAnalysisInput = document.getElementById('product-analysis-json');
+            const latitudeInput = document.getElementById('new-latitude');
+            const longitudeInput = document.getElementById('new-longitude');
+            const accuracyInput = document.getElementById('new-location-accuracy');
 
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('content', content);
-            if (productAnalysisInput && productAnalysisInput.value) {
-                formData.append('product_analysis_json', productAnalysisInput.value);
-            }
-            if (imageInput.files[0]) {
-                formData.append('image', imageInput.files[0]);
-            }
+            requestCurrentPostLocation(false).then(() => {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('content', content);
+                formData.append('post_category', categoryInput ? categoryInput.value : 'advice');
+                if (productAnalysisInput && productAnalysisInput.value) {
+                    formData.append('product_analysis_json', productAnalysisInput.value);
+                }
+                if (latitudeInput && latitudeInput.value && longitudeInput && longitudeInput.value) {
+                    formData.append('latitude', latitudeInput.value);
+                    formData.append('longitude', longitudeInput.value);
+                    if (accuracyInput && accuracyInput.value) {
+                        formData.append('location_accuracy', accuracyInput.value);
+                    }
+                }
+                if (imageInput.files[0]) {
+                    formData.append('image', imageInput.files[0]);
+                }
 
-            fetch('../../controller/postController.php?action=create', {
-                    method: 'POST',
-                    body: formData
-                })
+                fetch('../../controller/postController.php?action=create', {
+                        method: 'POST',
+                        body: formData
+                    })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -767,6 +1131,7 @@ function decodeProductAnalysis($json)
                         alert(data.message || "Erreur lors de la publication");
                     }
                 });
+            });
         }
 
         function toggleEdit(id) {
@@ -787,6 +1152,7 @@ function decodeProductAnalysis($json)
         function saveEdit(id) {
             const title = document.getElementById(`edit-title-${id}`).value;
             const content = document.getElementById(`edit-content-${id}`).value;
+            const categoryInput = document.getElementById(`edit-post-category-${id}`);
             const imageInput = document.getElementById(`edit-image-${id}`);
             const productAnalysisInput = document.getElementById(`edit-product-analysis-json-${id}`);
 
@@ -794,6 +1160,7 @@ function decodeProductAnalysis($json)
             formData.append('id', id);
             formData.append('title', title);
             formData.append('content', content);
+            formData.append('post_category', categoryInput ? categoryInput.value : 'advice');
             if (productAnalysisInput) {
                 formData.append('product_analysis_json', productAnalysisInput.value);
             }
@@ -873,6 +1240,56 @@ function decodeProductAnalysis($json)
                 button.classList.toggle('is-active', isActive);
                 button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             });
+        }
+
+        function copyPostLink(postId, button) {
+            const url = `${window.location.origin}${window.location.pathname}#post-${postId}`;
+            const done = () => {
+                if (!button) return;
+                const original = button.innerHTML;
+                button.innerHTML = '<i class="fa-solid fa-check"></i> Copied';
+                window.setTimeout(() => {
+                    button.innerHTML = original;
+                }, 1600);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(url).then(done).catch(() => prompt('Copiez le lien de la publication :', url));
+                return;
+            }
+
+            prompt('Copiez le lien de la publication :', url);
+            done();
+        }
+
+        function likeComment(commentId) {
+            fetch('../../controller/commentController.php?action=like', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `id=${commentId}`
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert(data.message || 'Erreur like');
+                        return;
+                    }
+
+                    const summary = data.likeSummary || {};
+                    const countElement = document.getElementById(`comment-like-count-${commentId}`);
+                    const button = document.querySelector(`#comment-${commentId} .comment-like-btn`);
+
+                    if (countElement) {
+                        countElement.textContent = summary.likes_count ?? 0;
+                    }
+                    if (button) {
+                        const active = Boolean(summary.user_liked);
+                        button.classList.toggle('is-active', active);
+                        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+                    }
+                });
         }
 
         function toggleReportForm(postId) {
@@ -1128,6 +1545,8 @@ function decodeProductAnalysis($json)
 
             return '<p>' + htmlEscape(text).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>') + '</p>';
         }
+
+        initAllFrontPostMaps();
     </script>
 </body>
 
