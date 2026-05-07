@@ -23,6 +23,9 @@ class NutritionDashboardService
 
         return [
             'today' => $todayData,
+            'sugar_today_g' => round((float) ($todayData['sugar_today_g'] ?? 0), 1),
+            'sugar_goal_g' => isset($todayData['sugar_goal_g']) ? $todayData['sugar_goal_g'] : null,
+            'sugar_status' => $todayData['sugar_status'] ?? 'not_configured',
             'profile' => [
                 'name' => $profile['name'] ?? 'Utilisateur',
                 'target_calories' => (int) round((float) ($profile['target_calories'] ?? 2000)),
@@ -53,6 +56,8 @@ class NutritionDashboardService
         $proteins = (float) ($todayData['proteins_g'] ?? 0);
         $waterMl = (int) ($todayData['water_ml'] ?? 0);
         $consistencyRate = (int) ($weeklyAnalysis['consistency_rate'] ?? 0);
+        $sugarGoal = is_numeric($todayData['sugar_goal_g'] ?? null) ? (float) $todayData['sugar_goal_g'] : null;
+        $sugarToday = (float) ($todayData['sugar_today_g'] ?? 0);
 
         $calorieRatio = $totalCalories / $targetCalories;
         $proteinRatio = $proteins / $proteinTarget;
@@ -109,6 +114,10 @@ class NutritionDashboardService
         }
 
         $score = max(0, min(100, $calorieScore + $proteinScore + $hydrationScore + $consistencyScore + $structureScore));
+
+        if ($sugarGoal !== null && $sugarGoal > 0 && $sugarToday > $sugarGoal) {
+            $score = max(0, $score - 5);
+        }
 
         if ($score >= 80) {
             $label = 'excellent';
@@ -331,6 +340,9 @@ class NutritionDashboardService
         $mealCount = (int) ($todayData['meal_count'] ?? 0);
         $daysLogged = max(0, min(7, (int) ($weeklyData['logged_days'] ?? 0)));
         $consistencyRate = (float) ($weeklyData['consistency_rate'] ?? ($daysLogged / 7) * 100);
+        $objectiveType = (string) ($todayData['objective_type'] ?? 'maintien');
+        $sugarGoal = is_numeric($todayData['sugar_goal_g'] ?? null) ? (float) $todayData['sugar_goal_g'] : null;
+        $sugarToday = (float) ($todayData['sugar_today_g'] ?? 0);
 
         $calorieRatio = $targetCalories > 0 ? $totalCalories / $targetCalories : 0;
         $proteinRatio = $proteinTarget > 0 ? $proteinsG / $proteinTarget : 0;
@@ -459,6 +471,26 @@ class NutritionDashboardService
                 "Peu de prises ont ete enregistrees aujourd'hui.",
                 'medium',
                 'Viser 3 prises alimentaires regulieres'
+            );
+        }
+
+        if ($objectiveType === 'reduction_sucre') {
+            $addRecommendation(
+                'sugar',
+                'Surveille le sucre du jour',
+                "Surveille les boissons sucrees et les desserts aujourd'hui.",
+                'medium',
+                'Verifier les produits les plus sucres'
+            );
+        }
+
+        if ($sugarGoal !== null && $sugarGoal > 0 && $sugarToday > $sugarGoal) {
+            $addRecommendation(
+                'sugar',
+                'Seuil de sucre depasse',
+                "Ton seuil de sucre est depasse aujourd'hui.",
+                'high',
+                'Limiter les apports sucres sur le reste de la journee'
             );
         }
 

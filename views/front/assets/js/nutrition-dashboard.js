@@ -68,6 +68,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  function renderSugarSummary(today) {
+    const sugarEl = document.getElementById('nutritionSugarSummary');
+
+    if (!sugarEl) {
+      return;
+    }
+
+    const sugarGoal = today && today.sugar_goal_g !== null && typeof today.sugar_goal_g !== 'undefined'
+      ? Number(today.sugar_goal_g)
+      : null;
+    const sugarToday = Number(today && today.sugar_today_g ? today.sugar_today_g : 0);
+
+    if (sugarGoal === null || Number.isNaN(sugarGoal) || sugarGoal <= 0) {
+      sugarEl.hidden = true;
+      sugarEl.textContent = 'Sucre du jour : --';
+      return;
+    }
+
+    sugarEl.hidden = false;
+    sugarEl.textContent = 'Sucre du jour : ' + sugarToday + ' g / ' + sugarGoal + ' g';
+  }
+
   function badgeClass(priority) {
     if (priority === 'high') {
       return 'nutrition-badge nutrition-badge-high';
@@ -191,6 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
       renderText('nutritionDayHeading', dayHeading);
       renderText('nutritionDaySummary', daySummary);
       renderHydrationCard(hydration);
+      renderSugarSummary(today);
 
       const recommendationsBox = document.getElementById('nutritionRecommendations');
 

@@ -73,6 +73,16 @@ $hasComputedSummary = !empty($objectifSummary);
                     <td><?= number_format((float) ($objectif['poids'] ?? 0), 1, '.', ' ') ?> kg</td>
                 </tr>
                 <tr>
+                    <th>Poids cible</th>
+                    <td>
+                        <?php if (isset($objectif['poids_cible']) && $objectif['poids_cible'] !== null && $objectif['poids_cible'] !== ''): ?>
+                            <?= number_format((float) $objectif['poids_cible'], 1, '.', ' ') ?> kg
+                        <?php else: ?>
+                            -
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
                     <th>Taille</th>
                     <td><?= number_format((float) ($objectif['taille'] ?? 0), 0, '.', ' ') ?> cm</td>
                 </tr>
@@ -91,6 +101,16 @@ $hasComputedSummary = !empty($objectifSummary);
                 <tr>
                     <th>Type d'objectif</th>
                     <td><?= htmlspecialchars((string) $objectifTypeLabel) ?></td>
+                </tr>
+                <tr>
+                    <th>Sucre max / jour</th>
+                    <td>
+                        <?php if (isset($objectif['sucre_max_g']) && $objectif['sucre_max_g'] !== null && $objectif['sucre_max_g'] !== ''): ?>
+                            <?= number_format((float) $objectif['sucre_max_g'], 0, '.', ' ') ?> g
+                        <?php else: ?>
+                            -
+                        <?php endif; ?>
+                    </td>
                 </tr>
                 <tr>
                     <th>Proteines cible</th>

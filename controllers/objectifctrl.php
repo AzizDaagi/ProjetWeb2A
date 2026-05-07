@@ -28,10 +28,11 @@ class objectifctrl
         $objectif = !empty($todayObjectif) ? $todayObjectif : null;
         $objectifMessage = empty($objectif) ? "Aucun objectif defini pour aujourd'hui." : null;
         $objectifDebug = $_SESSION['objectif_debug'] ?? null;
+        $objectifWarning = $_SESSION['objectif_warning'] ?? null;
         $sexeOptions = $this->objectifCalculator->getSexeOptions();
         $activiteInputOptions = $this->objectifCalculator->getActiviteSelectOptions();
         $objectifTypeOptions = $this->objectifCalculator->getObjectifTypeOptions();
-        unset($_SESSION['objectif_debug']);
+        unset($_SESSION['objectif_debug'], $_SESSION['objectif_warning']);
 
         require __DIR__ . '/../views/front/objectif/index.php';
     }
@@ -118,6 +119,8 @@ class objectifctrl
         }
 
         unset($_SESSION['objectif_form']);
+        $sugarWarningMessage = $this->buildSugarGoalWarning($calculationInput);
+        $warningMessage = $this->buildTargetWeightWarning($calculationInput);
 
         $isCreated = $this->objectifModel->createSevenDayPlan($planRows);
 
@@ -127,6 +130,11 @@ class objectifctrl
             ];
         } else {
             $_SESSION['objectif_debug'] = $debugMetrics;
+            $softMessages = array_values(array_filter([$sugarWarningMessage, $warningMessage]));
+
+            if (!empty($softMessages)) {
+                $_SESSION['objectif_warning'] = implode(' ', $softMessages);
+            }
             $_SESSION['objectif_success'] = "Plan nutritionnel sur 7 jours genere avec succes";
         }
 
@@ -166,6 +174,8 @@ class objectifctrl
         }
 
         $objectif = $this->prepareStoredObjectif($objectif, $objectif['date_creation'] ?? null);
+        $objectifWarning = $_SESSION['objectif_warning'] ?? null;
+        unset($_SESSION['objectif_warning']);
 
         $objectifSummary = $this->hasPhysicalProfile($objectif)
             ? $this->objectifCalculator->calculateNutritionTargets($objectif)
@@ -220,11 +230,19 @@ class objectifctrl
             $debugMetrics['calories_cible'] = (int) $planRows[0]['calories_cible'];
         }
 
+        $sugarWarningMessage = $this->buildSugarGoalWarning($calculationInput);
+        $warningMessage = $this->buildTargetWeightWarning($calculationInput);
+
         $isUpdated = $this->objectifModel->replaceLatestPlan($planRows);
 
         if ($isUpdated) {
             unset($_SESSION['objectif_form']);
             $_SESSION['objectif_debug'] = $debugMetrics;
+            $softMessages = array_values(array_filter([$sugarWarningMessage, $warningMessage]));
+
+            if (!empty($softMessages)) {
+                $_SESSION['objectif_warning'] = implode(' ', $softMessages);
+            }
             $_SESSION['objectif_success'] = "Plan nutritionnel sur 7 jours mis a jour avec succes";
         } else {
             $_SESSION['objectif_error'] = [
@@ -315,9 +333,13 @@ class objectifctrl
         $sexe = $data['sexe'] ?? 'homme';
         $activite = $data['activite'] ?? 'moderate';
         $objectifType = $data['objectif_type'] ?? 'maintien';
+        $poidsCibleInput = trim((string) ($data['poids_cible'] ?? ''));
+        $sucreMaxInput = trim((string) ($data['sucre_max_g'] ?? ''));
         $isPoidsValid = $poidsInput !== '' && is_numeric($poidsInput);
         $isTailleValid = $tailleInput !== '' && is_numeric($tailleInput);
         $isAgeValid = $ageInput !== '' && filter_var($ageInput, FILTER_VALIDATE_INT) !== false;
+        $isPoidsCibleValid = $poidsCibleInput === '' || is_numeric($poidsCibleInput);
+        $isSucreMaxValid = $sucreMaxInput === '' || is_numeric($sucreMaxInput);
 
         if (!$isPoidsValid) {
             $errors[] = "Le poids est obligatoire et doit etre numerique.";
@@ -331,12 +353,30 @@ class objectifctrl
             $errors[] = "L'age est obligatoire et doit etre un entier.";
         }
 
+        if (!$isPoidsCibleValid) {
+            $errors[] = "Le poids objectif doit etre numerique s'il est renseigne.";
+        }
+
+        if (!$isSucreMaxValid) {
+            $errors[] = "Le sucre maximum doit etre numerique s'il est renseigne.";
+        }
+
         $poids = (float) $poidsInput;
         $taille = (float) $tailleInput;
         $age = (int) $ageInput;
+        $poidsCible = $poidsCibleInput === '' ? null : (float) $poidsCibleInput;
+        $sucreMax = $sucreMaxInput === '' ? null : (float) $sucreMaxInput;
 
         if ($isPoidsValid && ($poids <= 0 || $poids > 500)) {
             $errors[] = "Le poids doit etre compris entre 1 et 500 kg.";
+        }
+
+        if ($isPoidsCibleValid && $poidsCible !== null && ($poidsCible < 20 || $poidsCible > 300)) {
+            $errors[] = "Le poids objectif doit etre compris entre 20 et 300 kg.";
+        }
+
+        if ($isSucreMaxValid && $sucreMax !== null && ($sucreMax < 0 || $sucreMax > 300)) {
+            $errors[] = "Le sucre maximum doit etre compris entre 0 et 300 g.";
         }
 
         if ($isTailleValid && ($taille <= 0 || $taille > 300)) {
@@ -363,6 +403,8 @@ class objectifctrl
             'errors' => $errors,
             'data' => [
                 'poids' => $poids,
+                'poids_cible' => $poidsCible,
+                'sucre_max_g' => $sucreMax,
                 'taille' => $taille,
                 'age' => $age,
                 'sexe' => $sexe,
@@ -376,6 +418,8 @@ class objectifctrl
     {
         $formState = [
             'poids' => trim((string) ($data['poids'] ?? '')),
+            'poids_cible' => trim((string) ($data['poids_cible'] ?? '')),
+            'sucre_max_g' => trim((string) ($data['sucre_max_g'] ?? '')),
             'taille' => trim((string) ($data['taille'] ?? '')),
             'age' => trim((string) ($data['age'] ?? '')),
             'sexe' => $data['sexe'] ?? 'homme',
@@ -389,6 +433,45 @@ class objectifctrl
         }
 
         return $formState;
+    }
+
+    private function buildTargetWeightWarning(array $data)
+    {
+        $poids = isset($data['poids']) ? (float) $data['poids'] : null;
+        $poidsCible = array_key_exists('poids_cible', $data) && $data['poids_cible'] !== null
+            ? (float) $data['poids_cible']
+            : null;
+        $objectifType = (string) ($data['objectif_type'] ?? '');
+
+        if ($poids === null || $poidsCible === null || $poids <= 0 || $poidsCible <= 0) {
+            return null;
+        }
+
+        if ($objectifType === 'prise_muscle' && $poidsCible <= $poids) {
+            return "Pour une prise de masse, le poids objectif est generalement superieur au poids actuel.";
+        }
+
+        if ($objectifType === 'perte_poids' && $poidsCible >= $poids) {
+            return "Pour une perte de poids, le poids objectif est generalement inferieur au poids actuel.";
+        }
+
+        return null;
+    }
+
+    private function buildSugarGoalWarning(array &$data)
+    {
+        $objectifType = (string) ($data['objectif_type'] ?? '');
+
+        if ($objectifType !== 'reduction_sucre') {
+            return null;
+        }
+
+        if (!array_key_exists('sucre_max_g', $data) || $data['sucre_max_g'] === null) {
+            $data['sucre_max_g'] = 50.0;
+            return "Seuil de sucre non renseigne : 50 g/jour a ete utilise par defaut.";
+        }
+
+        return null;
     }
 
     private function buildSevenDayPlanRows(array $baseData)

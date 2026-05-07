@@ -89,6 +89,19 @@
             margin-bottom: 20px;
         }
 
+        .warning-message {
+            background: rgba(241, 196, 15, 0.12);
+            border: 1px solid rgba(241, 196, 15, 0.3);
+            color: #f4d35e;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        body.theme-light .warning-message {
+            color: #92400e;
+        }
+
         .debug-message {
             background: rgba(52, 152, 219, 0.1);
             border: 1px solid rgba(52, 152, 219, 0.3);
@@ -596,6 +609,8 @@
         : (!empty($todayObjectif) ? $todayObjectif : (!empty($objectif) ? $objectif : []));
 
     $selectedPoids = $formSource['poids'] ?? '';
+    $selectedPoidsCible = $formSource['poids_cible'] ?? '';
+    $selectedSucreMax = $formSource['sucre_max_g'] ?? '';
     $selectedTaille = $formSource['taille'] ?? '';
     $selectedAge = $formSource['age'] ?? '';
     $selectedSexe = $formSource['sexe'] ?? 'homme';
@@ -649,6 +664,12 @@
                 </div>
             <?php endif; ?>
 
+            <?php if (!empty($objectifWarning)): ?>
+                <div class="warning-message">
+                    <?= htmlspecialchars((string) $objectifWarning) ?>
+                </div>
+            <?php endif; ?>
+
             <?php if (!empty($objectifMessage)): ?>
                 <div class="objectif-note" style="margin-bottom: 20px;">
                     <?= htmlspecialchars((string) $objectifMessage) ?>
@@ -669,6 +690,18 @@
                         <div class="field">
                             <label>Poids (kg)</label>
                             <input type="text" name="poids" placeholder="Ex: 70" value="<?= htmlspecialchars((string) $selectedPoids) ?>">
+                        </div>
+
+                        <div class="field">
+                            <label for="poids_cible">Poids objectif (kg)</label>
+                            <input type="number" step="0.1" min="20" max="300" name="poids_cible" id="poids_cible" placeholder="Ex: 75" value="<?= htmlspecialchars((string) $selectedPoidsCible) ?>">
+                            <small>Utilise pour estimer la date d'atteinte dans la projection nutritionnelle.</small>
+                        </div>
+
+                        <div class="field">
+                            <label for="sucre_max_g">Sucre maximum par jour (g)</label>
+                            <input type="number" step="1" min="0" max="300" name="sucre_max_g" id="sucre_max_g" placeholder="Ex: 50" value="<?= htmlspecialchars((string) $selectedSucreMax) ?>">
+                            <small>Utilise pour suivre la consommation de sucre quotidienne.</small>
                         </div>
 
                         <div class="field">
@@ -796,6 +829,19 @@
 
                         <a href="index.php?action=chrono_nutrition" class="btn btn-secondary objectif-chrono-entry__action">
                             Optimiser mes horaires
+                        </a>
+                    </div>
+
+                    <div class="objectif-chrono-entry">
+                        <div class="objectif-chrono-entry__content">
+                            <h3 class="objectif-chrono-entry__title">Projection nutritionnelle</h3>
+                            <p class="objectif-chrono-entry__text">
+                                Estime ton evolution selon tes habitudes reelles et teste differents scenarios.
+                            </p>
+                        </div>
+
+                        <a href="index.php?action=prediction_dashboard" class="btn btn-secondary objectif-chrono-entry__action">
+                            Voir la projection
                         </a>
                     </div>
                 </div>

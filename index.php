@@ -1,4 +1,4 @@
-    <?php
+<?php
     session_start();
 
     ini_set('display_errors', 1);
@@ -47,6 +47,17 @@
     $controllerName = 'chronoNutrition';
 }
 
+    if (!isset($_GET['controller']) && in_array($action, [
+        'prediction_dashboard',
+        'prediction_weekly_trend',
+        'prediction_scenarios',
+        'prediction_goal_date',
+        'prediction_what_if',
+        'prediction_confidence',
+    ], true)) {
+        $controllerName = 'prediction';
+    }
+
     $routes = [
         'suivi' => 'suivictrl',
         'objectif' => 'objectifctrl',
@@ -56,6 +67,7 @@
         'reminder' => 'ReminderController',
         'nutritiondashboard' => 'NutritionDashboardController',
         'chronoNutrition' => 'ChronoNutritionController',
+        'prediction' => 'PredictionController',
     ];
 
     if (!array_key_exists($controllerName, $routes)) {

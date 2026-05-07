@@ -36,6 +36,8 @@ class ObjectifCalculatorService
     private $objectifTypeOptions = [
         'maintien' => 'Maintien',
         'prise_muscle' => 'Prise de muscle',
+        'perte_poids' => 'Perte de poids',
+        'reduction_sucre' => 'Reduction du sucre',
     ];
 
     private $activityFactors = [
@@ -152,6 +154,12 @@ class ObjectifCalculatorService
 
         return [
             'poids' => (float) $profile['poids'],
+            'poids_cible' => array_key_exists('poids_cible', $profile) && $profile['poids_cible'] !== null
+                ? (float) $profile['poids_cible']
+                : null,
+            'sucre_max_g' => array_key_exists('sucre_max_g', $profile) && $profile['sucre_max_g'] !== null
+                ? (float) $profile['sucre_max_g']
+                : null,
             'taille' => (float) $profile['taille'],
             'age' => (int) $profile['age'],
             'sexe' => $profile['sexe'],

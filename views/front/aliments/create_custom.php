@@ -205,6 +205,11 @@
                     <input type="text" id="customLipidesInput" name="lipides" placeholder="Ex : 8" value="<?= htmlspecialchars((string) ($customForm['lipides'] ?? '')) ?>">
                 </div>
 
+                <div class="form-group">
+                    <label>Sucre / unite (g)</label>
+                    <input type="text" id="customSucreInput" name="sucre_g" placeholder="Ex : 5" value="<?= htmlspecialchars((string) ($customForm['sucre_g'] ?? '')) ?>">
+                </div>
+
                 <div class="actions">
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                     <a href="index.php?controller=suivi&action=index" class="btn btn-secondary">
@@ -222,6 +227,7 @@
         const customProteinesInput = document.getElementById('customProteinesInput');
         const customGlucidesInput = document.getElementById('customGlucidesInput');
         const customLipidesInput = document.getElementById('customLipidesInput');
+        const customSucreInput = document.getElementById('customSucreInput');
         const externalLookupButton = document.getElementById('externalLookupButton');
         const externalLookupMessage = document.getElementById('externalLookupMessage');
 
@@ -263,19 +269,21 @@
                 calories: document.querySelector('#customCaloriesInput'),
                 proteines: document.querySelector('#customProteinesInput'),
                 glucides: document.querySelector('#customGlucidesInput'),
-                lipides: document.querySelector('#customLipidesInput')
+                lipides: document.querySelector('#customLipidesInput'),
+                sucre: document.querySelector('#customSucreInput')
             };
             const calories = pickNumber(data, ['calories', 'calories_kcal', 'kcal']);
             const proteines = pickNumber(data, ['protein_g', 'proteins_g', 'proteines', 'proteines_g', 'protein']);
             const glucides = pickNumber(data, ['carbohydrates_total_g', 'carbs_g', 'glucides', 'glucides_g', 'carbohydrates']);
             const lipides = pickNumber(data, ['fat_total_g', 'fat_g', 'lipides', 'lipides_g', 'fat']);
+            const sucre = pickNumber(data, ['sugar_g', 'sugars_g', 'sucre_g', 'sugars']);
             let affectedFields = 0;
 
             console.log('[Nutrition Lookup] data:', data);
             console.log('[Nutrition Lookup] champs DOM trouves:', fields);
-            console.log('[Nutrition Lookup] mapped:', { calories, proteines, glucides, lipides });
+            console.log('[Nutrition Lookup] mapped:', { calories, proteines, glucides, lipides, sucre });
 
-            if (!fields.nom && !fields.calories && !fields.proteines && !fields.glucides && !fields.lipides) {
+            if (!fields.nom && !fields.calories && !fields.proteines && !fields.glucides && !fields.lipides && !fields.sucre) {
                 setLookupMessage('Aucun champ cible trouve dans le formulaire.', 'is-error');
                 return false;
             }
@@ -304,6 +312,11 @@
                 affectedFields++;
             }
 
+            if (fields.sucre && sucre !== '') {
+                fields.sucre.value = sucre;
+                affectedFields++;
+            }
+
             if (fields.nom && data.name && fields.nom.value.trim() === '') {
                 fields.nom.value = data.name;
                 affectedFields++;
@@ -314,6 +327,7 @@
                 proteines: fields.proteines ? fields.proteines.value : null,
                 glucides: fields.glucides ? fields.glucides.value : null,
                 lipides: fields.lipides ? fields.lipides.value : null,
+                sucre: fields.sucre ? fields.sucre.value : null,
                 nom: fields.nom ? fields.nom.value : null
             });
 

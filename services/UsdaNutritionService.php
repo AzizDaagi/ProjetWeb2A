@@ -137,6 +137,7 @@ class UsdaNutritionService
         $protein = $this->findNutrientValue($nutrients, ['203'], ['Protein']);
         $carbohydrates = $this->findNutrientValue($nutrients, ['205'], ['Carbohydrate']);
         $fat = $this->findNutrientValue($nutrients, ['204'], ['Total lipid']);
+        $sugar = $this->findNutrientValue($nutrients, ['269'], ['Sugars']);
         $score = $this->getDataTypePriority($dataType);
         $warning = null;
 
@@ -161,6 +162,7 @@ class UsdaNutritionService
                 'protein_g' => $protein,
                 'carbohydrates_total_g' => $carbohydrates,
                 'fat_total_g' => $fat,
+                'sugar_g' => $sugar,
                 'source' => 'usda_fdc',
                 'warning' => $warning,
             ],

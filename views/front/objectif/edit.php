@@ -64,6 +64,16 @@
             color: #e74c3c;
         }
 
+        .message-box.is-warning {
+            background: rgba(241, 196, 15, 0.12);
+            border: 1px solid rgba(241, 196, 15, 0.28);
+            color: #f4d35e;
+        }
+
+        body.theme-light .message-box.is-warning {
+            color: #92400e;
+        }
+
         .metric-tooltip {
             position: relative;
             display: inline-block;
@@ -153,6 +163,7 @@
     <?php require __DIR__ . '/../partials/navbar.php'; ?>
     <?php
     $objectifErrors = $_SESSION['objectif_error'] ?? [];
+    $objectifWarning = $objectifWarning ?? null;
 
     if (!is_array($objectifErrors) && !empty($objectifErrors)) {
         $objectifErrors = [$objectifErrors];
@@ -177,6 +188,12 @@
                 </div>
             <?php endif; ?>
 
+            <?php if (!empty($objectifWarning)): ?>
+                <div class="message-box is-warning">
+                    <?= htmlspecialchars((string) $objectifWarning) ?>
+                </div>
+            <?php endif; ?>
+
             <div class="card">
                 <form method="POST" action="index.php?controller=objectif&action=update" novalidate>
                     <input type="hidden" name="id" value="<?= htmlspecialchars((string) $objectif['id']) ?>">
@@ -185,6 +202,18 @@
                         <div class="field">
                             <label>Poids (kg)</label>
                             <input type="text" name="poids" value="<?= htmlspecialchars((string) ($objectif['poids'] ?? '')) ?>">
+                        </div>
+
+                        <div class="field">
+                            <label for="poids_cible">Poids objectif (kg)</label>
+                            <input type="number" step="0.1" min="20" max="300" name="poids_cible" id="poids_cible" value="<?= htmlspecialchars((string) ($objectif['poids_cible'] ?? '')) ?>">
+                            <small>Utilise pour estimer la date d'atteinte dans la projection nutritionnelle.</small>
+                        </div>
+
+                        <div class="field">
+                            <label for="sucre_max_g">Sucre maximum par jour (g)</label>
+                            <input type="number" step="1" min="0" max="300" name="sucre_max_g" id="sucre_max_g" value="<?= htmlspecialchars((string) ($objectif['sucre_max_g'] ?? '')) ?>">
+                            <small>Utilise pour suivre la consommation de sucre quotidienne.</small>
                         </div>
 
                         <div class="field">

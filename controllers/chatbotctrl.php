@@ -37,7 +37,29 @@ class chatbotctrl
             exit;
         }
 
-        $message = $this->sanitizeMessage($_POST['message'] ?? '');
+        // Read raw JSON body (Content-Type: application/json bypasses $_POST)
+        $rawInput = file_get_contents('php://input');
+        $payload  = json_decode($rawInput, true);
+
+        $message = '';
+
+        if (is_array($payload)) {
+            $message = $payload['message']
+                ?? $payload['userMessage']
+                ?? $payload['text']
+                ?? $payload['prompt']
+                ?? '';
+        }
+
+        if ($message === '') {
+            $message = $_POST['message']
+                ?? $_POST['userMessage']
+                ?? $_POST['text']
+                ?? $_POST['prompt']
+                ?? '';
+        }
+
+        $message = $this->sanitizeMessage($message);
 
         if ($message === '') {
             http_response_code(422);
@@ -55,13 +77,20 @@ class chatbotctrl
         $this->appendHistoryMessage('user', $message);
         $this->appendHistoryMessage('assistant', $result['response'], $result['source']);
 
-        echo json_encode([
+        $output = [
             'response' => $result['response'],
-            'source' => $result['source'],
-            'time' => date('H:i'),
-            'error' => false,
-            'history' => $_SESSION['chat_history'] ?? [],
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            'source'   => $result['source'],
+            'time'     => date('H:i'),
+            'error'    => false,
+            'history'  => $_SESSION['chat_history'] ?? [],
+        ];
+
+        // Diagnostic only — present when source=fallback so HF failure is visible
+        if (isset($result['debug_hf'])) {
+            $output['debug_hf'] = $result['debug_hf'];
+        }
+
+        echo json_encode($output, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         exit;
     }
 

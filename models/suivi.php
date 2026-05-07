@@ -40,7 +40,15 @@ class Suivi
             return false;
         }
 
-        $stmt = $this->pdo->prepare("SELECT nom, calories, type, unite FROM aliments WHERE id = ?");
+        $hasAlimentSugarColumn = $this->columnExists('aliments', 'sucre_g');
+        $alimentQuery = "SELECT nom, calories, type, unite";
+
+        if ($hasAlimentSugarColumn) {
+            $alimentQuery .= ", sucre_g";
+        }
+
+        $alimentQuery .= " FROM aliments WHERE id = ?";
+        $stmt = $this->pdo->prepare($alimentQuery);
         $stmt->execute([(int) $alimentId]);
         $aliment = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -62,16 +70,21 @@ class Suivi
 
         $quantite = (float) $quantite;
         $baseCalories = (float) ($aliment['calories'] ?? 0);
+        $baseSugar = (float) ($aliment['sucre_g'] ?? 0);
         $unite = $aliment['unite'] ?? 'g';
         $caloriesCalculees = $unite === 'piece'
             ? $baseCalories * $quantite
             : ($baseCalories * $quantite) / 100;
+        $sucreCalcule = $unite === 'piece'
+            ? $baseSugar * $quantite
+            : ($baseSugar * $quantite) / 100;
 
         return [
             'aliment_id' => (int) $alimentId,
             'quantite' => $quantite,
             'calories' => $caloriesCalculees,
             'calories_calculees' => $caloriesCalculees,
+            'sucre_g' => $sucreCalcule,
             'type' => $type,
             'date_consommation' => $date,
             'nom' => $aliment['nom'] ?? 'Aliment',
@@ -103,7 +116,8 @@ class Suivi
 
         $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
         $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
-        $stmt = $this->pdo->prepare($this->buildMealInsertQuery($hasWaterColumn, $hasIsWaterColumn));
+        $hasSugarColumn = $this->columnExists('repas_consomme', 'sucre_g');
+        $stmt = $this->pdo->prepare($this->buildMealInsertQuery($hasWaterColumn, $hasIsWaterColumn, $hasSugarColumn));
 
         try {
             $this->pdo->beginTransaction();
@@ -128,6 +142,10 @@ class Suivi
                     $date,
                     $objectifId,
                 ];
+
+                if ($hasSugarColumn) {
+                    $params[] = (float) ($mealItem['sucre_g'] ?? 0);
+                }
 
                 if ($hasWaterColumn) {
                     $params[] = 0;
@@ -232,6 +250,10 @@ class Suivi
     public function countAllMeals()
     {
         try {
+            if ($this->columnExists('repas_consomme', 'is_demo')) {
+                return (int) $this->pdo->query("SELECT COUNT(*) FROM repas_consomme WHERE is_demo = 0")->fetchColumn();
+            }
+
             return (int) $this->pdo->query("SELECT COUNT(*) FROM repas_consomme")->fetchColumn();
         } catch (PDOException $exception) {
             return 0;
@@ -241,6 +263,10 @@ class Suivi
     public function getTotalCaloriesTracked()
     {
         try {
+            if ($this->columnExists('repas_consomme', 'is_demo')) {
+                return (float) $this->pdo->query("SELECT COALESCE(SUM(calories_calculees), 0) FROM repas_consomme WHERE is_demo = 0")->fetchColumn();
+            }
+
             return (float) $this->pdo->query("SELECT COALESCE(SUM(calories_calculees), 0) FROM repas_consomme")->fetchColumn();
         } catch (PDOException $exception) {
             return 0;
@@ -252,18 +278,28 @@ class Suivi
         $days = max(1, (int) $days);
         $startDate = (new DateTime())->modify('-' . ($days - 1) . ' days')->format('Y-m-d');
         $rowsByDate = [];
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
 
         try {
-            $stmt = $this->pdo->prepare("
+            $query = "
                 SELECT
                     date_consommation,
                     COUNT(*) AS repas_count,
                     COALESCE(SUM(calories_calculees), 0) AS total_calories
                 FROM repas_consomme
                 WHERE date_consommation >= ?
+            ";
+
+            if ($hasIsDemoColumn) {
+                $query .= " AND is_demo = 0";
+            }
+
+            $query .= "
                 GROUP BY date_consommation
                 ORDER BY date_consommation ASC
-            ");
+            ";
+
+            $stmt = $this->pdo->prepare($query);
             $stmt->execute([$startDate]);
 
             foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -295,11 +331,17 @@ class Suivi
 
     public function getTotalByDate($date)
     {
-        $stmt = $this->pdo->prepare(
-            "SELECT SUM(calories_calculees) as total
-             FROM repas_consomme
-             WHERE date_consommation = ?"
-        );
+        $query = "
+            SELECT SUM(calories_calculees) as total
+            FROM repas_consomme
+            WHERE date_consommation = ?
+        ";
+
+        if ($this->columnExists('repas_consomme', 'is_demo')) {
+            $query .= " AND is_demo = 0";
+        }
+
+        $stmt = $this->pdo->prepare($query);
         $stmt->execute([$date]);
 
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0;
@@ -312,8 +354,9 @@ class Suivi
 
     public function getMacrosByDate($date)
     {
-        $stmt = $this->pdo->prepare(
-            "SELECT
+        $hasAlimentSugarColumn = $this->columnExists('aliments', 'sucre_g');
+        $query = "
+            SELECT
                 COALESCE(SUM(
                     CASE
                         WHEN COALESCE(a.unite, 'g') = 'piece' THEN a.proteines * r.quantite
@@ -331,11 +374,23 @@ class Suivi
                         WHEN COALESCE(a.unite, 'g') = 'piece' THEN a.lipides * r.quantite
                         ELSE a.lipides * r.quantite / 100
                     END
-                ), 0) AS lipides
-             FROM repas_consomme r
-             JOIN aliments a ON r.aliment_id = a.id
-             WHERE r.date_consommation = ?"
-        );
+                ), 0) AS lipides,
+                COALESCE(SUM(
+                    CASE
+                        WHEN COALESCE(a.unite, 'g') = 'piece' THEN " . ($hasAlimentSugarColumn ? "COALESCE(a.sucre_g, 0)" : "0") . " * r.quantite
+                        ELSE " . ($hasAlimentSugarColumn ? "COALESCE(a.sucre_g, 0)" : "0") . " * r.quantite / 100
+                    END
+                ), 0) AS sucre_g
+            FROM repas_consomme r
+            JOIN aliments a ON r.aliment_id = a.id
+            WHERE r.date_consommation = ?
+        ";
+
+        if ($this->columnExists('repas_consomme', 'is_demo')) {
+            $query .= " AND COALESCE(r.is_demo, 0) = 0";
+        }
+
+        $stmt = $this->pdo->prepare($query);
         $stmt->execute([(string) $date]);
 
         $result = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
@@ -344,6 +399,7 @@ class Suivi
             'proteines' => round((float) ($result['proteines'] ?? 0), 1),
             'glucides' => round((float) ($result['glucides'] ?? 0), 1),
             'lipides' => round((float) ($result['lipides'] ?? 0), 1),
+            'sucre_g' => round((float) ($result['sucre_g'] ?? 0), 1),
         ];
     }
 
@@ -352,6 +408,7 @@ class Suivi
         $whereClauses = [];
         $whereParams = [];
         $havingClause = '';
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
 
         $whereClauses[] = "DATE(o.date_creation) <= CURDATE()";
 
@@ -402,7 +459,7 @@ class Suivi
                     ELSE 'ok'
                 END AS statut
              FROM objectif o
-             LEFT JOIN repas_consomme r ON r.objectif_id = o.id
+             LEFT JOIN repas_consomme r ON r.objectif_id = o.id" . ($hasIsDemoColumn ? " AND COALESCE(r.is_demo, 0) = 0" : "") . "
              $whereSql
              GROUP BY o.id, DATE(o.date_creation), o.calories_cible
              $havingClause
@@ -415,7 +472,8 @@ class Suivi
 
     public function getLast30Days()
     {
-        $stmt = $this->pdo->query("
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
+        $query = "
             SELECT
                 r.date_consommation,
                 SUM(r.calories_calculees) as total,
@@ -423,24 +481,42 @@ class Suivi
             FROM repas_consomme r
             LEFT JOIN objectif o ON r.objectif_id = o.id
             WHERE date_consommation >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+        ";
+
+        if ($hasIsDemoColumn) {
+            $query .= " AND COALESCE(r.is_demo, 0) = 0";
+        }
+
+        $query .= "
             GROUP BY r.date_consommation
             ORDER BY r.date_consommation ASC
-        ");
+        ";
+
+        $stmt = $this->pdo->query($query);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getCaloriesParJour()
     {
-        $stmt = $this->pdo->prepare("
+        $query = "
             SELECT
                 DATE(date_consommation) AS jour,
                 COALESCE(SUM(calories_calculees), 0) AS total
             FROM repas_consomme
             WHERE date_consommation >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        ";
+
+        if ($this->columnExists('repas_consomme', 'is_demo')) {
+            $query .= " AND is_demo = 0";
+        }
+
+        $query .= "
             GROUP BY DATE(date_consommation)
             ORDER BY jour ASC
-        ");
+        ";
+
+        $stmt = $this->pdo->prepare($query);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -448,7 +524,8 @@ class Suivi
 
     public function getWeeklyStats()
     {
-        $stmt = $this->pdo->query("
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
+        $query = "
             SELECT
                 r.date_consommation,
                 SUM(r.calories_calculees) as total,
@@ -456,8 +533,17 @@ class Suivi
             FROM repas_consomme r
             LEFT JOIN objectif o ON r.objectif_id = o.id
             WHERE r.date_consommation >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        ";
+
+        if ($hasIsDemoColumn) {
+            $query .= " AND COALESCE(r.is_demo, 0) = 0";
+        }
+
+        $query .= "
             GROUP BY r.date_consommation
-        ");
+        ";
+
+        $stmt = $this->pdo->query($query);
         $days = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $avg = 0;
@@ -477,15 +563,24 @@ class Suivi
             }
         }
 
-        $stmt2 = $this->pdo->query("
+        $queryTop = "
             SELECT a.nom, COUNT(*) as total_count
             FROM repas_consomme r
             JOIN aliments a ON r.aliment_id = a.id
             WHERE r.date_consommation >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        ";
+
+        if ($hasIsDemoColumn) {
+            $queryTop .= " AND COALESCE(r.is_demo, 0) = 0";
+        }
+
+        $queryTop .= "
             GROUP BY a.nom
             ORDER BY total_count DESC
             LIMIT 1
-        ");
+        ";
+
+        $stmt2 = $this->pdo->query($queryTop);
         $top = $stmt2->fetch(PDO::FETCH_ASSOC)['nom'] ?? 'Aucun';
 
         return [
@@ -499,7 +594,8 @@ class Suivi
     {
         $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
         $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
-        $stmt = $this->pdo->prepare("
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
+        $query = "
             SELECT
                 r.id,
                 r.aliment_id,
@@ -520,8 +616,17 @@ class Suivi
             FROM repas_consomme r
             LEFT JOIN aliments a ON r.aliment_id = a.id
             WHERE date_consommation = ?
+        ";
+
+        if ($hasIsDemoColumn) {
+            $query .= " AND COALESCE(r.is_demo, 0) = 0";
+        }
+
+        $query .= "
             ORDER BY r.id ASC
-        ");
+        ";
+
+        $stmt = $this->pdo->prepare($query);
         $stmt->execute([$date]);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -530,6 +635,7 @@ class Suivi
     public function getById($id)
     {
         $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
+        $hasAlimentSugarColumn = $this->columnExists('aliments', 'sucre_g');
         $stmt = $this->pdo->prepare("
             SELECT
                 r.*,
@@ -541,6 +647,7 @@ class Suivi
                     WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 0
                     ELSE COALESCE(a.calories, 0)
                 END AS calories,
+                " . ($hasAlimentSugarColumn ? "COALESCE(a.sucre_g, 0)" : "0") . " AS sucre_unite,
                 CASE
                     WHEN " . ($hasIsWaterColumn ? "COALESCE(r.is_water, 0) = 1" : "0 = 1") . " THEN 'ml'
                     ELSE COALESCE(a.unite, 'g')
@@ -572,6 +679,7 @@ class Suivi
         $quantite = (float) $quantite;
         $isWaterEntry = (int) ($repas['is_water'] ?? 0) === 1;
         $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
+        $hasSugarColumn = $this->columnExists('repas_consomme', 'sucre_g');
 
         if ($isWaterEntry) {
             $stmt = $this->pdo->prepare(
@@ -592,18 +700,36 @@ class Suivi
             $caloriesCalculees = ($repas['unite'] ?? 'g') === 'piece'
                 ? ((float) $repas['calories']) * $quantite
                 : (((float) $repas['calories']) * $quantite) / 100;
+            $sucreCalcule = ($repas['unite'] ?? 'g') === 'piece'
+                ? ((float) ($repas['sucre_unite'] ?? 0)) * $quantite
+                : (((float) ($repas['sucre_unite'] ?? 0)) * $quantite) / 100;
 
-            $stmt = $this->pdo->prepare("
-                UPDATE repas_consomme
-                SET quantite = ?, calories_calculees = ?
-                WHERE id = ?
-            ");
+            if ($hasSugarColumn) {
+                $stmt = $this->pdo->prepare("
+                    UPDATE repas_consomme
+                    SET quantite = ?, calories_calculees = ?, sucre_g = ?
+                    WHERE id = ?
+                ");
 
-            $stmt->execute([
-                $quantite,
-                $caloriesCalculees,
-                (int) $id
-            ]);
+                $stmt->execute([
+                    $quantite,
+                    $caloriesCalculees,
+                    $sucreCalcule,
+                    (int) $id
+                ]);
+            } else {
+                $stmt = $this->pdo->prepare("
+                    UPDATE repas_consomme
+                    SET quantite = ?, calories_calculees = ?
+                    WHERE id = ?
+                ");
+
+                $stmt->execute([
+                    $quantite,
+                    $caloriesCalculees,
+                    (int) $id
+                ]);
+            }
         }
 
         return $repas['date_consommation'];
@@ -630,7 +756,8 @@ class Suivi
 
         $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
         $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
-        $stmt = $this->pdo->prepare($this->buildMealInsertQuery($hasWaterColumn, $hasIsWaterColumn));
+        $hasSugarColumn = $this->columnExists('repas_consomme', 'sucre_g');
+        $stmt = $this->pdo->prepare($this->buildMealInsertQuery($hasWaterColumn, $hasIsWaterColumn, $hasSugarColumn));
 
         $params = [
             (int) ($mealItem['aliment_id'] ?? 0),
@@ -640,6 +767,10 @@ class Suivi
             $mealItem['date_consommation'] ?? date('Y-m-d'),
             $objectifId,
         ];
+
+        if ($hasSugarColumn) {
+            $params[] = (float) ($mealItem['sucre_g'] ?? 0);
+        }
 
         if ($hasWaterColumn) {
             $params[] = 0;
@@ -658,7 +789,7 @@ class Suivi
         return $isInserted;
     }
 
-    private function buildMealInsertQuery(bool $hasWaterColumn, bool $hasIsWaterColumn): string
+    private function buildMealInsertQuery(bool $hasWaterColumn, bool $hasIsWaterColumn, bool $hasSugarColumn): string
     {
         $columns = [
             'aliment_id',
@@ -669,6 +800,11 @@ class Suivi
             'objectif_id',
         ];
         $placeholders = ['?', '?', '?', '?', '?', '?'];
+
+        if ($hasSugarColumn) {
+            $columns[] = 'sucre_g';
+            $placeholders[] = '?';
+        }
 
         if ($hasWaterColumn) {
             $columns[] = 'eau_ml';
@@ -718,6 +854,7 @@ class Suivi
     {
         $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
         $hasWaterColumn = $this->columnExists('repas_consomme', 'eau_ml');
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
 
         if (!$hasWaterColumn) {
             return 0;
@@ -733,6 +870,10 @@ class Suivi
             $query .= " AND is_water = 1";
         } else {
             $query .= " AND type = 'eau'";
+        }
+
+        if ($hasIsDemoColumn) {
+            $query .= " AND is_demo = 0";
         }
 
         $stmt = $this->pdo->prepare($query);

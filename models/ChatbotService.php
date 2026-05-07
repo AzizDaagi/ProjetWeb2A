@@ -1,14 +1,16 @@
 <?php
 
+require_once __DIR__ . '/../services/HuggingFaceChatService.php';
+
 class ChatbotService
 {
     private $pdo;
-    private $config;
+    private $huggingFaceChatService;
 
     public function __construct($pdo)
     {
         $this->pdo = $pdo;
-        $this->config = $this->loadConfig();
+        $this->huggingFaceChatService = new HuggingFaceChatService();
     }
 
     public function generateResponse($message, $userId = null)
@@ -31,18 +33,21 @@ class ChatbotService
             ];
         }
 
-        $apiResponse = $this->requestHuggingFace($message, $userId);
+        $hfResult    = $this->huggingFaceChatService->generateReply($message);
+        $apiResponse = $hfResult['reply'];
+        $hfDebug     = $hfResult['debug'];
 
         if ($apiResponse !== null) {
             return [
                 'response' => $apiResponse,
-                'source' => 'api',
+                'source'   => 'huggingface',
             ];
         }
 
         return [
             'response' => $this->buildDefaultFallbackResponse(),
-            'source' => 'local',
+            'source'   => 'fallback',
+            'debug_hf' => $hfDebug,
         ];
     }
 
@@ -68,8 +73,36 @@ class ChatbotService
             return "Les proteines aident surtout a maintenir la masse musculaire et a recuperer apres l'effort. Pensez a en mettre dans chaque repas via oeufs, poisson, viande maigre, yaourt grec ou legumes secs.";
         }
 
+        if (preg_match('/(glucides?|carb)/ui', $message)) {
+            return "Les glucides servent surtout a fournir de l'energie. Essaie de privilegier des sources simples a suivre comme riz, flocons d avoine, pommes de terre, fruits ou pain complet selon ton objectif.";
+        }
+
+        if (preg_match('/(lipides?|gras|mati[eè]res?\s+grasses?)/ui', $message)) {
+            return "Les lipides sont utiles pour l energie et l equilibre hormonal. Garde surtout des sources de bonne qualite comme huile d olive, oeufs, avocats, noix et poissons gras.";
+        }
+
         if (preg_match('/(eau|hydrat)/ui', $message)) {
             return "Pour rester bien hydrate, buvez regulierement dans la journee et augmentez un peu l'apport s'il fait chaud ou si vous vous entrainez. Un repere simple est d'anticiper la soif plutot que d'attendre d'avoir tres soif.";
+        }
+
+        if (preg_match('/(objectif|cible)/ui', $message)) {
+            return $this->buildCaloriesResponse($userId);
+        }
+
+        if (preg_match('/(repas|manger|mange|collation)/ui', $message)) {
+            return "Essaie de structurer tes repas autour d une source de proteines, un glucide utile et un peu de fibres. Meme un suivi simple de 2 a 3 prises par jour aide deja beaucoup a garder un bon rythme.";
+        }
+
+        if (preg_match('/(chrono|horaire|mange tard|manger tard|soir)/ui', $message)) {
+            return "Si tu manges tard, essaie de garder un repas plus simple et digeste le soir, avec une portion de proteines et un glucide modere. Le plus utile reste de garder des horaires assez reguliers sur plusieurs jours.";
+        }
+
+        if (preg_match('/(sucre|sucres|dessert|boisson sucree)/ui', $message)) {
+            return "Pour reduire le sucre, surveille d abord les boissons sucrees, desserts frequents et grignotages. Une bonne strategie est de remplacer une seule source sucree recurrente par jour plutot que de tout changer d un coup.";
+        }
+
+        if (preg_match('/(projection|prediction|pr[eé]vision|date d[\' ]atteinte)/ui', $message)) {
+            return "La projection nutritionnelle s appuie surtout sur tes repas enregistres recents et ton objectif courant. Elle reste indicative et devient plus utile quand ton suivi est regulier sur plusieurs jours.";
         }
 
         return null;
@@ -266,111 +299,9 @@ class ChatbotService
         return (float) $value;
     }
 
-    private function requestHuggingFace($message, $userId = null)
-    {
-        $apiKey = trim((string) ($this->config['huggingface_api_key'] ?? ''));
-        $model = trim((string) ($this->config['huggingface_model'] ?? ''));
-        $timeout = max(1, (int) ($this->config['huggingface_timeout'] ?? 5));
-
-        if ($apiKey === '' || $model === '' || !function_exists('curl_init')) {
-            return null;
-        }
-
-        $endpoint = 'https://api-inference.huggingface.co/models/' . $this->encodeModelId($model);
-        $progress = $this->fetchTodayProgressData($userId);
-        $objectifText = $progress['objectif'] !== null
-            ? (string) ((int) round((float) $progress['objectif'])) . ' kcal'
-            : 'non disponible';
-        $consumedText = (string) ((int) round((float) ($progress['consomme'] ?? 0))) . ' kcal';
-        $statusText = $this->mapStatusToFrench($progress['statut'] ?? 'aucune');
-        $prompt = "You are a nutrition assistant.\n\n"
-            . "User context:\n"
-            . "- objectif: {$objectifText}\n"
-            . "- consomme: {$consumedText}\n"
-            . "- statut: {$statusText}\n\n"
-            . "Answer briefly in French.\n\nQuestion: "
-            . $message;
-        $payload = json_encode([
-            'inputs' => $prompt,
-            'parameters' => [
-                'max_new_tokens' => 140,
-                'temperature' => 0.4,
-                'return_full_text' => false,
-            ],
-            'options' => [
-                'wait_for_model' => false,
-                'use_cache' => true,
-            ],
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-        if ($payload === false) {
-            return null;
-        }
-
-        $curl = curl_init($endpoint);
-
-        curl_setopt_array($curl, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer ' . $apiKey,
-                'Content-Type: application/json',
-            ],
-            CURLOPT_CONNECTTIMEOUT => min(3, $timeout),
-            CURLOPT_TIMEOUT => $timeout,
-        ]);
-
-        $rawResponse = curl_exec($curl);
-        $httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($curl);
-        curl_close($curl);
-
-        if ($rawResponse === false || $curlError !== '' || $httpCode >= 400) {
-            return null;
-        }
-
-        $decoded = json_decode($rawResponse, true);
-
-        if (!is_array($decoded)) {
-            return null;
-        }
-
-        if (!empty($decoded['error'])) {
-            return null;
-        }
-
-        if (!empty($decoded[0]['generated_text'])) {
-            return $this->sanitizeApiText($decoded[0]['generated_text']);
-        }
-
-        if (!empty($decoded['generated_text'])) {
-            return $this->sanitizeApiText($decoded['generated_text']);
-        }
-
-        return null;
-    }
-
-    private function sanitizeApiText($text)
-    {
-        $text = trim((string) $text);
-
-        if ($text === '') {
-            return null;
-        }
-
-        $text = preg_replace('/\s+/u', ' ', $text);
-
-        if ($text === null) {
-            return null;
-        }
-
-        return mb_substr(trim($text), 0, 500, 'UTF-8');
-    }
-
     private function buildDefaultFallbackResponse()
     {
-        return "Je peux analyser votre progression, votre objectif ou vous donner un conseil personnalise. Essayez par exemple : ou j'en suis ?";
+        return "Je n’ai pas pu générer une réponse avancée pour le moment, mais je peux t’aider sur les calories, protéines, hydratation, objectifs, sucre ou projection nutritionnelle.";
     }
 
     private function fetchTodayProgressData($userId = null)
@@ -481,26 +412,6 @@ class ChatbotService
         }
 
         return $responses[array_rand($responses)];
-    }
-
-    private function loadConfig()
-    {
-        $configPath = __DIR__ . '/chatbot_env.php';
-
-        if (!is_file($configPath)) {
-            return [];
-        }
-
-        $config = require $configPath;
-
-        return is_array($config) ? $config : [];
-    }
-
-    private function encodeModelId($modelId)
-    {
-        $segments = array_map('rawurlencode', explode('/', $modelId));
-
-        return implode('/', $segments);
     }
 
     private function formatFrenchDate($date)

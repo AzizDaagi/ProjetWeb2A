@@ -59,6 +59,7 @@
                     <p class="nutrition-card-label">Resume de la journee</p>
                     <h2 id="nutritionDayHeading">--</h2>
                     <p id="nutritionDaySummary" class="nutrition-muted">Resume quotidien en attente.</p>
+                    <p id="nutritionSugarSummary" class="nutrition-muted" hidden>Sucre du jour : --</p>
                 </article>
             </section>
 

@@ -4,6 +4,7 @@ class Objectif {
 
     private $pdo;
     private $lastError;
+    private $columnExistsCache = [];
 
     public function __construct($pdo) {
         $this->pdo = $pdo;
@@ -330,25 +331,8 @@ class Objectif {
 
     public function update($data) {
         $this->lastError = null;
-        $stmt = $this->pdo->prepare("
-            UPDATE objectif
-            SET calories_cible = ?, objectif_type = ?, poids = ?, taille = ?, age = ?, sexe = ?, activite = ?, proteines = ?, lipides = ?, glucides = ?
-            WHERE id = ?
-        ");
-
-        $isUpdated = $stmt->execute([
-            (int) $data['calories_cible'],
-            $data['objectif_type'] ?? 'maintien',
-            (float) $data['poids'],
-            (float) $data['taille'],
-            (int) $data['age'],
-            $data['sexe'] ?? 'homme',
-            $data['activite'] ?? null,
-            (float) $data['proteines'],
-            (float) $data['lipides'],
-            (float) $data['glucides'],
-            (int) $data['id']
-        ]);
+        $stmt = $this->prepareSingleUpdateStatement();
+        $isUpdated = $stmt->execute($this->buildSingleUpdateParameters($data));
 
         if (!$isUpdated) {
             $this->lastError = "Impossible de mettre a jour l'objectif.";
@@ -435,46 +419,88 @@ class Objectif {
     }
 
     private function prepareInsertStatement() {
+        $hasTargetWeightColumn = $this->columnExists('objectif', 'poids_cible');
+        $columns = [
+            'calories_cible',
+            'objectif_type',
+            'poids',
+        ];
+
+        if ($hasTargetWeightColumn) {
+            $columns[] = 'poids_cible';
+        }
+
+        if ($this->columnExists('objectif', 'sucre_max_g')) {
+            $columns[] = 'sucre_max_g';
+        }
+
+        $columns = array_merge($columns, [
+            'taille',
+            'age',
+            'sexe',
+            'activite',
+            'proteines',
+            'lipides',
+            'glucides',
+            'date_creation',
+        ]);
+        $placeholders = implode(', ', array_fill(0, count($columns), '?'));
+
         return $this->pdo->prepare("
-            INSERT INTO objectif (
-                calories_cible,
-                objectif_type,
-                poids,
-                taille,
-                age,
-                sexe,
-                activite,
-                proteines,
-                lipides,
-                glucides,
-                date_creation
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO objectif (" . implode(', ', $columns) . ")
+            VALUES ($placeholders)
         ");
     }
 
     private function preparePlanUpdateStatement() {
+        $assignments = [
+            'calories_cible = ?',
+            'objectif_type = ?',
+            'poids = ?',
+        ];
+
+        if ($this->columnExists('objectif', 'poids_cible')) {
+            $assignments[] = 'poids_cible = ?';
+        }
+
+        if ($this->columnExists('objectif', 'sucre_max_g')) {
+            $assignments[] = 'sucre_max_g = ?';
+        }
+
+        $assignments = array_merge($assignments, [
+            'taille = ?',
+            'age = ?',
+            'sexe = ?',
+            'activite = ?',
+            'proteines = ?',
+            'lipides = ?',
+            'glucides = ?',
+            'date_creation = ?',
+        ]);
+
         return $this->pdo->prepare("
             UPDATE objectif
-            SET calories_cible = ?,
-                objectif_type = ?,
-                poids = ?,
-                taille = ?,
-                age = ?,
-                sexe = ?,
-                activite = ?,
-                proteines = ?,
-                lipides = ?,
-                glucides = ?,
-                date_creation = ?
+            SET " . implode(",\n                ", $assignments) . "
             WHERE id = ?
         ");
     }
 
     private function buildInsertParameters(array $data, $dateCreation) {
-        return [
+        $parameters = [
             (int) $data['calories_cible'],
             $data['objectif_type'] ?? 'maintien',
             (float) $data['poids'],
+        ];
+
+        if ($this->columnExists('objectif', 'poids_cible')) {
+            $parameters[] = $this->normalizeNullableFloat($data['poids_cible'] ?? null);
+        }
+
+        if ($this->columnExists('objectif', 'sucre_max_g')) {
+            $parameters[] = $this->normalizeNullableFloat($data['sucre_max_g'] ?? null);
+        }
+
+        return array_merge($parameters, [
             (float) $data['taille'],
             (int) $data['age'],
             $data['sexe'] ?? 'homme',
@@ -483,14 +509,25 @@ class Objectif {
             (float) $data['lipides'],
             (float) $data['glucides'],
             $dateCreation,
-        ];
+        ]);
     }
 
     private function buildPlanUpdateParameters(array $data, $id, $dateCreation) {
-        return [
+        $parameters = [
             (int) $data['calories_cible'],
             $data['objectif_type'] ?? 'maintien',
             (float) $data['poids'],
+        ];
+
+        if ($this->columnExists('objectif', 'poids_cible')) {
+            $parameters[] = $this->normalizeNullableFloat($data['poids_cible'] ?? null);
+        }
+
+        if ($this->columnExists('objectif', 'sucre_max_g')) {
+            $parameters[] = $this->normalizeNullableFloat($data['sucre_max_g'] ?? null);
+        }
+
+        return array_merge($parameters, [
             (float) $data['taille'],
             (int) $data['age'],
             $data['sexe'] ?? 'homme',
@@ -500,7 +537,74 @@ class Objectif {
             (float) $data['glucides'],
             $dateCreation,
             (int) $id,
+        ]);
+    }
+
+    private function prepareSingleUpdateStatement() {
+        $assignments = [
+            'calories_cible = ?',
+            'objectif_type = ?',
+            'poids = ?',
         ];
+
+        if ($this->columnExists('objectif', 'poids_cible')) {
+            $assignments[] = 'poids_cible = ?';
+        }
+
+        if ($this->columnExists('objectif', 'sucre_max_g')) {
+            $assignments[] = 'sucre_max_g = ?';
+        }
+
+        $assignments = array_merge($assignments, [
+            'taille = ?',
+            'age = ?',
+            'sexe = ?',
+            'activite = ?',
+            'proteines = ?',
+            'lipides = ?',
+            'glucides = ?',
+        ]);
+
+        return $this->pdo->prepare("
+            UPDATE objectif
+            SET " . implode(",\n                ", $assignments) . "
+            WHERE id = ?
+        ");
+    }
+
+    private function buildSingleUpdateParameters(array $data) {
+        $parameters = [
+            (int) $data['calories_cible'],
+            $data['objectif_type'] ?? 'maintien',
+            (float) $data['poids'],
+        ];
+
+        if ($this->columnExists('objectif', 'poids_cible')) {
+            $parameters[] = $this->normalizeNullableFloat($data['poids_cible'] ?? null);
+        }
+
+        if ($this->columnExists('objectif', 'sucre_max_g')) {
+            $parameters[] = $this->normalizeNullableFloat($data['sucre_max_g'] ?? null);
+        }
+
+        return array_merge($parameters, [
+            (float) $data['taille'],
+            (int) $data['age'],
+            $data['sexe'] ?? 'homme',
+            $data['activite'] ?? null,
+            (float) $data['proteines'],
+            (float) $data['lipides'],
+            (float) $data['glucides'],
+            (int) $data['id'],
+        ]);
+    }
+
+    private function normalizeNullableFloat($value) {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return is_numeric($value) ? (float) $value : null;
     }
 
     private function getExistingRowsByDate($startDate, $endDate) {
@@ -623,5 +727,25 @@ class Objectif {
         $dayLabel = $remainingDays > 1 ? 'jours' : 'jour';
 
         return "Vous avez deja un plan actif. Vous pourrez le modifier dans {$remainingDays} {$dayLabel}.";
+    }
+
+    private function columnExists($tableName, $columnName) {
+        $cacheKey = $tableName . '.' . $columnName;
+
+        if (array_key_exists($cacheKey, $this->columnExistsCache)) {
+            return $this->columnExistsCache[$cacheKey];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `$tableName` LIKE ?");
+            $stmt->execute([$columnName]);
+            $exists = (bool) $stmt->fetchColumn();
+        } catch (Exception $exception) {
+            $exists = false;
+        }
+
+        $this->columnExistsCache[$cacheKey] = $exists;
+
+        return $exists;
     }
 }

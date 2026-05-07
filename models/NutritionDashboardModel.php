@@ -65,18 +65,23 @@ class NutritionDashboardModel
     {
         $profile = $this->getUserProfile($userId);
         $date = $date ?: date('Y-m-d');
+        $hasSugarGoalColumn = $this->columnExists('objectif', 'sucre_max_g');
 
         try {
-            $stmt = $this->pdo->prepare("
+            $query = "
                 SELECT
                     id,
                     calories_cible,
-                    proteines
+                    proteines,
+                    objectif_type" . ($hasSugarGoalColumn ? ",
+                    sucre_max_g" : "")
+                . "
                 FROM objectif
                 WHERE DATE(date_creation) = :targetDate
                 ORDER BY id DESC
                 LIMIT 1
-            ");
+            ";
+            $stmt = $this->pdo->prepare($query);
             $stmt->execute([
                 'targetDate' => $date,
             ]);
@@ -91,12 +96,16 @@ class NutritionDashboardModel
 
         return [
             'objective_id' => isset($row['id']) ? (int) $row['id'] : null,
+            'objective_type' => trim((string) ($row['objectif_type'] ?? 'maintien')),
             'target_calories' => isset($row['calories_cible'])
                 ? (float) $row['calories_cible']
                 : (float) ($profile['target_calories'] ?? 2000),
             'protein_target_g' => isset($row['proteines']) && (float) $row['proteines'] > 0
                 ? (float) $row['proteines']
                 : round(max(50, $weightKg * 1.2), 1),
+            'sugar_goal_g' => isset($row['sucre_max_g']) && $row['sucre_max_g'] !== null && $row['sucre_max_g'] !== ''
+                ? (float) $row['sucre_max_g']
+                : (trim((string) ($row['objectif_type'] ?? '')) === 'reduction_sucre' ? 50.0 : null),
         ];
     }
 
@@ -114,10 +123,17 @@ class NutritionDashboardModel
             'date' => date('Y-m-d'),
             // TODO: replace meal_entries with a true meal/session count if a meal_group_id is introduced later.
             'meal_count' => (int) ($row['meal_entries'] ?? 0),
+            'objective_type' => (string) ($objective['objective_type'] ?? 'maintien'),
             'total_calories' => round((float) ($row['total_calories'] ?? 0), 1),
             'proteins_g' => round((float) ($row['proteins_g'] ?? 0), 1),
             'carbs_g' => round((float) ($row['carbs_g'] ?? 0), 1),
             'fats_g' => round((float) ($row['fats_g'] ?? 0), 1),
+            'sugar_today_g' => round((float) ($row['sugar_today_g'] ?? 0), 1),
+            'sugar_goal_g' => isset($objective['sugar_goal_g']) ? $objective['sugar_goal_g'] : null,
+            'sugar_status' => $this->resolveSugarStatus(
+                (float) ($row['sugar_today_g'] ?? 0),
+                isset($objective['sugar_goal_g']) ? $objective['sugar_goal_g'] : null
+            ),
             'water_ml' => $waterMl,
             'target_calories' => (float) ($objective['target_calories'] ?? 2000),
             'protein_target_g' => (float) ($objective['protein_target_g'] ?? max(50, $weightKg * 1.2)),
@@ -129,6 +145,7 @@ class NutritionDashboardModel
     {
         $hasUserIdColumn = $this->columnExists('repas_consomme', 'user_id');
         $hasIsWaterColumn = $this->columnExists('repas_consomme', 'is_water');
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
         $hasObjectifColumn = $this->columnExists('repas_consomme', 'objectif_id');
 
         if (!$this->columnExists('repas_consomme', 'eau_ml')) {
@@ -146,6 +163,10 @@ class NutritionDashboardModel
 
             if ($hasIsWaterColumn) {
                 $query .= " AND is_water = 1";
+            }
+
+            if ($hasIsDemoColumn) {
+                $query .= " AND is_demo = 0";
             }
 
             if ($hasUserIdColumn) {
@@ -169,6 +190,9 @@ class NutritionDashboardModel
     private function getTodayMealsAggregate(int $userId, bool $hasUserIdColumn): array
     {
         try {
+            $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
+            $hasRepasSugarColumn = $this->columnExists('repas_consomme', 'sucre_g');
+            $hasAlimentSugarColumn = $this->columnExists('aliments', 'sucre_g');
             $query = "
                 SELECT
                     COUNT(*) AS meal_entries,
@@ -190,11 +214,21 @@ class NutritionDashboardModel
                             WHEN COALESCE(a.unite, 'g') = 'piece' THEN a.lipides * r.quantite
                             ELSE a.lipides * r.quantite / 100
                         END
-                    ), 0) AS fats_g
+                    ), 0) AS fats_g,
+                    COALESCE(SUM(" . ($hasRepasSugarColumn
+                        ? "COALESCE(r.sucre_g, 0)"
+                        : "CASE
+                            WHEN COALESCE(a.unite, 'g') = 'piece' THEN " . ($hasAlimentSugarColumn ? "COALESCE(a.sucre_g, 0)" : "0") . " * r.quantite
+                            ELSE " . ($hasAlimentSugarColumn ? "COALESCE(a.sucre_g, 0)" : "0") . " * r.quantite / 100
+                        END") . "), 0) AS sugar_today_g
                 FROM repas_consomme r
                 JOIN aliments a ON a.id = r.aliment_id
                 WHERE DATE(r.date_consommation) = CURDATE()
             ";
+
+            if ($hasIsDemoColumn) {
+                $query .= " AND COALESCE(r.is_demo, 0) = 0";
+            }
 
             $params = [];
 
@@ -220,6 +254,7 @@ class NutritionDashboardModel
             ->modify('-' . ($days - 1) . ' days')
             ->format('Y-m-d');
         $hasUserIdColumn = $this->columnExists('repas_consomme', 'user_id');
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
 
         try {
             $query = "
@@ -248,6 +283,10 @@ class NutritionDashboardModel
                 $query .= " WHERE DATE(r.date_consommation) >= :startDate";
             }
 
+            if ($hasIsDemoColumn) {
+                $query .= " AND COALESCE(r.is_demo, 0) = 0";
+            }
+
             $query .= "
                 GROUP BY DATE(r.date_consommation)
                 ORDER BY DATE(r.date_consommation) ASC
@@ -266,6 +305,7 @@ class NutritionDashboardModel
     public function getLastLoggedConsumptionDate(int $userId): ?string
     {
         $hasUserIdColumn = $this->columnExists('repas_consomme', 'user_id');
+        $hasIsDemoColumn = $this->columnExists('repas_consomme', 'is_demo');
 
         try {
             $query = "
@@ -278,6 +318,10 @@ class NutritionDashboardModel
             if ($hasUserIdColumn) {
                 $query .= " WHERE user_id = :userId";
                 $params['userId'] = $userId;
+            }
+
+            if ($hasIsDemoColumn) {
+                $query .= empty($params) ? " WHERE is_demo = 0" : " AND is_demo = 0";
             }
 
             $stmt = $this->pdo->prepare($query);
@@ -435,5 +479,14 @@ class NutritionDashboardModel
 
         $this->columnExistsCache[$cacheKey] = $exists;
         return $exists;
+    }
+
+    private function resolveSugarStatus(float $sugarToday, $sugarGoal): string
+    {
+        if (!is_numeric($sugarGoal) || (float) $sugarGoal <= 0) {
+            return 'not_configured';
+        }
+
+        return $sugarToday > (float) $sugarGoal ? 'high' : 'ok';
     }
 }

@@ -255,6 +255,7 @@ class alimentctrl
                 'proteines' => trim((string) ($_POST['proteines'] ?? '')),
                 'glucides' => trim((string) ($_POST['glucides'] ?? '')),
                 'lipides' => trim((string) ($_POST['lipides'] ?? '')),
+                'sucre_g' => trim((string) ($_POST['sucre_g'] ?? '')),
                 'unite' => $_POST['unite'] ?? 'g',
                 'type' => $_POST['type'] ?? 'proteine',
             ];
@@ -424,6 +425,7 @@ class alimentctrl
         $proteines = trim((string) ($data['proteines'] ?? '0'));
         $glucides = trim((string) ($data['glucides'] ?? '0'));
         $lipides = trim((string) ($data['lipides'] ?? '0'));
+        $sucre = trim((string) ($data['sucre_g'] ?? '0'));
         $type = $data['type'] ?? '';
         $unite = $data['unite'] ?? 'g';
 
@@ -447,6 +449,10 @@ class alimentctrl
             $errors[] = "Les lipides doivent etre un nombre valide.";
         }
 
+        if (!is_numeric($sucre) || (float) $sucre < 0) {
+            $errors[] = "Le sucre doit etre un nombre valide.";
+        }
+
         if (!in_array($type, $this->allowedTypes, true)) {
             $errors[] = "Type invalide.";
         }
@@ -463,6 +469,7 @@ class alimentctrl
                 'proteines' => (float) $proteines,
                 'glucides' => (float) $glucides,
                 'lipides' => (float) $lipides,
+                'sucre_g' => (float) $sucre,
                 'type' => $type,
                 'unite' => $unite,
             ],
