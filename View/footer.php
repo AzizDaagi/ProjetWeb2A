@@ -17,5 +17,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
     <script src="/smart_nutrition/View/app.js?v=<?= $assetVersion ?>"></script>
+    <script src="/smart_nutrition/View/backoffice.js?v=<?= $assetVersion ?>"></script>
 </body>
 </html>

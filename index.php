@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 require_once __DIR__ . "/controller/FrontController.php";
 require_once __DIR__ . "/controller/ActiviteController.php";
@@ -18,7 +19,10 @@ switch ($action) {
         $frontController->home();
         break;
     case 'activites':
-        $frontController->listActivites();
+        $frontController->activites();
+        break;
+    case 'export_activite_pdf':
+        $frontController->exportActivitePDF();
         break;
     case 'showExercices':
         $frontController->showExercices();
@@ -78,6 +82,21 @@ switch ($action) {
     case 'nutrition_success':
         $frontController->nutritionSuccess();
         break;
+    case 'my_nutrition_requests':
+        $frontController->myRequests();
+        break;
+    case 'edit_nutrition_request':
+        $frontController->editRequest();
+        break;
+    case 'update_nutrition_request':
+        $frontController->updateRequest();
+        break;
+    case 'delete_nutrition_request':
+        $frontController->deleteRequest();
+        break;
+    case 'export_nutrition_pdf':
+        $frontController->exportNutritionPDF();
+        break;
 
     // ---- BACK OFFICE NUTRITION REQUEST ----
     case 'admin_requests':
@@ -97,5 +116,3 @@ switch ($action) {
         $frontController->home();
         break;
 }
-
-?>

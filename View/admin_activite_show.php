@@ -8,7 +8,7 @@
 
     <?php if(isset($_GET['error'])): ?>
         <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--error); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #fca5a5;">
-            <?= $_GET['error'] == 'fields' ? "Tous les champs d'exercice sont obligatoires !" : "Erreur." ?>
+            <?php if($_GET['error']=='fields') echo "Tous les champs d'exercice sont obligatoires !"; elseif($_GET['error']=='profanity') echo "Veuillez ne pas utiliser de langage inapproprié."; else echo "Erreur."; ?>
         </div>
     <?php endif; ?>
 
@@ -74,7 +74,7 @@
                             </div>
                             <div style="display: flex; flex-direction: column; gap: 0.5rem; justify-content: center;">
                                 <a href="index.php?action=editExercice&id=<?= $ex['id_exercice'] ?>" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.9rem;"><i class="fa-solid fa-pen"></i></a>
-                                <a href="index.php?action=deleteExercice&id=<?= $ex['id_exercice'] ?>" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.9rem; background: var(--error);" onclick="return confirm('Supprimer cet exercice ?');"><i class="fa-solid fa-trash"></i></a>
+                                <a href="index.php?action=deleteExercice&id=<?= $ex['id_exercice'] ?>" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.9rem; background: var(--error);"><i class="fa-solid fa-trash"></i></a>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -104,24 +104,24 @@
                     
                     <div>
                         <label>Nom de l'exercice</label>
-                        <input type="text" name="nom_exercice" required>
+                        <input type="text" name="nom_exercice">
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
                             <label>Séries</label>
-                            <input type="number" name="series" min="1" value="3" required>
+                            <input type="text" name="series" value="3">
                         </div>
                         <div>
                             <label>Répétitions</label>
-                            <input type="number" name="repetitions" min="1" value="10" required>
+                            <input type="text" name="repetitions" value="10">
                         </div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
                             <label>Muscle Principal</label>
-                            <input type="text" name="muscle_principal" required>
+                            <input type="text" name="muscle_principal">
                         </div>
                         <div>
                             <label>Muscle Secondaire</label>
@@ -132,7 +132,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div>
                             <label>Difficulté</label>
-                            <select name="niveau_difficulte" style="width: 100%; padding: 0.75rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-main);" required>
+                            <select name="niveau_difficulte" style="width: 100%; padding: 0.75rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-main);">
                                 <option value="Débutant">Débutant</option>
                                 <option value="Intermédiaire">Intermédiaire</option>
                                 <option value="Avancé">Avancé</option>
@@ -140,7 +140,7 @@
                         </div>
                         <div>
                             <label>Calories estimées</label>
-                            <input type="number" name="calories_estimees" min="1" required>
+                            <input type="text" name="calories_estimees">
                         </div>
                     </div>
                     
@@ -154,9 +154,9 @@
 <script>
 // Simple Validation
 document.getElementById('addExerciceForm').addEventListener('submit', function(e) {
-    let requiredFields = this.querySelectorAll('input[required], select[required]');
+    letFields = this.querySelectorAll('input[required], select[required]');
     let valid = true;
-    requiredFields.forEach(function(el) {
+   Fields.forEach(function(el) {
         if (!el.value.trim()) {
             el.style.borderColor = 'var(--error)';
             valid = false;

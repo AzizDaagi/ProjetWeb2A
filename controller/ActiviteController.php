@@ -5,6 +5,11 @@ require_once __DIR__ . '/../model/Exercice.php';
 class ActiviteController {
 
     public function index() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         $activiteModel = new Activite();
         $activites = $activiteModel->getAll();
         
@@ -12,6 +17,11 @@ class ActiviteController {
     }
 
     public function show() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         if (!isset($_GET['id'])) {
             header('Location: index.php?action=admin_dashboard');
             exit;
@@ -33,18 +43,38 @@ class ActiviteController {
     }
 
     public function createActivite() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nom = trim($_POST['nom_activite']);
+            $duree = $_POST['duree_minutes'];
+            $calories = $_POST['calories_brulees'];
+            $desc = trim($_POST['description']);
+
             // PHP Validation Server-Side
-            if (empty(trim($_POST['nom_activite'])) || empty(trim($_POST['duree_minutes'])) || empty(trim($_POST['calories_brulees']))) {
+            if (empty($nom) || empty($duree) || empty($calories) || empty($desc)) {
                 $error = "PHP: Tous les champs sont obligatoires.";
+            } elseif (is_numeric($nom)) {
+                $error = "PHP: Le nom ne peut pas être uniquement composé de chiffres.";
+            } elseif (!is_numeric($duree) || $duree <= 0) {
+                $error = "PHP: La durée doit être un nombre positif.";
+            } elseif (!is_numeric($calories) || $calories < 0) {
+                $error = "PHP: Les calories doivent être un nombre positif ou zéro.";
+            }
+
+            if (isset($error)) {
                 $activiteModel = new Activite();
                 $activites = $activiteModel->getAll();
                 require_once __DIR__ . '/../View/admin_activite_index.php';
                 return;
             }
 
-            if (!is_numeric($_POST['duree_minutes']) || $_POST['duree_minutes'] <= 0) {
-                $error = "PHP: La durée doit être un nombre positif.";
+            require_once __DIR__ . '/../utils/ProfanityFilter.php';
+            if (ProfanityFilter::checkArray([$nom, $desc])) {
+                $error = "Veuillez ne pas utiliser de langage inapproprié.";
                 $activiteModel = new Activite();
                 $activites = $activiteModel->getAll();
                 require_once __DIR__ . '/../View/admin_activite_index.php';
@@ -52,10 +82,10 @@ class ActiviteController {
             }
 
             $activiteModel = new Activite();
-            $activiteModel->nom_activite = htmlspecialchars(trim($_POST['nom_activite']));
-            $activiteModel->description = htmlspecialchars(trim($_POST['description']));
-            $activiteModel->duree_minutes = (int) $_POST['duree_minutes'];
-            $activiteModel->calories_brulees = (int) $_POST['calories_brulees'];
+            $activiteModel->nom_activite = htmlspecialchars($nom);
+            $activiteModel->description = htmlspecialchars($desc);
+            $activiteModel->duree_minutes = (int) $duree;
+            $activiteModel->calories_brulees = (int) $calories;
             $activiteModel->create();
             
             header('Location: index.php?action=admin_dashboard');
@@ -64,21 +94,46 @@ class ActiviteController {
     }
 
     public function addExercice() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_activite'])) {
-            if (empty(trim($_POST['nom_exercice'])) || empty(trim($_POST['series'])) || empty(trim($_POST['repetitions'])) || 
-                empty(trim($_POST['muscle_principal'])) || empty(trim($_POST['niveau_difficulte'])) || empty(trim($_POST['calories_estimees']))) {
+            $nom = trim($_POST['nom_exercice']);
+            $series = $_POST['series'];
+            $reps = $_POST['repetitions'];
+            $muscle = trim($_POST['muscle_principal']);
+            $diff = trim($_POST['niveau_difficulte']);
+            $cal = $_POST['calories_estimees'];
+
+            if (empty($nom) || empty($series) || empty($reps) || empty($muscle) || empty($diff) || empty($cal)) {
                 header("Location: index.php?action=admin_show&id=" . $_POST['id_activite'] . "&error=fields");
+                exit;
+            }
+            if (is_numeric($nom) || is_numeric($muscle)) {
+                header("Location: index.php?action=admin_show&id=" . $_POST['id_activite'] . "&error=not_numeric_text");
+                exit;
+            }
+            if (!is_numeric($series) || $series <= 0 || !is_numeric($reps) || $reps <= 0 || !is_numeric($cal) || $cal < 0) {
+                header("Location: index.php?action=admin_show&id=" . $_POST['id_activite'] . "&error=invalid_numbers");
+                exit;
+            }
+
+            require_once __DIR__ . '/../utils/ProfanityFilter.php';
+            if (ProfanityFilter::checkArray([$nom, $muscle, $_POST['muscle_secondaire'] ?? ''])) {
+                header("Location: index.php?action=admin_show&id=" . $_POST['id_activite'] . "&error=profanity");
                 exit;
             }
 
             $exerciceModel = new Exercice();
-            $exerciceModel->nom_exercice = htmlspecialchars(trim($_POST['nom_exercice']));
-            $exerciceModel->series = (int) $_POST['series'];
-            $exerciceModel->repetitions = (int) $_POST['repetitions'];
-            $exerciceModel->muscle_principal = htmlspecialchars(trim($_POST['muscle_principal']));
+            $exerciceModel->nom_exercice = htmlspecialchars($nom);
+            $exerciceModel->series = (int) $series;
+            $exerciceModel->repetitions = (int) $reps;
+            $exerciceModel->muscle_principal = htmlspecialchars($muscle);
             $exerciceModel->muscle_secondaire = htmlspecialchars(trim($_POST['muscle_secondaire'] ?? ''));
-            $exerciceModel->niveau_difficulte = htmlspecialchars(trim($_POST['niveau_difficulte']));
-            $exerciceModel->calories_estimees = (int) $_POST['calories_estimees'];
+            $exerciceModel->niveau_difficulte = htmlspecialchars($diff);
+            $exerciceModel->calories_estimees = (int) $cal;
             $exerciceModel->id_activite = (int) $_POST['id_activite'];
             $exerciceModel->create();
             
@@ -88,6 +143,11 @@ class ActiviteController {
     }
 
     public function editExercice() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         if (!isset($_GET['id'])) {
             header('Location: index.php?action=admin_dashboard');
             exit;
@@ -105,22 +165,47 @@ class ActiviteController {
     }
 
     public function updateExercice() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_exercice'])) {
-            if (empty(trim($_POST['nom_exercice'])) || empty(trim($_POST['series'])) || empty(trim($_POST['repetitions'])) || 
-                empty(trim($_POST['muscle_principal'])) || empty(trim($_POST['niveau_difficulte'])) || empty(trim($_POST['calories_estimees']))) {
+            $nom = trim($_POST['nom_exercice']);
+            $series = $_POST['series'];
+            $reps = $_POST['repetitions'];
+            $muscle = trim($_POST['muscle_principal']);
+            $diff = trim($_POST['niveau_difficulte']);
+            $cal = $_POST['calories_estimees'];
+
+            if (empty($nom) || empty($series) || empty($reps) || empty($muscle) || empty($diff) || empty($cal)) {
                 header("Location: index.php?action=editExercice&id=" . $_POST['id_exercice'] . "&error=fields");
+                exit;
+            }
+            if (is_numeric($nom) || is_numeric($muscle)) {
+                header("Location: index.php?action=editExercice&id=" . $_POST['id_exercice'] . "&error=not_numeric_text");
+                exit;
+            }
+            if (!is_numeric($series) || $series <= 0 || !is_numeric($reps) || $reps <= 0 || !is_numeric($cal) || $cal < 0) {
+                header("Location: index.php?action=editExercice&id=" . $_POST['id_exercice'] . "&error=invalid_numbers");
+                exit;
+            }
+
+            require_once __DIR__ . '/../utils/ProfanityFilter.php';
+            if (ProfanityFilter::checkArray([$nom, $muscle, $_POST['muscle_secondaire'] ?? ''])) {
+                header("Location: index.php?action=editExercice&id=" . $_POST['id_exercice'] . "&error=profanity");
                 exit;
             }
 
             $exerciceModel = new Exercice();
             $exerciceModel->id_exercice = (int) $_POST['id_exercice'];
-            $exerciceModel->nom_exercice = htmlspecialchars(trim($_POST['nom_exercice']));
-            $exerciceModel->series = (int) $_POST['series'];
-            $exerciceModel->repetitions = (int) $_POST['repetitions'];
-            $exerciceModel->muscle_principal = htmlspecialchars(trim($_POST['muscle_principal']));
+            $exerciceModel->nom_exercice = htmlspecialchars($nom);
+            $exerciceModel->series = (int) $series;
+            $exerciceModel->repetitions = (int) $reps;
+            $exerciceModel->muscle_principal = htmlspecialchars($muscle);
             $exerciceModel->muscle_secondaire = htmlspecialchars(trim($_POST['muscle_secondaire'] ?? ''));
-            $exerciceModel->niveau_difficulte = htmlspecialchars(trim($_POST['niveau_difficulte']));
-            $exerciceModel->calories_estimees = (int) $_POST['calories_estimees'];
+            $exerciceModel->niveau_difficulte = htmlspecialchars($diff);
+            $exerciceModel->calories_estimees = (int) $cal;
             $exerciceModel->update();
             
             if (isset($_POST['id_activite'])) {
@@ -133,7 +218,12 @@ class ActiviteController {
     }
 
     public function deleteExercice() {
-        if (isset($_GET['id'])) {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
+        if (isset($_GET['id']) && is_numeric($_GET['id'])) {
             $id = (int) $_GET['id'];
             $exerciceModel = new Exercice();
             $exercice = $exerciceModel->getById($id);
@@ -148,6 +238,11 @@ class ActiviteController {
     }
 
     public function editActivite() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         if (!isset($_GET['id'])) {
             header('Location: index.php?action=admin_dashboard');
             exit;
@@ -165,19 +260,43 @@ class ActiviteController {
     }
 
     public function updateActivite() {
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_activite'])) {
+            $nom = trim($_POST['nom_activite']);
+            $desc = trim($_POST['description']);
+            $duree = $_POST['duree_minutes'];
+            $cal = $_POST['calories_brulees'];
+
             // PHP Validation
-            if (empty(trim($_POST['nom_activite']))) {
-                header('Location: index.php?action=editActivite&id=' . $_POST['id_activite'] . '&error=nom_vide');
+            if (empty($nom) || empty($desc) || empty($duree) || empty($cal)) {
+                header('Location: index.php?action=editActivite&id=' . $_POST['id_activite'] . '&error=fields');
+                exit;
+            }
+            if (is_numeric($nom)) {
+                header('Location: index.php?action=editActivite&id=' . $_POST['id_activite'] . '&error=not_numeric_text');
+                exit;
+            }
+            if (!is_numeric($duree) || $duree <= 0 || !is_numeric($cal) || $cal < 0) {
+                header('Location: index.php?action=editActivite&id=' . $_POST['id_activite'] . '&error=invalid_numbers');
+                exit;
+            }
+
+            require_once __DIR__ . '/../utils/ProfanityFilter.php';
+            if (ProfanityFilter::checkArray([$nom, $desc])) {
+                header('Location: index.php?action=editActivite&id=' . $_POST['id_activite'] . '&error=profanity');
                 exit;
             }
 
             $activiteModel = new Activite();
             $activiteModel->id_activite = $_POST['id_activite'];
-            $activiteModel->nom_activite = htmlspecialchars(trim($_POST['nom_activite']));
-            $activiteModel->description = htmlspecialchars(trim($_POST['description']));
-            $activiteModel->duree_minutes = (int) $_POST['duree_minutes'];
-            $activiteModel->calories_brulees = (int) $_POST['calories_brulees'];
+            $activiteModel->nom_activite = htmlspecialchars($nom);
+            $activiteModel->description = htmlspecialchars($desc);
+            $activiteModel->duree_minutes = (int) $duree;
+            $activiteModel->calories_brulees = (int) $cal;
             $activiteModel->update();
             
             header('Location: index.php?action=admin_dashboard');
@@ -186,8 +305,13 @@ class ActiviteController {
     }
 
     public function deleteActivite() {
-        if (isset($_GET['id'])) {
-            $id = $_GET['id'];
+        session_start();
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+            header('Location: index.php?action=admin_login');
+            exit;
+        }
+        if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+            $id = (int)$_GET['id'];
             $activiteModel = new Activite();
             $activiteModel->delete($id);
         }

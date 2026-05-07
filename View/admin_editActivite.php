@@ -5,9 +5,9 @@
         <a href="index.php?action=admin_index" style="color: var(--text-muted); text-decoration: none;">&larr; Retour au TdB Admin</a>
     </div>
 
-    <?php if(isset($_GET['error']) && $_GET['error'] == 'nom_vide'): ?>
+    <?php if(isset($_GET['error'])): ?>
         <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--error); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #fca5a5;">
-            PHP: Le nom de l'activité ne peut pas être vide !
+            <?php if($_GET['error']=='nom_vide') echo "Le nom de l'activité ne peut pas être vide !"; elseif($_GET['error']=='profanity') echo "Veuillez ne pas utiliser de langage inapproprié."; else echo htmlspecialchars(urldecode($_GET['error'])); ?>
         </div>
     <?php endif; ?>
 

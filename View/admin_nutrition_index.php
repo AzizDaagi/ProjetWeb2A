@@ -55,7 +55,7 @@
                                 </td>
                                 <td style="padding: 1rem; text-align: right;">
                                     <a href="index.php?action=admin_edit_request&id=<?= $req['id'] ?>" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; border-color: var(--accent); color: var(--accent);">Gérer</a>
-                                    <a href="index.php?action=admin_delete_request&id=<?= $req['id'] ?>" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; border-color: var(--error); color: var(--error);" onclick="return confirm('Supprimer définitivement cette requête ?');"><i class="fa-solid fa-trash"></i></a>
+                                    <a href="index.php?action=admin_delete_request&id=<?= $req['id'] ?>" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.9rem; border-color: var(--error); color: var(--error);"><i class="fa-solid fa-trash"></i></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

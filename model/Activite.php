@@ -126,5 +126,58 @@ class Activite {
         $stmt = $this->conn->query($query);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function getSuggestedActivities($goal, $excludeIds = []) {
+        $query = "SELECT * FROM activite";
+        if (!empty($excludeIds)) {
+            $ids = implode(',', array_map('intval', $excludeIds));
+            $query .= " WHERE id_activite NOT IN ($ids)";
+        }
+        $query .= " ORDER BY RAND() LIMIT 2";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Fallback if exclusion results in too few activities
+        if (count($results) < 2 && !empty($excludeIds)) {
+            return $this->getSuggestedActivities($goal, []); 
+        }
+
+        return $results;
+    }
+
+    public function searchAndSort($term = '', $sort = 'name_asc') {
+        $query = "SELECT * FROM activite WHERE 1=1";
+        $params = [];
+
+        if (!empty($term)) {
+            $query .= " AND (nom_activite LIKE :term OR description LIKE :term)";
+            $params[':term'] = '%' . $term . '%';
+        }
+
+        switch ($sort) {
+            case 'name_desc':
+                $query .= " ORDER BY nom_activite DESC";
+                break;
+            case 'calories_desc':
+                $query .= " ORDER BY calories_brulees DESC";
+                break;
+            case 'duration_desc':
+                $query .= " ORDER BY duree_minutes DESC";
+                break;
+            case 'name_asc':
+            default:
+                $query .= " ORDER BY nom_activite ASC";
+                break;
+        }
+
+        $stmt = $this->conn->prepare($query);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

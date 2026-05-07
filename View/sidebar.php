@@ -1,12 +1,43 @@
-<aside class="sidebar font-sidebar" style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border-right: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem 1rem; min-height: 80vh;">
-    <h3 style="color: #38bdf8; margin-bottom: 2rem; text-align: center; font-size: 1.3rem;"><i class="fa-solid fa-layer-group"></i> Modules</h3>
-    <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.8rem;">
-        <li><a href="index.php?action=activites" style="text-decoration: none; color: #f8fafc; font-weight: 600; padding: 10px; display: block; border-radius: 8px; transition: 0.3s;" onmouseover="this.style.background='#38bdf8'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#f8fafc';"><i class="fa-solid fa-dumbbell"></i> Gestion Activité Sportif</a></li>
-        <li><a href="#" style="text-decoration: none; color: #f8fafc; font-weight: 600; padding: 10px; display: block; border-radius: 8px; transition: 0.3s;" onmouseover="this.style.background='#38bdf8'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#f8fafc';"><i class="fa-solid fa-utensils"></i> Gestion Recettes</a></li>
-        <li><a href="#" style="text-decoration: none; color: #f8fafc; font-weight: 600; padding: 10px; display: block; border-radius: 8px; transition: 0.3s;" onmouseover="this.style.background='#38bdf8'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#f8fafc';"><i class="fa-solid fa-cart-shopping"></i> Gestion eCommerce</a></li>
-        <li><a href="#" style="text-decoration: none; color: #f8fafc; font-weight: 600; padding: 10px; display: block; border-radius: 8px; transition: 0.3s;" onmouseover="this.style.background='#38bdf8'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#f8fafc';"><i class="fa-solid fa-users"></i> Gestion Communauté</a></li>
-        <li><a href="#" style="text-decoration: none; color: #f8fafc; font-weight: 600; padding: 10px; display: block; border-radius: 8px; transition: 0.3s;" onmouseover="this.style.background='#38bdf8'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#f8fafc';"><i class="fa-solid fa-calendar"></i> Gestion Planning</a></li>
-        <li><a href="#" style="text-decoration: none; color: #f8fafc; font-weight: 600; padding: 10px; display: block; border-radius: 8px; transition: 0.3s;" onmouseover="this.style.background='#38bdf8'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#f8fafc';"><i class="fa-solid fa-user-gear"></i> Gestion Utilisateurs</a></li>
-        <li style="margin-top: 2rem;"><a href="index.php?action=admin_login" style="text-decoration: none; color: #f43f5e; font-weight: 600; padding: 10px; display: block; border-radius: 8px; border: 1px solid #f43f5e; text-align: center; transition: 0.3s;" onmouseover="this.style.background='#f43f5e'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#f43f5e';"><i class="fa-solid fa-shield-halved"></i> BackOffice Admin</a></li>
-    </ul>
+<?php 
+$currentAction = $_GET['action'] ?? 'home'; 
+?>
+<aside class="admin-sidebar">
+    <div class="admin-brand" style="margin-bottom: 30px;">
+        <a href="/smart_nutrition/index.php?action=home" class="admin-brand-link" style="display: flex; flex-direction: column; align-items: center; text-decoration: none; color: inherit;">
+            <img src="/smart_nutrition/2-removebg-preview.png" alt="Logo" style="height: 100px; margin-bottom: 10px;">
+            <span style="font-size: 1.2rem; font-weight: 700; color: var(--text-main, #ecf0f1);">Smart Nutrition</span>
+        </a>
+    </div>
+    <nav class="admin-nav">
+        <a href="index.php?action=home" class="admin-nav-link <?= $currentAction == 'home' ? 'active' : '' ?>">
+            <i class="fa-solid fa-house"></i> <span>Accueil</span>
+        </a>
+        <a href="index.php?action=activites" class="admin-nav-link <?= $currentAction == 'activites' ? 'active' : '' ?>">
+            <i class="fa-solid fa-dumbbell"></i> <span>Activites Sportives</span>
+        </a>
+        <a href="index.php?action=nutrition_request" class="admin-nav-link <?= $currentAction == 'nutrition_request' ? 'active' : '' ?>">
+            <i class="fa-solid fa-apple-whole"></i> <span>Bilan Nutritionnel</span>
+        </a>
+        <a href="#" class="admin-nav-link">
+            <i class="fa-solid fa-utensils"></i> <span>Recettes</span>
+        </a>
+        <a href="#" class="admin-nav-link">
+            <i class="fa-solid fa-cart-shopping"></i> <span>E-Commerce</span>
+        </a>
+        <a href="#" class="admin-nav-link">
+            <i class="fa-solid fa-users"></i> <span>Communaute</span>
+        </a>
+        <a href="#" class="admin-nav-link">
+            <i class="fa-solid fa-calendar"></i> <span>Planning</span>
+        </a>
+        <div class="admin-nav-divider"></div>
+        <a href="index.php?action=admin_dashboard" class="admin-nav-link admin-nav-backoffice <?= in_array($currentAction, ['admin_dashboard','admin_index','admin_show','editActivite','editExercice']) ? 'active' : '' ?>">
+            <i class="fa-solid fa-shield-halved"></i> <span>BackOffice Admin</span>
+        </a>
+    </nav>
+    <div class="admin-sidebar-footer">
+        <button type="button" id="themeToggle" class="theme-toggle" aria-label="Toggle color mode">
+            <i class="fa-solid fa-moon"></i> <span>Theme</span>
+        </button>
+    </div>
 </aside>

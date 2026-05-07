@@ -86,7 +86,12 @@ function initFormSubmitLock() {
         return;
     }
 
-    form.addEventListener('submit', function () {
+    form.addEventListener('submit', function (e) {
+        // If validation failed and prevented default, do not lock the button
+        if (e.defaultPrevented) {
+            return;
+        }
+
         var submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.disabled = true;

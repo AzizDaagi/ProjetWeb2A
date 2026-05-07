@@ -64,7 +64,7 @@
                     <a href="index.php?action=admin_show&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="width: 100%; text-align: center; margin-bottom: 0.5rem;">GÃ©rer DÃ©tails & Exercices</a>
                     <div style="display: flex; gap: 0.5rem;">
                         <a href="index.php?action=editActivite&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: #f59e0b; color: #f59e0b;">â?? Modifier</a>
-                        <a href="index.php?action=deleteActivite&id=<?= $act['id_activite'] ?>" onclick="return confirm('Ã?tes-vous sÃ»r de vouloir supprimer cette activitÃ© et tous ses exercices ?');" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: var(--error); color: var(--error);">ð??? Supprimer</a>
+                        <a href="index.php?action=deleteActivite&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="flex: 1; text-align: center; padding: 0.5rem; font-size: 0.85rem; border-color: var(--error); color: var(--error);">ð??? Supprimer</a>
                     </div>
                 </div>
             <?php endforeach; ?>

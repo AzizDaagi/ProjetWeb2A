@@ -3,6 +3,12 @@
 <div class="animate-fade-in" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
     <h2 style="color: var(--primary); margin-bottom: 0.5rem; text-align: center;">Demande de Programme Nutritionnel</h2>
     <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Remplissez ce formulaire pour recevoir un programme personnalisé basé sur vos objectifs.</p>
+    
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <a href="index.php?action=my_nutrition_requests" style="display: inline-block; padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--secondary); color: var(--secondary); text-decoration: none; border-radius: 30px; font-weight: 600; transition: 0.3s;">
+            <i class="fa-solid fa-list-check"></i> Accéder à Mes Demandes
+        </a>
+    </div>
 
     <?php if(isset($_GET['error'])): ?>
         <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--error); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #fca5a5; text-align: center;">
@@ -12,6 +18,7 @@
                     case 'invalid_weight': echo "Le poids doit être un nombre compris entre 1 et 300 kg."; break;
                     case 'invalid_goal': echo "Veuillez sélectionner un objectif valide."; break;
                     case 'invalid_height': echo "La taille doit être comprise entre 50 et 250 cm."; break;
+                    case 'profanity': echo "Veuillez ne pas utiliser de langage inapproprié."; break;
                     case 'db_error': echo "Une erreur est survenue lors de l'enregistrement. Réessayez plus tard."; break;
                     default: echo "Erreur de validation.";
                 }
@@ -37,12 +44,12 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Poids Actuel (kg) *</label>
-                    <input type="number" name="current_weight" id="current_weight" step="0.1" placeholder="ex: 75.5" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
+                    <input type="text" name="current_weight" id="current_weight" placeholder="ex: 75.5" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
                     <div id="error_weight" style="color: var(--error); font-size: 0.85rem; margin-top: 5px; display: none;">Doit être entre 1 et 300 kg.</div>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Taille (cm) <span style="color: var(--text-muted); font-size: 0.8rem;">Optionnel</span></label>
-                    <input type="number" name="height" id="height" placeholder="ex: 180" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
+                    <input type="text" name="height" id="height" placeholder="ex: 180" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
                     <div id="error_height" style="color: var(--error); font-size: 0.85rem; margin-top: 5px; display: none;">Taille absurde.</div>
                 </div>
             </div>
@@ -78,8 +85,11 @@ document.getElementById('nutritionForm').addEventListener('submit', function(e) 
     const goal = document.getElementById('current_goal');
     const height = document.getElementById('height');
 
+    const isOnlyNumbers = (str) => /^\d+$/.test(str.trim());
+
     // Name Validate
-    if(!name.value.trim()){
+    if(!name.value.trim() || isOnlyNumbers(name.value)){
+        document.getElementById('error_name').innerText = isOnlyNumbers(name.value) ? "Le nom ne peut pas être uniquement des chiffres." : "Ce champ est requis.";
         document.getElementById('error_name').style.display = 'block';
         isValid = false;
     } else { document.getElementById('error_name').style.display = 'none'; }

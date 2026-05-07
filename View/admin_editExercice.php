@@ -10,7 +10,7 @@
         
         <?php if(isset($_GET['error'])): ?>
             <div style="background: rgba(239, 68, 68, 0.2); border: 1px solid var(--error); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; color: #fca5a5;">
-                Veuillez remplir tous les champs obligatoires.
+                <?php if($_GET['error']=='profanity') echo "Veuillez ne pas utiliser de langage inapproprié."; else echo "Veuillez remplir tous les champs obligatoires."; ?>
             </div>
         <?php endif; ?>
 
@@ -20,24 +20,24 @@
             
             <div>
                 <label>Nom de l'exercice</label>
-                <input type="text" name="nom_exercice" value="<?= htmlspecialchars($exercice['nom_exercice']) ?>" required>
+                <input type="text" name="nom_exercice" value="<?= htmlspecialchars($exercice['nom_exercice']) ?>">
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div>
                     <label>Séries</label>
-                    <input type="number" name="series" min="1" value="<?= $exercice['series'] ?>" required>
+                    <input type="text" name="series" value="<?= $exercice['series'] ?>">
                 </div>
                 <div>
                     <label>Répétitions</label>
-                    <input type="number" name="repetitions" min="1" value="<?= $exercice['repetitions'] ?>" required>
+                    <input type="text" name="repetitions" value="<?= $exercice['repetitions'] ?>">
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div>
                     <label>Muscle Principal</label>
-                    <input type="text" name="muscle_principal" value="<?= htmlspecialchars($exercice['muscle_principal']) ?>" required>
+                    <input type="text" name="muscle_principal" value="<?= htmlspecialchars($exercice['muscle_principal']) ?>">
                 </div>
                 <div>
                     <label>Muscle Secondaire</label>
@@ -48,7 +48,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                 <div>
                     <label>Difficulté</label>
-                    <select name="niveau_difficulte" style="width: 100%; padding: 0.75rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-main);" required>
+                    <select name="niveau_difficulte" style="width: 100%; padding: 0.75rem; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 8px; color: var(--text-main);">
                         <option value="Débutant" <?= $exercice['niveau_difficulte'] == 'Débutant' ? 'selected' : '' ?>>Débutant</option>
                         <option value="Intermédiaire" <?= $exercice['niveau_difficulte'] == 'Intermédiaire' ? 'selected' : '' ?>>Intermédiaire</option>
                         <option value="Avancé" <?= $exercice['niveau_difficulte'] == 'Avancé' ? 'selected' : '' ?>>Avancé</option>
@@ -56,7 +56,7 @@
                 </div>
                 <div>
                     <label>Calories estimées</label>
-                    <input type="number" name="calories_estimees" min="1" value="<?= $exercice['calories_estimees'] ?>" required>
+                    <input type="text" name="calories_estimees" value="<?= $exercice['calories_estimees'] ?>">
                 </div>
             </div>
             

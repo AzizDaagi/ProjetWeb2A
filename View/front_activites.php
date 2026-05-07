@@ -1,50 +1,51 @@
 <?php ob_start(); ?>
 
-<?php
-    $quotes = [
-        "The only bad workout is the one you didn‚??t do.",
-        "No pain, no gain.",
-        "Push yourself because no one else is going to do it for you.",
-        "Success starts with self-discipline.",
-        "Don‚??t stop when you‚??re tired. Stop when you‚??re done.",
-        "Your body can stand almost anything. It‚??s your mind you have to convince.",
-        "Small progress is still progress.",
-        "Wake up. Work out. Get stronger.",
-        "Muscles are built, not wished for.",
-        "Stronger than yesterday.",
-        "Pain is temporary, pride is forever.",
-        "Be stronger than your strongest excuse.",
-        "Lift heavy. Live strong.",
-        "Champions train, losers complain.",
-        "Discipline is doing it even when you don‚??t feel like it.",
-        "Motivation gets you started. Discipline keeps you going.",
-        "Your future body is built by what you do today.",
-        "Excuses don‚??t burn calories.",
-        "Consistency is more important than intensity."
-    ];
-    $randomQuote = $quotes[array_rand($quotes)];
-?>
-<div class="animate-fade-in">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-        <h2>Catalogue des Activit√©s Sportives</h2>
-        <div style="font-style: italic; color: var(--accent); padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid var(--accent); max-width: 400px; text-align: right; font-size: 0.95rem;">
-            ¬´ <?= htmlspecialchars($randomQuote) ?> ¬ª
+<div class="animate-fade-in" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+    <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <h2 style="color: var(--primary); margin: 0;"><i class="fa-solid fa-person-running"></i> Catalogue des Activit√©s</h2>
+            
+            <form action="index.php" method="GET" style="display: flex; gap: 0.5rem; flex-grow: 1; max-width: 600px;">
+                <input type="hidden" name="action" value="activites">
+                <input type="text" name="search" placeholder="Rechercher par nom..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>" 
+                       style="flex-grow: 1; padding: 0.5rem 1rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: #fff;">
+                
+                <select name="sort" onchange="this.form.submit()" 
+                        style="padding: 0.5rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: #fff;">
+                    <option value="name_asc" <?= ($_GET['sort'] ?? '') == 'name_asc' ? 'selected' : '' ?>>Nom (A-Z)</option>
+                    <option value="name_desc" <?= ($_GET['sort'] ?? '') == 'name_desc' ? 'selected' : '' ?>>Nom (Z-A)</option>
+                    <option value="calories_desc" <?= ($_GET['sort'] ?? '') == 'calories_desc' ? 'selected' : '' ?>>Plus de calories</option>
+                    <option value="duration_desc" <?= ($_GET['sort'] ?? '') == 'duration_desc' ? 'selected' : '' ?>>Plus longue dur√©e</option>
+                </select>
+                
+                <button type="submit" class="btn" style="padding: 0.5rem 1.2rem; border-radius: 20px;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+
+            <a href="index.php?action=export_activite_pdf&search=<?= urlencode($_GET['search'] ?? '') ?>&sort=<?= urlencode($_GET['sort'] ?? 'name_asc') ?>" 
+               class="btn" style="background: var(--secondary); padding: 0.5rem 1.2rem; border-radius: 20px;">
+                <i class="fa-solid fa-file-pdf"></i> Exporter PDF
+            </a>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
         <?php if(empty($activites)): ?>
-            <p style="color: var(--text-muted);">Aucune activit√© disponible pour le moment.</p>
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                <p style="color: var(--text-muted);">Aucune activit√© trouv√©e pour votre recherche.</p>
+            </div>
         <?php else: ?>
             <?php foreach($activites as $act): ?>
-                <div class="glass-card">
-                    <h3 style="color: var(--primary); margin-bottom: 0.5rem;"><?= htmlspecialchars($act['nom_activite']) ?></h3>
-                    <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem;"><?= htmlspecialchars($act['description']) ?></p>
+                <div class="glass-card" style="padding: 1.5rem; display: flex; flex-direction: column;">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;"><?= htmlspecialchars($act['nom_activite']) ?></h3>
+                    <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; flex-grow: 1;">
+                        <?= htmlspecialchars($act['description']) ?>
+                    </p>
                     <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.85rem;">
-                        <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">‚è± <?= $act['duree_minutes'] ?> min</span>
-                        <span style="background: rgba(244, 63, 94, 0.2); color: var(--accent); padding: 4px 8px; border-radius: 4px;">??• <?= $act['calories_brulees'] ?> kcal</span>
+                        <span style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;"><i class="fa-regular fa-clock"></i> <?= $act['duree_minutes'] ?> min</span>
+                        <span style="background: rgba(244, 63, 94, 0.2); color: var(--accent); padding: 4px 8px; border-radius: 4px;"><i class="fa-solid fa-fire"></i> <?= $act['calories_brulees'] ?> kcal</span>
                     </div>
-                    <!-- READ ONLY MODE -->
                     <a href="index.php?action=showExercices&id=<?= $act['id_activite'] ?>" class="btn btn-outline" style="width: 100%; text-align: center;">Consulter les Exercices</a>
                 </div>
             <?php endforeach; ?>

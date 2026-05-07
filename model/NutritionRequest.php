@@ -84,5 +84,60 @@ class NutritionRequest {
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+    public function getByEmail($email) {
+        $query = "SELECT * FROM nutrition_requests WHERE email = :email ORDER BY created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateUser() {
+        $query = "UPDATE nutrition_requests 
+                  SET user_name = :name, current_weight = :weight, current_goal = :goal, height = :height, message = :msg 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':name', $this->user_name);
+        $stmt->bindParam(':weight', $this->current_weight);
+        $stmt->bindParam(':goal', $this->current_goal);
+        $stmt->bindParam(':height', $this->height);
+        $stmt->bindParam(':msg', $this->message);
+        $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function searchAndSort($term = '', $sort = 'date_desc') {
+        $query = "SELECT * FROM nutrition_requests WHERE 1=1";
+        $params = [];
+
+        if (!empty($term)) {
+            $query .= " AND (user_name LIKE :term OR email LIKE :term OR current_goal LIKE :term OR status LIKE :term)";
+            $params[':term'] = '%' . $term . '%';
+        }
+
+        switch ($sort) {
+            case 'date_asc':
+                $query .= " ORDER BY created_at ASC";
+                break;
+            case 'status':
+                $query .= " ORDER BY status ASC, created_at DESC";
+                break;
+            case 'user_asc':
+                $query .= " ORDER BY user_name ASC";
+                break;
+            case 'date_desc':
+            default:
+                $query .= " ORDER BY created_at DESC";
+                break;
+        }
+
+        $stmt = $this->conn->prepare($query);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
