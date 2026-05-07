@@ -111,6 +111,9 @@ switch ($action) {
     case 'admin_delete_request':
         $nutritionReqController->delete();
         break;
+    case 'export_requests_pdf':
+        $nutritionReqController->exportPDF();
+        break;
 
     default:
         $frontController->home();
