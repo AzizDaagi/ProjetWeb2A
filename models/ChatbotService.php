@@ -6,6 +6,8 @@ class ChatbotService
 {
     private $pdo;
     private $huggingFaceChatService;
+    private $tableExistsCache = [];
+    private $columnExistsCache = [];
 
     public function __construct($pdo)
     {
@@ -283,20 +285,28 @@ class ChatbotService
             return null;
         }
 
-        $stmt = $this->pdo->prepare("
-            SELECT objectif_calories
-            FROM utilisateur
-            WHERE id = ?
-            LIMIT 1
-        ");
-        $stmt->execute([$userId]);
-        $value = $stmt->fetchColumn();
+        foreach ([['users', 'objectif'], ['utilisateur', 'objectif_calories']] as $source) {
+            [$tableName, $columnName] = $source;
 
-        if ($value === false || $value === null || $value === '') {
-            return null;
+            if (!$this->tableExists($tableName) || !$this->columnExists($tableName, $columnName)) {
+                continue;
+            }
+
+            $stmt = $this->pdo->prepare("
+                SELECT {$columnName}
+                FROM {$tableName}
+                WHERE id = ?
+                LIMIT 1
+            ");
+            $stmt->execute([$userId]);
+            $value = $stmt->fetchColumn();
+
+            if ($value !== false && $value !== null && $value !== '' && is_numeric($value)) {
+                return (float) $value;
+            }
         }
 
-        return (float) $value;
+        return null;
     }
 
     private function buildDefaultFallbackResponse()
@@ -339,6 +349,53 @@ class ChatbotService
         ");
 
         return (float) $stmt->fetchColumn();
+    }
+
+    private function tableExists(string $tableName): bool
+    {
+        if (array_key_exists($tableName, $this->tableExistsCache)) {
+            return $this->tableExistsCache[$tableName];
+        }
+
+        try {
+            $stmt = $this->pdo->prepare('SHOW TABLES LIKE ?');
+            $stmt->execute([$tableName]);
+            $exists = (bool) $stmt->fetchColumn();
+        } catch (Exception $exception) {
+            error_log($exception->getMessage());
+            $exists = false;
+        }
+
+        $this->tableExistsCache[$tableName] = $exists;
+
+        return $exists;
+    }
+
+    private function columnExists(string $tableName, string $columnName): bool
+    {
+        $cacheKey = $tableName . '.' . $columnName;
+
+        if (array_key_exists($cacheKey, $this->columnExistsCache)) {
+            return $this->columnExistsCache[$cacheKey];
+        }
+
+        if (!$this->tableExists($tableName)) {
+            $this->columnExistsCache[$cacheKey] = false;
+            return false;
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `$tableName` LIKE ?");
+            $stmt->execute([$columnName]);
+            $exists = (bool) $stmt->fetchColumn();
+        } catch (Exception $exception) {
+            error_log($exception->getMessage());
+            $exists = false;
+        }
+
+        $this->columnExistsCache[$cacheKey] = $exists;
+
+        return $exists;
     }
 
     private function fetchWeeklySummaryData($userId = null)

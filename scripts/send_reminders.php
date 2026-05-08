@@ -2,7 +2,7 @@
 
 require_once __DIR__ . '/../models/NutritionDashboardService.php';
 require_once __DIR__ . '/../models/ReminderMailer.php';
-require_once __DIR__ . '/../models/utilisateur.php';
+require_once __DIR__ . '/../models/UserModel.php';
 
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -11,12 +11,12 @@ $pdo = new PDO("mysql:host=localhost;dbname=smart_nutrition", "root", "");
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $nutritionService = new NutritionDashboardService($pdo);
-$userModel = new Utilisateur($pdo);
+$userModel = new UserModel($pdo);
 $mailer = new ReminderMailer();
 
 $nutritionService->ensureReminderLogsTable();
 
-$users = $userModel->getAll();
+$users = $userModel->getRemindableUsers();
 $logLines = [];
 $runAt = date('Y-m-d H:i:s');
 
@@ -29,15 +29,14 @@ if (empty($users)) {
 foreach ($users as $user) {
     $userId = (int) ($user['id'] ?? 0);
     $email = trim((string) ($user['email'] ?? ''));
-    $name = trim((string) ($user['nom'] ?? 'Utilisateur'));
+    $nameParts = array_filter([
+        trim((string) ($user['prenom'] ?? '')),
+        trim((string) ($user['nom'] ?? '')),
+    ]);
+    $name = !empty($nameParts) ? implode(' ', $nameParts) : 'Utilisateur';
 
     if ($userId <= 0) {
         $logLines[] = "Skipped invalid user row.";
-        continue;
-    }
-
-    if ($email === '') {
-        $logLines[] = "Skipped user #{$userId} ({$name}): missing email.";
         continue;
     }
 

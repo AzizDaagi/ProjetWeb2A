@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../models/objectif.php';
 require_once __DIR__ . '/../models/ObjectifCalculatorService.php';
+require_once __DIR__ . '/../models/UserModel.php';
 require_once __DIR__ . '/../models/suivi.php';
 
 class objectifctrl
@@ -9,12 +10,14 @@ class objectifctrl
     private $objectifModel;
     private $suiviModel;
     private $objectifCalculator;
+    private $userModel;
 
     public function __construct($pdo)
     {
         $this->objectifModel = new Objectif($pdo);
         $this->suiviModel = new Suivi($pdo);
         $this->objectifCalculator = new ObjectifCalculatorService();
+        $this->userModel = new UserModel($pdo);
     }
 
     public function index()
@@ -29,6 +32,7 @@ class objectifctrl
         $objectifMessage = empty($objectif) ? "Aucun objectif defini pour aujourd'hui." : null;
         $objectifDebug = $_SESSION['objectif_debug'] ?? null;
         $objectifWarning = $_SESSION['objectif_warning'] ?? null;
+        $objectivePrefillProfile = $this->getObjectivePrefillProfile();
         $sexeOptions = $this->objectifCalculator->getSexeOptions();
         $activiteInputOptions = $this->objectifCalculator->getActiviteSelectOptions();
         $objectifTypeOptions = $this->objectifCalculator->getObjectifTypeOptions();
@@ -89,11 +93,12 @@ class objectifctrl
 
     public function store()
     {
-        $validation = $this->validateObjectifInput($_POST);
+        $input = $this->mergeUserFallbackIntoInput($_POST);
+        $validation = $this->validateObjectifInput($input);
 
         if (!empty($validation['errors'])) {
             $_SESSION['objectif_error'] = $validation['errors'];
-            $_SESSION['objectif_form'] = $this->buildFormState($_POST);
+            $_SESSION['objectif_form'] = $this->buildFormState($input);
             header("Location: index.php?controller=objectif&action=index");
             exit;
         }
@@ -102,7 +107,7 @@ class objectifctrl
 
         if (!empty($activePlan['is_locked'])) {
             $_SESSION['objectif_error'] = [$this->buildActivePlanMessage($activePlan)];
-            $_SESSION['objectif_form'] = $this->buildFormState($_POST);
+            $_SESSION['objectif_form'] = $this->buildFormState($input);
             header("Location: index.php?controller=objectif&action=index");
             exit;
         }
@@ -202,11 +207,12 @@ class objectifctrl
             exit;
         }
 
-        $validation = $this->validateObjectifInput($_POST);
+        $input = $this->mergeUserFallbackIntoInput($_POST);
+        $validation = $this->validateObjectifInput($input);
 
         if (!empty($validation['errors'])) {
             $_SESSION['objectif_error'] = !empty($validation['errors']) ? $validation['errors'] : ["Objectif invalide."];
-            $_SESSION['objectif_form'] = $this->buildFormState($_POST, $id);
+            $_SESSION['objectif_form'] = $this->buildFormState($input, $id);
             header("Location: index.php?controller=objectif&action=edit&id=" . urlencode((string) $id));
             exit;
         }
@@ -248,7 +254,7 @@ class objectifctrl
             $_SESSION['objectif_error'] = [
                 $this->objectifModel->getLastError() ?: "Impossible de mettre a jour le plan nutritionnel."
             ];
-            $_SESSION['objectif_form'] = $this->buildFormState($_POST, $id);
+            $_SESSION['objectif_form'] = $this->buildFormState($input, $id);
             header("Location: index.php?controller=objectif&action=edit&id=" . urlencode((string) $id));
             exit;
         }
@@ -412,6 +418,89 @@ class objectifctrl
                 'objectif_type' => $objectifType,
             ],
         ];
+    }
+
+    private function getObjectivePrefillProfile(): array
+    {
+        $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
+
+        if ($userId <= 0) {
+            return [];
+        }
+
+        $profile = $this->userModel->getUserProfile($userId);
+
+        if (empty($profile)) {
+            return [];
+        }
+
+        return [
+            'poids' => $profile['poids'] ?? '',
+            'taille' => $profile['taille'] ?? '',
+            'age' => $profile['age'] ?? '',
+            'sexe' => $this->normalizeSexeValue($profile['sexe'] ?? ''),
+            'activite' => $this->normalizeActiviteInputValue($profile['niveau_activite'] ?? ''),
+            'activite_input' => $this->normalizeActiviteInputValue($profile['niveau_activite'] ?? ''),
+        ];
+    }
+
+    private function mergeUserFallbackIntoInput(array $data): array
+    {
+        $profile = $this->getObjectivePrefillProfile();
+
+        if (empty($profile)) {
+            return $data;
+        }
+
+        $fallbackMap = [
+            'poids' => 'poids',
+            'taille' => 'taille',
+            'age' => 'age',
+            'sexe' => 'sexe',
+            'activite' => 'activite',
+        ];
+
+        foreach ($fallbackMap as $field => $profileField) {
+            $value = $data[$field] ?? null;
+
+            if ($value === null || trim((string) $value) === '') {
+                if (array_key_exists($profileField, $profile) && $profile[$profileField] !== '') {
+                    $data[$field] = $profile[$profileField];
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    private function normalizeSexeValue($value): string
+    {
+        $value = strtolower(trim((string) $value));
+
+        if (in_array($value, ['femme', 'female', 'f'], true)) {
+            return 'femme';
+        }
+
+        return 'homme';
+    }
+
+    private function normalizeActiviteInputValue($value): string
+    {
+        $value = strtolower(trim((string) $value));
+        $availableOptions = $this->objectifCalculator->getActiviteSelectOptions();
+
+        if (isset($availableOptions[$value])) {
+            return $value;
+        }
+
+        return match ($value) {
+            'faible', 'sedentaire', 'sédentaire', 'low', 'leger', 'léger' => 'light',
+            'moderee', 'modérée', 'moyenne', 'medium' => 'moderate',
+            'elevee', 'élevée', 'haut', 'high', 'actif', 'active' => 'active',
+            'tres_active', 'très actif', 'very_active' => 'very_active',
+            'extra_active' => 'extra_active',
+            default => 'moderate',
+        };
     }
 
     private function buildFormState($data, $id = null)

@@ -402,34 +402,36 @@ class PredictionModel
 
     private function fetchUserValue(int $userId, array $candidateColumns): ?float
     {
-        if (!$this->tableExists('utilisateur')) {
-            return null;
-        }
-
-        foreach ($candidateColumns as $column) {
-            if (!$this->columnExists('utilisateur', $column)) {
+        foreach (['users', 'utilisateur'] as $tableName) {
+            if (!$this->tableExists($tableName)) {
                 continue;
             }
 
-            try {
-                $stmt = $this->pdo->prepare("
-                    SELECT {$column}
-                    FROM utilisateur
-                    WHERE id = :userId
-                    LIMIT 1
-                ");
-                $stmt->execute([
-                    'userId' => $userId,
-                ]);
-
-                $value = $stmt->fetchColumn();
-
-                if (is_numeric($value) && (float) $value > 0) {
-                    return (float) $value;
+            foreach ($candidateColumns as $column) {
+                if (!$this->columnExists($tableName, $column)) {
+                    continue;
                 }
-            } catch (Exception $exception) {
-                error_log($exception->getMessage());
-                return null;
+
+                try {
+                    $stmt = $this->pdo->prepare("
+                        SELECT {$column}
+                        FROM {$tableName}
+                        WHERE id = :userId
+                        LIMIT 1
+                    ");
+                    $stmt->execute([
+                        'userId' => $userId,
+                    ]);
+
+                    $value = $stmt->fetchColumn();
+
+                    if (is_numeric($value) && (float) $value > 0) {
+                        return (float) $value;
+                    }
+                } catch (Exception $exception) {
+                    error_log($exception->getMessage());
+                    return null;
+                }
             }
         }
 

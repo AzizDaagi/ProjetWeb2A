@@ -1,51 +1,46 @@
 <?php
 
+require_once __DIR__ . '/UserModel.php';
+
 class NutritionDashboardModel
 {
     private $pdo;
+    private $userModel;
     private $tableExistsCache = [];
     private $columnExistsCache = [];
 
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
+        $this->userModel = new UserModel($pdo);
     }
 
     public function getUserProfile(int $userId): array
     {
-        if (!$this->tableExists('utilisateur')) {
-            return $this->getFallbackProfileFromObjectif($userId);
-        }
-
         try {
-            $stmt = $this->pdo->prepare("
-                SELECT
-                    id,
-                    nom,
-                    email,
-                    age,
-                    poids,
-                    taille,
-                    objectif_calories
-                FROM utilisateur
-                WHERE id = :userId
-                LIMIT 1
-            ");
-            $stmt->execute([
-                'userId' => $userId,
-            ]);
+            $row = $this->userModel->getUserProfile($userId);
 
-            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+            if (!empty($row)) {
+                $nameParts = array_filter([
+                    trim((string) ($row['prenom'] ?? '')),
+                    trim((string) ($row['nom'] ?? '')),
+                ]);
+                $targetCalories = isset($row['objectif']) && is_numeric($row['objectif'])
+                    ? (float) $row['objectif']
+                    : 2000.0;
 
-            return [
-                'id' => (int) ($row['id'] ?? $userId),
-                'name' => trim((string) ($row['nom'] ?? 'Utilisateur')),
-                'email' => trim((string) ($row['email'] ?? '')),
-                'age' => isset($row['age']) ? (int) $row['age'] : null,
-                'weight_kg' => isset($row['poids']) ? (float) $row['poids'] : null,
-                'height_cm' => isset($row['taille']) ? (float) $row['taille'] : null,
-                'target_calories' => isset($row['objectif_calories']) ? (float) $row['objectif_calories'] : 2000.0,
-            ];
+                return [
+                    'id' => (int) ($row['id'] ?? $userId),
+                    'name' => !empty($nameParts) ? implode(' ', $nameParts) : trim((string) ($row['nom'] ?? 'Utilisateur')),
+                    'email' => trim((string) ($row['email'] ?? '')),
+                    'age' => isset($row['age']) ? (int) $row['age'] : null,
+                    'weight_kg' => isset($row['poids']) ? (float) $row['poids'] : null,
+                    'height_cm' => isset($row['taille']) ? (float) $row['taille'] : null,
+                    'target_calories' => $targetCalories,
+                ];
+            }
+
+            return $this->getFallbackProfileFromObjectif($userId);
         } catch (Exception $e) {
             error_log($e->getMessage());
 

@@ -606,7 +606,11 @@
 
     $formSource = !empty($objectifForm)
         ? $objectifForm
-        : (!empty($todayObjectif) ? $todayObjectif : (!empty($objectif) ? $objectif : []));
+        : (!empty($todayObjectif)
+            ? array_merge($objectivePrefillProfile ?? [], $todayObjectif)
+            : (!empty($objectif)
+                ? array_merge($objectivePrefillProfile ?? [], $objectif)
+                : ($objectivePrefillProfile ?? [])));
 
     $selectedPoids = $formSource['poids'] ?? '';
     $selectedPoidsCible = $formSource['poids_cible'] ?? '';
