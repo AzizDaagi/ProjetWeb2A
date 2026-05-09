@@ -59,7 +59,7 @@
     <section class="admin-widget admin-recent-widget">
         <div class="admin-widget-head">
             <h2>Utilisateurs recents</h2>
-            <a href="/smart_nutrition/index.php?action=users-list" class="btn-edit">Voir tout</a>
+            <a href="/projet-web-25-26/index.php?action=users-list" class="btn-edit">Voir tout</a>
         </div>
         <table class="users-table">
             <thead>

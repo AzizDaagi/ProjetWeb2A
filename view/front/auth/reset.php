@@ -8,7 +8,21 @@
         <?php unset($_SESSION['flash_error']); ?>
     <?php endif; ?>
 
-    <form method="post" action="/smart_nutrition/index.php?action=reset-password">
+    <?php if (!empty($_SESSION['success'])) : ?>
+        <div class="alert alert-success"><?php echo htmlspecialchars($_SESSION['success']); ?></div>
+        <?php unset($_SESSION['success']); ?>
+    <?php endif; ?>
+
+    <?php if (!empty($_SESSION['dev_reset_code'])) : ?>
+        <div class="alert alert-warning">
+            <strong>Mode developpement :</strong>
+            Code de reinitialisation local :
+            <strong><?php echo htmlspecialchars($_SESSION['dev_reset_code']); ?></strong>
+        </div>
+        <?php unset($_SESSION['dev_reset_code']); ?>
+    <?php endif; ?>
+
+    <form method="post" action="/projet-web-25-26/index.php?action=reset-password">
         <div class="form-group">
             <label for="email">Adresse e-mail</label>
             <input id="email" name="email" type="email" class="form-control" required value="<?= htmlspecialchars($_GET['email'] ?? '') ?>" />
@@ -16,7 +30,7 @@
 
         <div class="form-group">
             <label for="code">Code de reinitialisation</label>
-            <input id="code" name="code" type="text" class="form-control" required maxlength="10" />
+            <input id="code" name="code" type="text" class="form-control" required maxlength="10" value="<?= htmlspecialchars($_GET['code'] ?? '') ?>" />
         </div>
 
         <div class="form-group">
@@ -31,7 +45,7 @@
 
         <div class="form-group">
             <button type="submit" class="btn btn-primary">Valider</button>
-            <a href="/smart_nutrition/index.php?action=login" class="btn btn-link">Retour</a>
+            <a href="/projet-web-25-26/index.php?action=login" class="btn btn-link">Retour</a>
         </div>
     </form>
 </div>

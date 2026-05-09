@@ -10,7 +10,7 @@ class Database
         if (self::$connection === null) {
             $host = getenv('DB_HOST') ?: '127.0.0.1';
             $port = (int) (getenv('DB_PORT') ?: 3306);
-            $dbName = getenv('DB_NAME') ?: 'smart_nutrition_db';
+            $dbName = getenv('DB_NAME') ?: 'smart_nutrition';
             $username = getenv('DB_USER') ?: 'root';
             $password = getenv('DB_PASSWORD') ?: '';
             $charset = 'utf8mb4';

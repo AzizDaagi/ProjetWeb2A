@@ -6,7 +6,7 @@
     <title><?= $pageTitle ?? 'Smart Nutrition' ?></title>
     <?php $assetVersion = time(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/smart_nutrition/view/assets/style.css?v=<?= $assetVersion ?>">
+    <link rel="stylesheet" href="/projet-web-25-26/view/assets/style.css?v=<?= $assetVersion ?>">
 </head>
 <?php $showNav = $showNav ?? isset($_SESSION['user_id']); ?>
 <?php $isAdminTemplate = isset($isAdminTemplate) && $isAdminTemplate === true; ?>

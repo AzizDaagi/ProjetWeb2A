@@ -14,7 +14,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/smart_nutrition/index.php?action=register" novalidate>
+    <form method="POST" action="/projet-web-25-26/index.php?action=register" novalidate>
         <div class="field">
             <label><i class="fa-solid fa-user icon"></i>Nom</label>
             <input type="text" name="nom" value="<?= htmlspecialchars($old['nom'] ?? '') ?>" placeholder="Nom" required>
@@ -65,5 +65,5 @@
         <button type="submit" class="btn-accent"><i class="fa-solid fa-user-plus icon success"></i>S'inscrire</button>
     </form>
 
-    <p class="link-text">Deja inscrit ? <a href="/smart_nutrition/index.php?action=login">Se connecter</a></p>
+    <p class="link-text">Deja inscrit ? <a href="/projet-web-25-26/index.php?action=login">Se connecter</a></p>
 </div>

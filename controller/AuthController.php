@@ -24,13 +24,13 @@ class AuthController
 
     private function redirect($action)
     {
-        header('Location: /smart_nutrition/index.php?action=' . $action);
+        header('Location: /projet-web-25-26/index.php?action=' . $action);
         exit;
     }
 
     private function buildActionUrl($action)
     {
-        return '/smart_nutrition/index.php?action=' . $action;
+        return '/projet-web-25-26/index.php?action=' . $action;
     }
 
     private function respondJson($payload, $statusCode = 200)
@@ -261,6 +261,14 @@ class AuthController
             return ['success' => false, 'error' => 'Email expediteur invalide. Configurez BREVO_FROM_EMAIL avec une adresse verifiee dans Brevo.'];
         }
 
+        if (!$this->isSmtpConfigured()) {
+            return [
+                'success' => false,
+                'error' => 'SMTP non configure en local. Le lien de reinitialisation est affiche en mode developpement.',
+                'local_fallback' => true,
+            ];
+        }
+
         $smtpPassword = trim((string) ($this->mailConfig['password'] ?? ''));
         if ($smtpPassword !== '') {
             return $this->sendBrevoEmailViaSmtp($to, $subject, $htmlContent, $fromEmail, $fromName);
@@ -272,6 +280,53 @@ class AuthController
         }
 
         return $this->sendBrevoEmailViaApi($to, $subject, $htmlContent, $fromEmail, $fromName, $apiKey);
+    }
+
+    private function isSmtpConfigured()
+    {
+        $username = trim((string) ($this->mailConfig['username'] ?? getenv('BREVO_SMTP_USERNAME') ?? ''));
+        $password = trim((string) ($this->mailConfig['password'] ?? getenv('BREVO_SMTP_PASSWORD') ?? ''));
+
+        if ($username === '' || $password === '') {
+            return false;
+        }
+
+        $placeholders = [
+            'YOUR_BREVO_SMTP_USERNAME_HERE',
+            'YOUR_BREVO_SMTP_PASSWORD_HERE',
+            'your_brevo_smtp_username_here',
+            'your_brevo_smtp_password_here',
+            'smtp_username',
+            'smtp_password',
+        ];
+
+        return !in_array($username, $placeholders, true) && !in_array($password, $placeholders, true);
+    }
+
+    private function isLocalEnvironment()
+    {
+        $appEnv = strtolower(trim((string) (getenv('APP_ENV') ?: '')));
+        $appUrl = strtolower(trim((string) ($this->appConfig['app_url'] ?? '')));
+        $serverName = strtolower(trim((string) ($_SERVER['SERVER_NAME'] ?? '')));
+
+        if ($appEnv === 'production') {
+            return false;
+        }
+
+        if (in_array($appEnv, ['local', 'development', 'dev'], true)) {
+            return true;
+        }
+
+        return strpos($appUrl, 'localhost') !== false
+            || strpos($appUrl, '127.0.0.1') !== false
+            || in_array($serverName, ['localhost', '127.0.0.1'], true);
+    }
+
+    private function buildLocalResetUrl($email, $code)
+    {
+        return $this->buildActionUrl('reset-password')
+            . '&email=' . urlencode((string) $email)
+            . '&code=' . urlencode((string) $code);
     }
 
     private function sendBrevoEmailViaApi($to, $subject, $htmlContent, $fromEmail, $fromName, $apiKey)
@@ -803,12 +858,24 @@ class AuthController
 
         $result = $this->sendBrevoEmail($email, 'Code de reinitialisation', $htmlContent);
         if (empty($result['success'])) {
-            $_SESSION['flash_error'] = 'Envoi e-mail echoue: ' . ($result['error'] ?? '');
+            if ($this->isLocalEnvironment()) {
+                $resetUrl = $this->buildLocalResetUrl($email, $code);
+                $_SESSION['success'] = 'Mode developpement : l e-mail n a pas pu etre envoye. Utilisez ce code ou ce lien de verification.';
+                $_SESSION['dev_reset_link'] = $resetUrl;
+                $_SESSION['dev_reset_code'] = $code;
+                error_log('[RESET EMAIL FALLBACK] ' . ($result['error'] ?? 'unknown_error'));
+                error_log('[DEV RESET LINK] ' . $resetUrl);
+                header('Location: /projet-web-25-26/index.php?action=reset-password&email=' . urlencode($email) . '&code=' . urlencode($code));
+                exit;
+            }
+
+            error_log('[RESET EMAIL ERROR] ' . ($result['error'] ?? 'unknown_error'));
+            $_SESSION['flash_error'] = 'Impossible d envoyer l e-mail de reinitialisation pour le moment.';
             $this->redirect('forgot');
         }
 
         $_SESSION['success'] = 'Un code a ete envoye par e-mail.';
-        header('Location: /smart_nutrition/index.php?action=reset-password&email=' . urlencode($email));
+        header('Location: /projet-web-25-26/index.php?action=reset-password&email=' . urlencode($email));
         exit;
     }
 
@@ -910,7 +977,7 @@ public function showRegister($errors = [], $old = [])
  
 public function showForgotPassword($errors = [])
 {
-    $pageTitle = 'Mot de passe oublié';
+    $pageTitle = 'Mot de passe oubliÃƒÆ’Ã‚Â©';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/forgot.php';
@@ -918,7 +985,11 @@ public function showForgotPassword($errors = [])
 }
 public function showResetForm()
 {
-    $pageTitle = 'Réinitialiser mot de passe';
+    if (!empty($_GET['code'])) {
+        $_SESSION['dev_reset_code'] = trim((string) $_GET['code']);
+    }
+
+    $pageTitle = 'RÃƒÆ’Ã‚Â©initialiser mot de passe';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/reset.php';

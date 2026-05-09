@@ -715,7 +715,7 @@ function initHomeWeatherCard() {
         }
 
         if (tempEl) {
-            tempEl.textContent = weather.temperature_c.toFixed(1) + '°C';
+            tempEl.textContent = weather.temperature_c.toFixed(1) + 'Ã‚Â°C';
         }
 
         if (conditionEl) {
@@ -723,7 +723,7 @@ function initHomeWeatherCard() {
         }
 
         if (feelsLikeEl) {
-            feelsLikeEl.textContent = weather.feels_like_c.toFixed(1) + '°C';
+            feelsLikeEl.textContent = weather.feels_like_c.toFixed(1) + 'Ã‚Â°C';
         }
 
         if (humidityEl) {
@@ -959,7 +959,7 @@ function initVoiceControl() {
     }
 
     function buildActionUrl(action) {
-        return '/smart_nutrition/index.php?action=' + encodeURIComponent(action);
+        return '/projet-web-25-26/index.php?action=' + encodeURIComponent(action);
     }
 
     function setTheme(theme) {
@@ -1667,7 +1667,7 @@ function initAdminUsersList() {
             return;
         }
 
-        resultCount.textContent = visibleRows + ' utilisateur(s) affiché(s)';
+        resultCount.textContent = visibleRows + ' utilisateur(s) affichÃƒÂ©(s)';
     }
 
     function ensureNoUsersRow() {
@@ -1717,13 +1717,13 @@ function initAdminUsersList() {
         cell.className = 'users-actions';
 
         var editLink = document.createElement('a');
-        editLink.href = '/smart_nutrition/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
+        editLink.href = '/projet-web-25-26/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
         editLink.className = 'btn-edit';
         editLink.innerHTML = '<i class="fa-solid fa-pen"></i> Modifier';
 
         var form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/smart_nutrition/index.php?action=delete-user';
+        form.action = '/projet-web-25-26/index.php?action=delete-user';
         form.className = 'inline-form';
         form.setAttribute('novalidate', 'novalidate');
         form.onsubmit = function () {
@@ -1876,7 +1876,7 @@ function initAdminUsersList() {
 
     if (exportButton) {
         exportButton.addEventListener('click', function () {
-            var url = '/smart_nutrition/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
+            var url = '/projet-web-25-26/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
             window.open(url, '_blank', 'noopener');
         });
     }
@@ -1934,7 +1934,7 @@ function initAdvancedBackground() {
     var height = 0;
     var particles = [];
     var foodParticles = [];
-    var foodIcons = ['🍎', '🥕', '🥦', '🍌', '🥗', '🍇', '🥑', '🍓'];
+    var foodIcons = ['Ã°Å¸ÂÅ½', 'Ã°Å¸Â¥â€¢', 'Ã°Å¸Â¥Â¦', 'Ã°Å¸ÂÅ’', 'Ã°Å¸Â¥â€”', 'Ã°Å¸Ââ€¡', 'Ã°Å¸Â¥â€˜', 'Ã°Å¸Ââ€œ'];
     var time = 0;
 
     function resize() {

@@ -1,0 +1,540 @@
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+option {
+    color: #1e293b;
+}
+
+.chrono-page {
+    min-height: 100vh;
+    padding: 32px 20px 56px;
+    background:
+        radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 28%),
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 24%),
+        #f8fafc;
+}
+
+.chrono-shell {
+    width: min(1160px, 100%);
+    margin: 0 auto;
+}
+
+.chrono-hero {
+    margin-bottom: 22px;
+}
+
+.chrono-hero__content {
+    padding: 28px;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    background:
+        linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(34, 197, 94, 0.06) 52%, rgba(255, 255, 255, 0.96) 100%);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+}
+
+.chrono-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 10px 14px;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #475569;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.chrono-back-link:hover {
+    background: #f8fafc;
+    border-color: #bae6fd;
+    color: #0f172a;
+    transform: translateY(-1px);
+}
+
+.chrono-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    margin-bottom: 14px;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.chrono-hero h1 {
+    margin: 0 0 12px;
+    color: #0f172a;
+    font-size: clamp(2rem, 3vw, 3rem);
+    line-height: 1.05;
+}
+
+.chrono-subtitle,
+.chrono-muted,
+.chrono-panel__intro,
+.chrono-subcard p,
+.chrono-state__content p,
+.chrono-meta-note,
+.chrono-disclaimer {
+    color: #64748b;
+}
+
+.chrono-subtitle {
+    max-width: 760px;
+    margin: 0;
+    line-height: 1.65;
+    font-size: 1rem;
+}
+
+.chrono-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 22px;
+    padding: 22px;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.chrono-card--form {
+    margin-bottom: 24px;
+}
+
+.chrono-card--wide {
+    grid-column: 1 / -1;
+}
+
+.chrono-section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.chrono-section-head h2,
+.chrono-panel__title {
+    margin: 0 0 8px;
+    color: #0f172a;
+}
+
+.chrono-panel__title {
+    font-size: 1.2rem;
+}
+
+.chrono-panel__intro {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.chrono-form {
+    display: grid;
+    gap: 18px;
+}
+
+.chrono-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.chrono-field {
+    display: grid;
+    gap: 8px;
+}
+
+.chrono-field label {
+    color: #1e293b;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.chrono-field input,
+.chrono-field select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #1e293b;
+    font: inherit;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.chrono-field input:focus,
+.chrono-field select:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.14);
+}
+
+.chrono-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.chrono-form-note {
+    margin: 0;
+}
+
+button {
+    appearance: none;
+    width: auto;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 20px;
+    background: #22c55e;
+    color: #ffffff;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 12px 22px rgba(34, 197, 94, 0.18);
+    transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+button:hover {
+    background: #16a34a;
+    transform: translateY(-1px);
+    box-shadow: 0 16px 26px rgba(34, 197, 94, 0.2);
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.74;
+    transform: none;
+    box-shadow: none;
+}
+
+.chrono-feedback {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    line-height: 1.5;
+}
+
+.chrono-feedback.is-success {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.2);
+    color: #166534;
+}
+
+.chrono-feedback.is-error {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #b91c1c;
+}
+
+.chrono-results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.result-block {
+    min-height: 210px;
+}
+
+.chrono-summary-list,
+.chrono-meta-list,
+.chrono-meal-grid,
+.chrono-advice-list,
+.chrono-fasting-grid,
+.chrono-nutrient-grid,
+.chrono-sleep-grid {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.chrono-summary-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chrono-meal-grid,
+.chrono-fasting-grid,
+.chrono-nutrient-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.chrono-fasting-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chrono-sleep-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chrono-advice-list {
+    grid-template-columns: 1fr;
+}
+
+.chrono-meta-item,
+.chrono-subcard {
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #f8fafc;
+}
+
+.chrono-meta-item small {
+    display: block;
+    margin-bottom: 8px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.78rem;
+}
+
+.chrono-meta-item strong {
+    display: block;
+    color: #0f172a;
+    font-size: 1.06rem;
+}
+
+.chrono-meta-note {
+    margin: 8px 0 0;
+    line-height: 1.45;
+}
+
+.chrono-highlight {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+    font-weight: 700;
+    font-size: 0.86rem;
+}
+
+.chrono-subcard h3,
+.chrono-subcard h4 {
+    margin: 10px 0 8px;
+    color: #0f172a;
+}
+
+.chrono-subcard--window h3 {
+    font-size: 1.2rem;
+    margin-bottom: 6px;
+}
+
+.chrono-subcard p {
+    margin: 0;
+    line-height: 1.55;
+}
+
+.chrono-time {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.chrono-inline-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.chrono-inline-list .chrono-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.chrono-inline-list .chrono-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.chrono-inline-list .chrono-row:first-child {
+    padding-top: 0;
+}
+
+.chrono-inline-list .chrono-row span {
+    color: #64748b;
+}
+
+.chrono-inline-list .chrono-row strong {
+    color: #0f172a;
+}
+
+.chrono-badges {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 14px 0 12px;
+}
+
+.chrono-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.12);
+    color: #0369a1;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.chrono-badge--soft {
+    background: #eef6ff;
+    color: #1e293b;
+}
+
+.chrono-badge--period-morning {
+    background: rgba(56, 189, 248, 0.14);
+    color: #0369a1;
+}
+
+.chrono-badge--period-noon {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+}
+
+.chrono-badge--period-evening {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
+}
+
+.chrono-badge--period-neutral {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.chrono-badge--priority-high {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+}
+
+.chrono-badge--priority-medium {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+.chrono-badge--priority-low {
+    background: rgba(34, 197, 94, 0.12);
+    color: #15803d;
+}
+
+.chrono-badge--protocol {
+    background: rgba(34, 197, 94, 0.14);
+    color: #15803d;
+}
+
+.chrono-state {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    text-align: center;
+}
+
+.chrono-state__content {
+    max-width: 320px;
+}
+
+.chrono-state__content h3 {
+    margin: 14px 0 8px;
+    color: #0f172a;
+}
+
+.chrono-state__content p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.spinner {
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #22c55e;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    animation: spin 0.9s linear infinite;
+    margin: 0 auto;
+}
+
+.error {
+    color: #b91c1c;
+}
+
+.chrono-disclaimer {
+    margin: 20px 0 0;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    line-height: 1.55;
+    font-size: 0.94rem;
+}
+
+.chrono-disclaimer-inline {
+    margin: 16px 0 0;
+    color: #64748b;
+    line-height: 1.55;
+    font-size: 0.92rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 1024px) {
+    .chrono-meal-grid,
+    .chrono-fasting-grid,
+    .chrono-nutrient-grid,
+    .chrono-sleep-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .chrono-page {
+        padding: 20px 14px 40px;
+    }
+
+    .chrono-hero__content,
+    .chrono-card {
+        padding: 18px;
+    }
+
+    .chrono-results,
+    .chrono-form-grid,
+    .chrono-summary-list,
+    .chrono-meal-grid,
+    .chrono-fasting-grid,
+    .chrono-nutrient-grid,
+    .chrono-sleep-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chrono-inline-list .chrono-row,
+    .chrono-form-actions,
+    .chrono-section-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

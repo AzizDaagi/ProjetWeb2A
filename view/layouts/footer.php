@@ -32,7 +32,7 @@
 
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="/smart_nutrition/view/assets/app.js?v=<?= $assetVersion ?>"></script>
-    <script src="/smart_nutrition/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
+    <script src="/projet-web-25-26/view/assets/app.js?v=<?= $assetVersion ?>"></script>
+    <script src="/projet-web-25-26/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
 </body>
 </html>

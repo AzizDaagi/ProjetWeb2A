@@ -4,7 +4,7 @@
 <?php $isFoodsAction = $currentAction === 'foods-management'; ?>
 <?php $isRecommendationsAction = $currentAction === 'recommendations-management'; ?>
 <?php $isTrackingAction = $currentAction === 'tracking-management'; ?>
-<?php $isPlannerAction = $currentAction === 'planner-management'; ?>
+<?php $isPlannerAction = in_array($currentAction, ['planner-management', 'suivi'], true); ?>
 <?php
 $moduleDescriptions = [
     'recipes-management' => [
@@ -24,8 +24,8 @@ $moduleDescriptions = [
         'description' => 'Module activite sportif pour suivre les seances, les indicateurs et la progression.',
     ],
     'planner-management' => [
-        'title' => 'Planning',
-        'description' => 'Module planning pour organiser les objectifs, les rappels et les taches hebdomadaires.',
+        'title' => 'Suivi nutritionnel',
+        'description' => 'Acces au module de suivi nutritionnel, objectifs et progression.',
     ],
 ];
 $currentModule = $moduleDescriptions[$currentAction] ?? null;
@@ -57,9 +57,9 @@ if ($adminInitials === '') {
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="/smart_nutrition/index.php?action=admin-dashboard" class="admin-brand-link">
+            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/smart_nutrition/view/assets/images/logo.png"
+                    src="/projet-web-25-26/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -70,11 +70,11 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section">
             <p class="admin-menu-title">Navigation</p>
-            <a href="/smart_nutrition/index.php?action=admin-dashboard" class="admin-side-link<?= $currentAction === 'admin-dashboard' ? ' active' : '' ?>">
+            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $currentAction === 'admin-dashboard' ? ' active' : '' ?>">
                 <i class="fa-solid fa-gauge-high"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/smart_nutrition/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+            <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
                 <i class="fa-solid fa-users"></i>
                 <span>Utilisateurs</span>
             </a>
@@ -121,11 +121,11 @@ if ($adminInitials === '') {
             <button
                 type="button"
                 class="admin-side-link admin-module-btn<?= $isPlannerAction ? ' active' : '' ?>"
-                data-module-title="Planning"
-                data-module-description="Module planning pour organiser les objectifs, les rappels et les taches hebdomadaires."
+                data-module-title="Suivi nutritionnel"
+                data-module-description="Acces au module de suivi nutritionnel, objectifs et progression."
             >
                 <i class="fa-solid fa-calendar-check"></i>
-                <span>Planning</span>
+                <span>Suivi nutritionnel</span>
             </button>
 
             <div id="adminModuleDescription" class="admin-module-description" tabindex="-1">
@@ -153,7 +153,7 @@ if ($adminInitials === '') {
                 </div>
             </div>
 
-            <a href="/smart_nutrition/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
+            <a href="/projet-web-25-26/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>

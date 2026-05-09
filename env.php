@@ -1,0 +1,3 @@
+<?php
+$_ENV['USDA_API_KEY'] = 'WyYtGx6hbZcob0dx9eQaOltEFOpEJ7EvIsgpaYzS';
+$_ENV['HF_API_TOKEN'] = 'YOUR_HF_API_TOKEN_HERE';
