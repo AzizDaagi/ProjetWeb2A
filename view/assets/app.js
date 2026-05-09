@@ -1561,17 +1561,105 @@ function initAdminUsersList() {
 
     var searchInput = document.getElementById('usersSearchInput');
     var exportButton = page.querySelector('[data-users-export]');
+    var sortButton = page.querySelector('[data-users-sort]');
     var resultCount = document.getElementById('usersResultsCount');
     var table = page.querySelector('[data-users-table]');
-    var rows = page.querySelectorAll('[data-user-row]');
+    var tbody = table ? table.querySelector('tbody') : null;
     var noUsersRow = page.querySelector('[data-no-users-row]');
+    var rows = page.querySelectorAll('[data-user-row]');
+    var searchEndpoint = page.getAttribute('data-users-search-endpoint') || '';
+    var isRemoteSearch = searchEndpoint !== '';
+    var debounceTimer = null;
+    var requestToken = 0;
+    var initialRowsHtml = tbody ? tbody.innerHTML : '';
+    var sortEnabled = false;
+    var sortDirection = 'desc';
 
-    if (!searchInput || !table) {
+    if (!searchInput || !table || !tbody) {
         return;
     }
 
     function buildSearchText(row) {
         return (row.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+
+    function normalizeValue(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+
+        return String(value);
+    }
+
+    function formatWithUnit(value, unit) {
+        var text = normalizeValue(value);
+        if (unit) {
+            return text + ' ' + unit;
+        }
+
+        return text;
+    }
+
+    function compareStrings(a, b) {
+        return a.localeCompare(b, 'fr', { sensitivity: 'base' });
+    }
+
+    function normalizeSortText(value) {
+        return normalizeValue(value).trim();
+    }
+
+    function compareUsersByName(a, b) {
+        var nomA = normalizeSortText(a.nom || '');
+        var nomB = normalizeSortText(b.nom || '');
+        var cmp = compareStrings(nomA, nomB);
+
+        if (cmp === 0) {
+            var prenomA = normalizeSortText(a.prenom || '');
+            var prenomB = normalizeSortText(b.prenom || '');
+            cmp = compareStrings(prenomA, prenomB);
+        }
+
+        return sortDirection === 'desc' ? -cmp : cmp;
+    }
+
+    function sortUsersArray(users) {
+        return users.slice().sort(compareUsersByName);
+    }
+
+    function getCellText(row, index) {
+        if (!row || !row.cells || !row.cells[index]) {
+            return '';
+        }
+
+        return (row.cells[index].textContent || '').trim();
+    }
+
+    function compareRowsByName(rowA, rowB) {
+        var cmp = compareStrings(getCellText(rowA, 0), getCellText(rowB, 0));
+        if (cmp === 0) {
+            cmp = compareStrings(getCellText(rowA, 1), getCellText(rowB, 1));
+        }
+
+        return sortDirection === 'desc' ? -cmp : cmp;
+    }
+
+    function sortLocalRows() {
+        var rowArray = Array.prototype.slice.call(tbody.querySelectorAll('[data-user-row]'));
+        rowArray.sort(compareRowsByName);
+        rowArray.forEach(function (row) {
+            tbody.appendChild(row);
+        });
+        rows = rowArray;
+    }
+
+    function updateSortButtonLabel() {
+        if (!sortButton) {
+            return;
+        }
+
+        var directionLabel = sortDirection === 'desc' ? 'Z-A' : 'A-Z';
+        sortButton.innerHTML = '<i class="fa-solid fa-sort"></i> Trier Nom ' + directionLabel;
+        sortButton.setAttribute('aria-pressed', sortEnabled ? 'true' : 'false');
     }
 
     function updateResultCount(visibleRows) {
@@ -1582,7 +1670,24 @@ function initAdminUsersList() {
         resultCount.textContent = visibleRows + ' utilisateur(s) affiché(s)';
     }
 
-    function applyFilter() {
+    function ensureNoUsersRow() {
+        if (noUsersRow) {
+            return noUsersRow;
+        }
+
+        noUsersRow = document.createElement('tr');
+        noUsersRow.setAttribute('data-no-users-row', '');
+
+        var cell = document.createElement('td');
+        cell.colSpan = 10;
+        cell.className = 'text-center';
+        cell.textContent = 'Aucun utilisateur trouve';
+        noUsersRow.appendChild(cell);
+
+        return noUsersRow;
+    }
+
+    function applyLocalFilter() {
         var query = (searchInput.value || '').trim().toLowerCase();
         var visibleRows = 0;
 
@@ -1601,8 +1706,173 @@ function initAdminUsersList() {
         updateResultCount(visibleRows);
     }
 
+    function createTextCell(text) {
+        var cell = document.createElement('td');
+        cell.textContent = text;
+        return cell;
+    }
+
+    function createActionCell(user) {
+        var cell = document.createElement('td');
+        cell.className = 'users-actions';
+
+        var editLink = document.createElement('a');
+        editLink.href = '/smart_nutrition/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
+        editLink.className = 'btn-edit';
+        editLink.innerHTML = '<i class="fa-solid fa-pen"></i> Modifier';
+
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/smart_nutrition/index.php?action=delete-user';
+        form.className = 'inline-form';
+        form.setAttribute('novalidate', 'novalidate');
+        form.onsubmit = function () {
+            return confirm('Supprimer cet utilisateur ?');
+        };
+
+        var idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = normalizeValue(user.id);
+
+        var deleteButton = document.createElement('button');
+        deleteButton.type = 'submit';
+        deleteButton.className = 'btn-delete-user';
+        deleteButton.innerHTML = '<i class="fa-solid fa-trash"></i> Supprimer';
+
+        form.appendChild(idInput);
+        form.appendChild(deleteButton);
+
+        cell.appendChild(editLink);
+        cell.appendChild(form);
+
+        return cell;
+    }
+
+    function renderRemoteRows(users) {
+        while (tbody.firstChild) {
+            tbody.removeChild(tbody.firstChild);
+        }
+
+        if (!users.length) {
+            tbody.appendChild(ensureNoUsersRow());
+            updateResultCount(0);
+            return;
+        }
+
+        var fragment = document.createDocumentFragment();
+        var usersToRender = sortEnabled ? sortUsersArray(users) : users;
+
+        usersToRender.forEach(function (user) {
+            var row = document.createElement('tr');
+            row.setAttribute('data-user-row', '');
+
+            row.appendChild(createTextCell(normalizeValue(user.nom)));
+            row.appendChild(createTextCell(normalizeValue(user.prenom)));
+            row.appendChild(createTextCell(normalizeValue(user.date_naissance)));
+            row.appendChild(createTextCell(normalizeValue(user.sexe)));
+            row.appendChild(createTextCell(normalizeValue(user.age)));
+            row.appendChild(createTextCell(formatWithUnit(user.poids, 'kg')));
+            row.appendChild(createTextCell(formatWithUnit(user.taille, 'cm')));
+            row.appendChild(createTextCell(normalizeValue(user.objectif)));
+            row.appendChild(createTextCell(normalizeValue(user.email)));
+            row.appendChild(createActionCell(user));
+
+            fragment.appendChild(row);
+        });
+
+        tbody.appendChild(fragment);
+        updateResultCount(users.length);
+    }
+
+    function buildSearchUrl(query) {
+        var separator = searchEndpoint.indexOf('?') === -1 ? '?' : '&';
+        return searchEndpoint + separator + 'search=' + encodeURIComponent(query);
+    }
+
+    function requestRemoteSearch() {
+        var query = (searchInput.value || '').trim();
+        var currentToken = ++requestToken;
+
+        fetch(buildSearchUrl(query), {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Recherche indisponible.');
+                }
+                return response.json();
+            })
+            .then(function (payload) {
+                if (currentToken !== requestToken) {
+                    return;
+                }
+
+                if (!payload || payload.success !== true || !Array.isArray(payload.users)) {
+                    throw new Error('Donnees invalides.');
+                }
+
+                renderRemoteRows(payload.users);
+            })
+            .catch(function () {
+                if (currentToken !== requestToken) {
+                    return;
+                }
+
+                if (initialRowsHtml) {
+                    tbody.innerHTML = initialRowsHtml;
+                    rows = page.querySelectorAll('[data-user-row]');
+                    if (sortEnabled) {
+                        sortLocalRows();
+                    }
+                    applyLocalFilter();
+                    return;
+                }
+
+                renderRemoteRows([]);
+            });
+    }
+
+    function applyFilter() {
+        if (isRemoteSearch) {
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+            }
+            debounceTimer = setTimeout(requestRemoteSearch, 250);
+            return;
+        }
+
+        applyLocalFilter();
+    }
+
     searchInput.addEventListener('input', applyFilter);
-    applyFilter();
+
+    if (sortButton) {
+        updateSortButtonLabel();
+        sortButton.addEventListener('click', function () {
+            if (!sortEnabled) {
+                sortEnabled = true;
+            } else {
+                sortDirection = sortDirection === 'desc' ? 'asc' : 'desc';
+            }
+
+            updateSortButtonLabel();
+
+            if (isRemoteSearch) {
+                requestRemoteSearch();
+                return;
+            }
+
+            sortLocalRows();
+        });
+    }
+
+    if (isRemoteSearch) {
+        requestRemoteSearch();
+    } else {
+        applyLocalFilter();
+    }
 
     if (exportButton) {
         exportButton.addEventListener('click', function () {
