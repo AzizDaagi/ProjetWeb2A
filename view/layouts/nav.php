@@ -16,7 +16,7 @@
     <?php if (!$isAdminNavbar): ?>
     <ul class="navbar-menu">
         <li><a href="/smart_nutrition/index.php?action=profile" class="nav-link">
-            <i class="fa-solid fa-user"></i> Mon profile
+            <i class="fa-solid fa-user"></i> Mon profile 
         </a></li>
         <li><a href="/smart_nutrition/index.php?action=tracking-management" class="nav-link">
             <i class="fa-solid fa-chart-line"></i> Activite sportif

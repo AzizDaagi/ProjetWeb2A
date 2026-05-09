@@ -620,6 +620,55 @@ class UserController
         include __DIR__ . '/../view/layouts/footer.php';
     }
 
+    public function usersSearch()
+    {
+        if (!$this->isLoggedIn()) {
+            $this->respondJson([
+                'success' => false,
+                'message' => 'Session invalide.',
+            ], 401);
+        }
+
+        if (!$this->isAdmin()) {
+            $this->respondJson([
+                'success' => false,
+                'message' => 'Acces refuse.',
+            ], 403);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+            $this->respondJson([
+                'success' => false,
+                'message' => 'Methode non autorisee.',
+            ], 405);
+        }
+
+        $searchTerm = trim((string) ($_GET['search'] ?? ''));
+        $users = $this->filterUsersBySearch($this->userModel->getAllWithRole(), $searchTerm);
+
+        $payloadUsers = [];
+        foreach ($users as $user) {
+            $payloadUsers[] = [
+                'id' => (int) ($user['id'] ?? 0),
+                'nom' => (string) ($user['nom'] ?? ''),
+                'prenom' => (string) ($user['prenom'] ?? ''),
+                'date_naissance' => (string) ($user['date_naissance'] ?? ''),
+                'sexe' => (string) ($user['sexe'] ?? ''),
+                'age' => (string) ($user['age'] ?? ''),
+                'poids' => (string) ($user['poids'] ?? ''),
+                'taille' => (string) ($user['taille'] ?? ''),
+                'objectif' => (string) ($user['objectif'] ?? ''),
+                'email' => (string) ($user['email'] ?? ''),
+            ];
+        }
+
+        $this->respondJson([
+            'success' => true,
+            'users' => $payloadUsers,
+            'count' => count($payloadUsers),
+        ]);
+    }
+
     public function usersReport()
     {
         if (!$this->isLoggedIn()) {

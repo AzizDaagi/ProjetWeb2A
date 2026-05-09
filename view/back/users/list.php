@@ -1,4 +1,4 @@
-<div class="container admin-dashboard users-list-page admin-page">
+<div class="container admin-dashboard users-list-page admin-page" data-users-search-endpoint="/smart_nutrition/index.php?action=users-search">
     <h1><i class="fa-solid fa-users icon"></i> Utilisateurs</h1>
     <p class="subtitle">Liste complete des utilisateurs inscrits</p>
 
@@ -11,9 +11,14 @@
     <?php endif; ?>
 
     <div class="users-tools">
-        <div class="admin-search-wrap users-search-wrap">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="search" id="usersSearchInput" placeholder="Rechercher un utilisateur..." autocomplete="off">
+        <div class="users-tools-left">
+            <div class="admin-search-wrap users-search-wrap">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="usersSearchInput" placeholder="Rechercher un utilisateur..." autocomplete="off">
+            </div>
+            <button type="button" class="btn-admin-secondary users-sort-btn" data-users-sort="nom" aria-pressed="false">
+                <i class="fa-solid fa-sort"></i> Trier Nom Z-A
+            </button>
         </div>
 
         <div class="users-tools-meta">
