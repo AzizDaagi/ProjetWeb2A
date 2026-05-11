@@ -27,6 +27,7 @@ require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/WeatherController.php';
+require_once __DIR__ . '/controller/FrontController.php';
 
 if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
     $pdo = Database::getConnection();
@@ -216,8 +217,62 @@ if ($action === 'home') {
     header('Location: ' . $baseUrl . '/index.php?controller=suivi&action=index');
     exit;
 } elseif ($action === 'front-office-integration') {
-    header('Location: ' . $baseUrl . '/index.php?controller=suivi&action=index');
+    header('Location: ' . $baseUrl . '/index.php?action=legacy_front_home');
     exit;
+} elseif (in_array($action, [
+    'legacy_front_home',
+    'activites',
+    'showExercices',
+    'nutrition_request',
+    'process_nutrition_request',
+    'nutrition_success',
+    'my_nutrition_requests',
+    'edit_nutrition_request',
+    'update_nutrition_request',
+    'delete_nutrition_request',
+    'export_nutrition_pdf',
+    'export_activite_pdf',
+], true)) {
+    $legacyFront = new FrontController();
+
+    switch ($action) {
+        case 'legacy_front_home':
+            $legacyFront->home();
+            break;
+        case 'activites':
+            $legacyFront->activites();
+            break;
+        case 'showExercices':
+            $legacyFront->showExercices();
+            break;
+        case 'nutrition_request':
+            $legacyFront->nutritionRequest();
+            break;
+        case 'process_nutrition_request':
+            $legacyFront->processNutritionRequest();
+            break;
+        case 'nutrition_success':
+            $legacyFront->nutritionSuccess();
+            break;
+        case 'my_nutrition_requests':
+            $legacyFront->myRequests();
+            break;
+        case 'edit_nutrition_request':
+            $legacyFront->editRequest();
+            break;
+        case 'update_nutrition_request':
+            $legacyFront->updateRequest();
+            break;
+        case 'delete_nutrition_request':
+            $legacyFront->deleteRequest();
+            break;
+        case 'export_nutrition_pdf':
+            $legacyFront->exportNutritionPDF();
+            break;
+        case 'export_activite_pdf':
+            $legacyFront->exportActivitePDF();
+            break;
+    }
 } elseif ($action === 'planner-management') {
     header('Location: ' . $baseUrl . '/index.php?action=suivi');
     exit;

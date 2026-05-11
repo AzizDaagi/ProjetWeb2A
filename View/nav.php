@@ -1,10 +1,8 @@
-<?php $isAdminNavbar = (($_SESSION['user_role'] ?? 'user') === 'admin'); ?>
-
-<nav class="navbar<?= $isAdminNavbar ? ' navbar-compact' : '' ?>">
+<nav class="navbar">
     <div class="navbar-brand">
-        <a href="/projet-web-25-26/index.php?action=home">
+        <a href="<?= $basePath ?>/index.php?action=home">
             <img
-                src="/projet-web-25-26/view/assets/images/logo.png"
+                src="<?= $basePath ?>/View/assets/images/logo.png"
                 alt="Smart Nutrition"
                 class="brand-logo"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -13,28 +11,29 @@
         </a>
     </div>
 
-    <?php if (!$isAdminNavbar): ?>
     <ul class="navbar-menu">
-        <li><a href="/projet-web-25-26/index.php?action=profile" class="nav-link">
-            <i class="fa-solid fa-user"></i> Mon profile 
-        </a></li>
-        <li><a href="/projet-web-25-26/index.php?action=tracking-management" class="nav-link">
+        <li><a href="<?= $basePath ?>/index.php?action=activites" class="nav-link">
             <i class="fa-solid fa-chart-line"></i> Activite sportif
         </a></li>
-        <li><a href="/projet-web-25-26/index.php?action=recipes-management" class="nav-link">
+        <li><a href="<?= $basePath ?>/index.php?action=nutrition_request" class="nav-link">
+            <i class="fa-solid fa-file-waveform"></i> Bilan nutritionnel
+        </a></li>
+        <li><a href="#" class="nav-link">
             <i class="fa-solid fa-book-open"></i> Recette alimentation
         </a></li>
-        <li><a href="/projet-web-25-26/index.php?action=foods-management" class="nav-link">
+        <li><a href="#" class="nav-link">
             <i class="fa-solid fa-apple-whole"></i> Ecommerce
         </a></li>
-        <li><a href="/projet-web-25-26/index.php?action=recommendations-management" class="nav-link">
+        <li><a href="#" class="nav-link">
             <i class="fa-solid fa-users"></i> Communaute
         </a></li>
-        <li><a href="/projet-web-25-26/index.php?action=front-office-integration" class="nav-link">
+        <li><a href="#" class="nav-link">
             <i class="fa-solid fa-calendar-check"></i> Suivi nutritionnel
         </a></li>
+        <li><a href="<?= $basePath ?>/index.php?action=admin_login" class="nav-link">
+            <i class="fa-solid fa-shield-halved"></i> Admin
+        </a></li>
     </ul>
-    <?php endif; ?>
 
     <div class="navbar-footer">
         <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
@@ -42,14 +41,14 @@
         </button>
         <?php if (isset($_SESSION['user_id'])): ?>
             <p class="user-info">Connecte: <strong><?= htmlspecialchars($_SESSION['user_name'] ?? 'Utilisateur') ?></strong></p>
-            <a href="/projet-web-25-26/index.php?action=logout" class="nav-link logout">
+            <a href="<?= $basePath ?>/index.php?action=logout" class="nav-link logout">
                 <i class="fa-solid fa-sign-out-alt"></i> Deconnexion
             </a>
         <?php else: ?>
-            <a href="/projet-web-25-26/index.php?action=login" class="nav-link">
+            <a href="<?= $basePath ?>/index.php?action=login" class="nav-link">
                 <i class="fa-solid fa-lock"></i> Connexion
             </a>
-            <a href="/projet-web-25-26/index.php?action=register" class="nav-link register">
+            <a href="<?= $basePath ?>/index.php?action=register" class="nav-link register">
                 <i class="fa-solid fa-user-plus"></i> Inscription
             </a>
         <?php endif; ?>
