@@ -153,15 +153,42 @@ if ($action === 'home') {
     include __DIR__ . '/view/front/modules/auth-management.php';
     include __DIR__ . '/view/layouts/footer.php';
 } elseif ($action === 'recipes-management') {
-    $pageTitle = 'Recette alimentation';
-    $moduleTitle = 'Recette alimentation';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez creer, modifier et supprimer des recettes alimentaires.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
+    include __DIR__ . '/view/front/recettes/index.php';
+} elseif ($action === 'recipe-details') {
+    include __DIR__ . '/view/front/recettes/show.php';
+} elseif ($action === 'recipe-aliment') {
+    include __DIR__ . '/view/front/recettes/aliment.php';
+} elseif ($action === 'recipe-generate') {
+    include __DIR__ . '/view/front/recettes/generate.php';
+} elseif ($action === 'recipe-optimize') {
+    include __DIR__ . '/view/front/recettes/optimize.php';
+} elseif ($action === 'recipe-save-optimization') {
+    include __DIR__ . '/view/front/recettes/save_optimization.php';
+} elseif ($action === 'recipe-stats') {
+    include __DIR__ . '/view/front/recettes/stats.php';
+} elseif ($action === 'recipe-export') {
+    include __DIR__ . '/view/front/recettes/export_pdf.php';
+} elseif ($action === 'admin-recipes') {
+    if (!$isAdminSession) {
+        header('Location: ' . $baseUrl . '/index.php?action=home');
+        exit;
     }
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
-    include __DIR__ . '/view/layouts/footer.php';
+
+    include __DIR__ . '/view/back/recettes/index.php';
+} elseif ($action === 'admin-recipe-generate') {
+    if (!$isAdminSession) {
+        header('Location: ' . $baseUrl . '/index.php?action=home');
+        exit;
+    }
+
+    include __DIR__ . '/view/back/recettes/generate.php';
+} elseif ($action === 'admin-recommendations') {
+    if (!$isAdminSession) {
+        header('Location: ' . $baseUrl . '/index.php?action=home');
+        exit;
+    }
+
+    include __DIR__ . '/view/back/recommandations/index.php';
 } elseif ($action === 'foods-management') {
     $pageTitle = 'Ecommerce';
     $moduleTitle = 'Ecommerce';

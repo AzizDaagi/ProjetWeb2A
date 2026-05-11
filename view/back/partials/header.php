@@ -2,6 +2,8 @@
 $pageTitle = $pageTitle ?? 'Backoffice';
 $adminInitials = $adminInitials ?? 'AD';
 $adminRole = $adminRole ?? 'Administrateur';
+$backofficeReturnUrl = $backofficeReturnUrl ?? 'index.php?controller=backoffice&action=dashboard';
+$backofficeReturnLabel = $backofficeReturnLabel ?? 'Retour au dashboard';
 $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $basePath = rtrim(dirname($scriptName), '/');
 $basePath = $basePath === '.' ? '' : $basePath;
@@ -24,9 +26,9 @@ $assetBase = $basePath . '/view/back/assets';
     </div>
 
     <div class="admin-top-actions">
-        <a href="index.php?controller=suivi&action=index" class="admin-chip-link">
+        <a href="<?= htmlspecialchars((string) $backofficeReturnUrl) ?>" class="admin-chip-link">
             <i class="fa-solid fa-arrow-left"></i>
-            Retour au suivi
+            <?= htmlspecialchars((string) $backofficeReturnLabel) ?>
         </a>
 
         <button type="button" id="themeToggle" class="admin-icon-btn admin-theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
