@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'Smart Nutrition | Recettes';
-$bodyClass = 'recipes-page';
+$bodyClass = 'recipes-page recipes-list-page';
 $projectBaseUrl = $baseUrl ?? '/projet-web-25-26';
 $routeBase = $projectBaseUrl . '/index.php';
 $isRecipeAdmin = $isAdminSession ?? ((($_SESSION['user_role'] ?? 'user') === 'admin'));

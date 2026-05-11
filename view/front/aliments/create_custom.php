@@ -210,6 +210,16 @@
                     <input type="text" id="customSucreInput" name="sucre_g" placeholder="Ex : 5" value="<?= htmlspecialchars((string) ($customForm['sucre_g'] ?? '')) ?>">
                 </div>
 
+                <div class="form-group">
+                    <label>Fibres / unite (g)</label>
+                    <input type="text" id="customFibresInput" name="fibres" placeholder="Ex : 3" value="<?= htmlspecialchars((string) ($customForm['fibres'] ?? '')) ?>">
+                </div>
+
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="url" id="customImageUrlInput" name="image_url" placeholder="https://... ou /projet-web-25-26/view/uploads/..." value="<?= htmlspecialchars((string) ($customForm['image_url'] ?? '')) ?>">
+                </div>
+
                 <div class="actions">
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                     <a href="index.php?controller=suivi&action=index" class="btn btn-secondary">
@@ -228,6 +238,7 @@
         const customGlucidesInput = document.getElementById('customGlucidesInput');
         const customLipidesInput = document.getElementById('customLipidesInput');
         const customSucreInput = document.getElementById('customSucreInput');
+        const customFibresInput = document.getElementById('customFibresInput');
         const externalLookupButton = document.getElementById('externalLookupButton');
         const externalLookupMessage = document.getElementById('externalLookupMessage');
 
@@ -277,11 +288,12 @@
             const glucides = pickNumber(data, ['carbohydrates_total_g', 'carbs_g', 'glucides', 'glucides_g', 'carbohydrates']);
             const lipides = pickNumber(data, ['fat_total_g', 'fat_g', 'lipides', 'lipides_g', 'fat']);
             const sucre = pickNumber(data, ['sugar_g', 'sugars_g', 'sucre_g', 'sugars']);
+            const fibres = pickNumber(data, ['fiber_g', 'fibers_g', 'fibre_g', 'fibres', 'fiber']);
             let affectedFields = 0;
 
             console.log('[Nutrition Lookup] data:', data);
             console.log('[Nutrition Lookup] champs DOM trouves:', fields);
-            console.log('[Nutrition Lookup] mapped:', { calories, proteines, glucides, lipides, sucre });
+            console.log('[Nutrition Lookup] mapped:', { calories, proteines, glucides, lipides, sucre, fibres });
 
             if (!fields.nom && !fields.calories && !fields.proteines && !fields.glucides && !fields.lipides && !fields.sucre) {
                 setLookupMessage('Aucun champ cible trouve dans le formulaire.', 'is-error');
@@ -317,6 +329,11 @@
                 affectedFields++;
             }
 
+            if (customFibresInput && fibres !== '') {
+                customFibresInput.value = fibres;
+                affectedFields++;
+            }
+
             if (fields.nom && data.name && fields.nom.value.trim() === '') {
                 fields.nom.value = data.name;
                 affectedFields++;
@@ -328,6 +345,7 @@
                 glucides: fields.glucides ? fields.glucides.value : null,
                 lipides: fields.lipides ? fields.lipides.value : null,
                 sucre: fields.sucre ? fields.sucre.value : null,
+                fibres: customFibresInput ? customFibresInput.value : null,
                 nom: fields.nom ? fields.nom.value : null
             });
 

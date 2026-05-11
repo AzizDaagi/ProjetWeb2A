@@ -58,7 +58,7 @@ if (isset($_GET['id'])) {
 require_once __DIR__ . '/../../layouts/header.php';
 ?>
 
-<div class="submit-page-wrapper" style="max-width:860px;">
+<div class="submit-page-wrapper recipes-detail-shell">
     <a href="<?= htmlspecialchars($routeBase) ?>?action=recipes-management" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
     </a>
@@ -71,7 +71,7 @@ require_once __DIR__ . '/../../layouts/header.php';
     <?php endif; ?>
 
     <?php if ($recette): ?>
-    <div class="submit-form-card" style="padding:36px 32px;">
+    <div class="submit-form-card recipes-detail-card" style="padding:36px 32px;">
         <?php $recipeImageUrl = $resolveImageUrl($recette['image_url'] ?? null); ?>
         <div class="recipe-visual-card<?= $recipeImageUrl ? '' : ' is-placeholder' ?>">
             <?php if ($recipeImageUrl): ?>
@@ -89,7 +89,7 @@ require_once __DIR__ . '/../../layouts/header.php';
 
         <h1 style="margin:0 0 20px;font-size:32px;font-weight:800;"><?= htmlspecialchars((string) $recette['nom']) ?></h1>
 
-        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;">
+        <div class="recipe-detail-meta" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;">
             <span class="product-card-badge badge-orange" style="font-size:14px;padding:8px 16px;">
                 <i class="fa-solid fa-clock"></i>
                 <?= htmlspecialchars((string) $recette['temps_preparation']) ?>
@@ -105,7 +105,7 @@ require_once __DIR__ . '/../../layouts/header.php';
             <h3 style="margin:0 0 14px;font-size:16px;font-weight:700;color:rgba(236,240,241,0.8);border-left:3px solid #2ecc71;padding-left:10px;">
                 <i class="fa-solid fa-basket-shopping"></i> Ingredients requis
             </h3>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+            <div class="recipe-detail-ingredients-grid" style="display:grid;gap:10px;">
                 <?php foreach ($alimentsAssocies as $aliment): ?>
                 <div style="background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
                     <span style="font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;">
@@ -124,7 +124,7 @@ require_once __DIR__ . '/../../layouts/header.php';
             <h3 style="margin:0 0 14px;font-size:16px;font-weight:700;color:rgba(236,240,241,0.8);border-left:3px solid #f39c12;padding-left:10px;">
                 <i class="fa-solid fa-fire"></i> Valeurs nutritionnelles globales
             </h3>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
+            <div class="recipe-detail-stats-grid" style="display:grid;gap:14px;margin-bottom:20px;">
                 <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.25);border-radius:10px;padding:12px;text-align:center;">
                     <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Calories</p>
                     <strong style="font-size:20px;color:#e74c3c;"><?= round((float) ($nutritionTotale['calories'] ?? 0)) ?></strong>
@@ -164,7 +164,7 @@ require_once __DIR__ . '/../../layouts/header.php';
             </div>
         </div>
 
-        <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+        <div class="recipe-detail-actions" style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
             <a href="<?= htmlspecialchars($routeBase) ?>?action=recipe-optimize&amp;id=<?= (int) $recette['id'] ?>"
                class="submit-btn"
                style="background:linear-gradient(135deg,#2ecc71,#27ae60);box-shadow:0 4px 15px rgba(46,204,113,0.35);text-decoration:none;display:inline-flex;">

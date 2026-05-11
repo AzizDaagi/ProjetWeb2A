@@ -1,23 +1,24 @@
 <?php $currentAction = $_GET['action'] ?? ''; ?>
+<?php $currentController = $_GET['controller'] ?? ''; ?>
 <?php $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'store-user', 'edit-user', 'update-user', 'delete-user'], true); ?>
-<?php $isRecipesAction = $currentAction === 'recipes-management'; ?>
-<?php $isFoodsAction = $currentAction === 'foods-management'; ?>
-<?php $isRecommendationsAction = $currentAction === 'recommendations-management'; ?>
+<?php $isRecipesAction = in_array($currentAction, ['recipes-management', 'admin-recipes', 'admin-recipe-generate'], true); ?>
+<?php $isFoodsAction = ($currentController === 'backoffice' && in_array($currentAction, ['suivi', 'suiviCreate', 'suiviStore', 'suiviEdit', 'suiviUpdate', 'suiviDelete'], true)); ?>
+<?php $isRecommendationsAction = in_array($currentAction, ['recommendations-management', 'admin-recommendations'], true); ?>
 <?php $isTrackingAction = $currentAction === 'tracking-management'; ?>
 <?php $isPlannerAction = in_array($currentAction, ['planner-management', 'suivi'], true); ?>
 <?php
 $moduleDescriptions = [
-    'recipes-management' => [
+    'admin-recipes' => [
         'title' => 'Recette alimentation',
-        'description' => 'Module en cours de developpement pour creer, modifier et supprimer des recettes alimentaires.',
+        'description' => 'Back-office officiel pour creer, modifier et publier les recettes du catalogue principal.',
     ],
-    'foods-management' => [
-        'title' => 'Ecommerce',
-        'description' => 'Module ecommerce pour gerer les produits, le panier, les commandes et le suivi de vente.',
+    'suivi' => [
+        'title' => 'Aliments',
+        'description' => 'Back-office officiel du catalogue aliments partage par le suivi nutritionnel et les recettes.',
     ],
-    'recommendations-management' => [
-        'title' => 'Communaute',
-        'description' => 'Module communaute pour publier des recommandations, echanger et moderer les contenus.',
+    'admin-recommendations' => [
+        'title' => 'Recommandations',
+        'description' => 'Back-office officiel pour gerer les recommandations nutritionnelles du projet.',
     ],
     'tracking-management' => [
         'title' => 'Activite sportif',
@@ -28,7 +29,8 @@ $moduleDescriptions = [
         'description' => 'Acces au module de suivi nutritionnel, objectifs et progression.',
     ],
 ];
-$currentModule = $moduleDescriptions[$currentAction] ?? null;
+$currentModuleKey = $currentController === 'backoffice' && $isFoodsAction ? 'suivi' : $currentAction;
+$currentModule = $moduleDescriptions[$currentModuleKey] ?? null;
 $defaultModuleTitle = $currentModule['title'] ?? 'Description module';
 $defaultModuleDescription = $currentModule['description'] ?? 'Cliquez sur un bouton de gestion pour afficher sa description ici.';
 ?>
@@ -82,33 +84,33 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section admin-modules-section">
             <p class="admin-menu-title">Modules</p>
-            <button
-                type="button"
+            <a
+                href="/projet-web-25-26/index.php?action=admin-recipes"
                 class="admin-side-link admin-module-btn<?= $isRecipesAction ? ' active' : '' ?>"
                 data-module-title="Recette alimentation"
-                data-module-description="Module en cours de developpement pour creer, modifier et supprimer des recettes alimentaires."
+                data-module-description="Back-office officiel pour creer, modifier et publier les recettes du catalogue principal."
             >
                 <i class="fa-solid fa-book-open"></i>
-                <span>Recette alimentation</span>
-            </button>
-            <button
-                type="button"
+                <span>Recettes</span>
+            </a>
+            <a
+                href="/projet-web-25-26/index.php?controller=backoffice&action=suivi"
                 class="admin-side-link admin-module-btn<?= $isFoodsAction ? ' active' : '' ?>"
-                data-module-title="Ecommerce"
-                data-module-description="Module ecommerce pour gerer les produits, le panier, les commandes et le suivi de vente."
+                data-module-title="Aliments"
+                data-module-description="Back-office officiel du catalogue aliments partage par le suivi nutritionnel et les recettes."
             >
                 <i class="fa-solid fa-apple-whole"></i>
-                <span>Ecommerce</span>
-            </button>
-            <button
-                type="button"
+                <span>Aliments</span>
+            </a>
+            <a
+                href="/projet-web-25-26/index.php?action=admin-recommendations"
                 class="admin-side-link admin-module-btn<?= $isRecommendationsAction ? ' active' : '' ?>"
-                data-module-title="Communaute"
-                data-module-description="Module communaute pour publier des recommandations, echanger et moderer les contenus."
+                data-module-title="Recommandations"
+                data-module-description="Back-office officiel pour gerer les recommandations nutritionnelles du projet."
             >
-                <i class="fa-solid fa-users"></i>
-                <span>Communaute</span>
-            </button>
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Recommandations</span>
+            </a>
             <button
                 type="button"
                 class="admin-side-link admin-module-btn<?= $isTrackingAction ? ' active' : '' ?>"

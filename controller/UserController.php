@@ -297,6 +297,14 @@ class UserController
         }
     }
 
+    private function renderBackofficeView($relativeView, array $data = [])
+    {
+        extract($data, EXTR_SKIP);
+
+        $view = __DIR__ . '/../view/back/' . ltrim($relativeView, '/');
+        require __DIR__ . '/../view/back/layout.php';
+    }
+
     private function buildUsersEvolutionData($pdo)
     {
         $months = 6;
@@ -613,11 +621,15 @@ class UserController
         $flashError = $_SESSION['flash_error'] ?? '';
         unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
-        $pageTitle = 'Utilisateurs';
-        $isAdminTemplate = true;
-        include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/back/users/list.php';
-        include __DIR__ . '/../view/layouts/footer.php';
+        $this->renderBackofficeView('users/list.php', [
+            'pageTitle' => 'Utilisateurs',
+            'currentSection' => 'users',
+            'users' => $users,
+            'usersCount' => $usersCount,
+            'flashSuccess' => $flashSuccess,
+            'flashError' => $flashError,
+            'loadMainAppAssets' => true,
+        ]);
     }
 
     public function usersSearch()
@@ -684,14 +696,15 @@ class UserController
         $summary = $this->buildUsersReportSummary($users);
         $generatedAt = new DateTimeImmutable('now');
 
-        $pageTitle = 'Rapport utilisateurs PDF';
-        $showNav = false;
-        $isAdminTemplate = false;
-        $bodyClass = 'report-page';
-
-        include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/back/users/report.php';
-        include __DIR__ . '/../view/layouts/footer.php';
+        $this->renderBackofficeView('users/report.php', [
+            'pageTitle' => 'Rapport utilisateurs PDF',
+            'currentSection' => 'users',
+            'users' => $users,
+            'summary' => $summary,
+            'generatedAt' => $generatedAt,
+            'searchTerm' => $searchTerm,
+            'loadMainAppAssets' => true,
+        ]);
     }
 
     public function createUser($errors = [], $user = null)
@@ -708,11 +721,13 @@ class UserController
             $user = [];
         }
 
-        $pageTitle = 'Ajouter un utilisateur';
-        $isAdminTemplate = true;
-        include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/back/users/create.php';
-        include __DIR__ . '/../view/layouts/footer.php';
+        $this->renderBackofficeView('users/create.php', [
+            'pageTitle' => 'Ajouter un utilisateur',
+            'currentSection' => 'users',
+            'errors' => $errors,
+            'user' => $user,
+            'loadMainAppAssets' => true,
+        ]);
     }
 
     public function storeUser()
@@ -816,12 +831,13 @@ class UserController
             }
         }
 
-        $pageTitle = 'Modifier un utilisateur';
-        $showNav = true;
-    $isAdminTemplate = true;
-        include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/back/users/edit.php';
-        include __DIR__ . '/../view/layouts/footer.php';
+        $this->renderBackofficeView('users/edit.php', [
+            'pageTitle' => 'Modifier un utilisateur',
+            'currentSection' => 'users',
+            'errors' => $errors,
+            'user' => $user,
+            'loadMainAppAssets' => true,
+        ]);
     }
 
     public function updateUser()
@@ -1092,11 +1108,25 @@ class UserController
             ],
         ];
 
-        $pageTitle = 'Tableau de bord Admin';
-        $isAdminTemplate = true;
-        include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/back/dashboard.php';
-        include __DIR__ . '/../view/layouts/footer.php';
+        $this->renderBackofficeView('dashboard.php', [
+            'pageTitle' => 'Tableau de bord Admin',
+            'currentSection' => 'dashboard',
+            'totalUsers' => $totalUsers,
+            'completedProfiles' => $completedProfiles,
+            'partialProfiles' => $partialProfiles,
+            'emptyProfiles' => $emptyProfiles,
+            'incompleteProfiles' => $incompleteProfiles,
+            'completionRate' => $completionRate,
+            'maleUsers' => $maleUsers,
+            'femaleUsers' => $femaleUsers,
+            'pieSegments' => $pieSegments,
+            'pieGradient' => $pieGradient,
+            'donutSegments' => $donutSegments,
+            'donutGradient' => $donutGradient,
+            'recentUsers' => $recentUsers,
+            'kpiCards' => $kpiCards,
+            'loadMainAppAssets' => true,
+        ]);
     }
 
     public function logout()

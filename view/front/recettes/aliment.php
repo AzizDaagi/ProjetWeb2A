@@ -50,13 +50,13 @@ if (isset($_GET['id'])) {
 require_once __DIR__ . '/../../layouts/header.php';
 ?>
 
-<div class="submit-page-wrapper" style="max-width:820px;">
+<div class="submit-page-wrapper recipes-detail-shell">
     <a href="<?= htmlspecialchars($routeBase) ?>?action=recipes-management" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
     </a>
 
     <?php if ($aliment): ?>
-    <div class="submit-form-card" style="padding:36px 32px;">
+    <div class="submit-form-card recipes-detail-card recipes-food-detail-card" style="padding:36px 32px;">
         <?php $foodImageUrl = $resolveImageUrl($aliment['image_url'] ?? null); ?>
         <div class="recipe-visual-card recipe-visual-card-sm<?= $foodImageUrl ? '' : ' is-placeholder' ?>">
             <?php if ($foodImageUrl): ?>
@@ -86,7 +86,7 @@ require_once __DIR__ . '/../../layouts/header.php';
             </span>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+        <div class="recipe-food-stats-grid" style="display:grid;gap:14px;margin-bottom:20px;">
             <div style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.25);border-radius:10px;padding:16px;text-align:center;">
                 <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Proteines</p>
                 <strong style="font-size:22px;color:#3498db;"><?= htmlspecialchars((string) ($aliment['proteines'] ?? 0)) ?></strong>

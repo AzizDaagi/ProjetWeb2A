@@ -42,6 +42,21 @@ $formAction = $isEdit ? 'suiviUpdate' : 'suiviStore';
             <input id="lipides" type="number" step="0.01" min="0" name="lipides" value="<?= htmlspecialchars((string) ($aliment['lipides'] ?? 0)) ?>">
         </div>
 
+        <div class="field">
+            <label for="sucre_g">Sucre / unite</label>
+            <input id="sucre_g" type="number" step="0.01" min="0" name="sucre_g" value="<?= htmlspecialchars((string) ($aliment['sucre_g'] ?? 0)) ?>">
+        </div>
+
+        <div class="field">
+            <label for="fibres">Fibres / unite</label>
+            <input id="fibres" type="number" step="0.01" min="0" name="fibres" value="<?= htmlspecialchars((string) ($aliment['fibres'] ?? 0)) ?>">
+        </div>
+
+        <div class="field field-full">
+            <label for="image_url">Image URL</label>
+            <input id="image_url" type="url" name="image_url" value="<?= htmlspecialchars((string) ($aliment['image_url'] ?? '')) ?>" placeholder="https://... ou /projet-web-25-26/view/uploads/...">
+        </div>
+
         <div class="field field-full">
             <label for="type">Type</label>
             <select id="type" name="type" required>

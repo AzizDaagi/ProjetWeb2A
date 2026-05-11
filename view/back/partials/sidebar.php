@@ -1,6 +1,14 @@
 <?php
 $currentSection = $currentSection ?? 'dashboard';
 $moduleDescriptions = [
+    'dashboard' => [
+        'title' => 'Dashboard',
+        'description' => 'Tableau de bord admin centre sur les statistiques et utilisateurs du projet.',
+    ],
+    'users' => [
+        'title' => 'Utilisateurs',
+        'description' => 'Gestion officielle des comptes utilisateurs et de leurs donnees de profil.',
+    ],
     'suivi' => [
         'title' => 'Suivi',
         'description' => 'Module de suivi nutritionnel pour gerer le catalogue des aliments et les actions associees.',
@@ -18,11 +26,11 @@ $moduleDescriptions = [
         'description' => 'Module actif pour la gestion des objectifs caloriques et de la progression utilisateur.',
     ],
 ];
-$currentModule = $moduleDescriptions[$currentSection] ?? $moduleDescriptions['suivi'];
+$currentModule = $moduleDescriptions[$currentSection] ?? $moduleDescriptions['dashboard'];
 ?>
 <aside class="admin-sidebar">
     <div class="admin-brand">
-        <a href="index.php?controller=backoffice&action=dashboard" class="admin-brand-link">
+        <a href="index.php?action=admin-dashboard" class="admin-brand-link">
             <img
                 src="<?= htmlspecialchars($assetBase) ?>/images/smart-nutrition-logo.png"
                 alt="Smart Nutrition"
@@ -34,11 +42,11 @@ $currentModule = $moduleDescriptions[$currentSection] ?? $moduleDescriptions['su
 
     <div class="admin-menu-section">
         <p class="admin-menu-title">Navigation</p>
-        <a href="index.php?controller=backoffice&action=dashboard" class="admin-side-link<?= $currentSection === 'dashboard' ? ' active' : '' ?>">
+        <a href="index.php?action=admin-dashboard" class="admin-side-link<?= $currentSection === 'dashboard' ? ' active' : '' ?>">
             <i class="fa-solid fa-gauge-high"></i>
             <span>Dashboard</span>
         </a>
-        <a href="index.php?controller=backoffice&action=users" class="admin-side-link<?= $currentSection === 'users' ? ' active' : '' ?>">
+        <a href="index.php?action=users-list" class="admin-side-link<?= $currentSection === 'users' ? ' active' : '' ?>">
             <i class="fa-solid fa-users"></i>
             <span>Utilisateurs</span>
         </a>

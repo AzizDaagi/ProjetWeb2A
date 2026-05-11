@@ -1,4 +1,10 @@
 <?php
+if (!empty($GLOBALS['nutrition_nav_rendered'])) {
+    return;
+}
+
+$GLOBALS['nutrition_nav_rendered'] = true;
+
 $currentAction = (string) ($_GET['action'] ?? '');
 $currentController = strtolower((string) ($_GET['controller'] ?? ''));
 

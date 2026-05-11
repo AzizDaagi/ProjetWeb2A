@@ -2994,7 +2994,7 @@ body.recipes-page .main-content {
 }
 
 .recipes-shell {
-    width: min(1180px, 100%);
+    width: min(1240px, 100%);
     margin: 0 auto;
     display: grid;
     gap: 28px;
@@ -3195,7 +3195,7 @@ body.recipes-page .main-content {
 
 .recipes-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 18px;
 }
 
@@ -3361,6 +3361,47 @@ body.recipes-page .main-content {
     margin-bottom: 22px;
 }
 
+body.recipes-page .submit-page-wrapper {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 6px 0 42px;
+}
+
+body.recipes-page .submit-form-card {
+    width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.recipes-detail-shell {
+    display: grid;
+    gap: 18px;
+}
+
+.recipes-detail-card {
+    max-width: 1100px;
+}
+
+.recipe-detail-meta {
+    align-items: center;
+}
+
+.recipe-detail-ingredients-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.recipe-detail-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.recipe-food-stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.recipe-detail-actions {
+    justify-content: flex-start;
+}
+
 .recipe-visual-card {
     position: relative;
     width: 100%;
@@ -3371,6 +3412,11 @@ body.recipes-page .main-content {
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: linear-gradient(140deg, rgba(16, 30, 44, 0.98), rgba(22, 36, 50, 0.94));
     box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.recipe-detail-page .recipe-visual-card {
+    height: min(420px, 48vw);
+    max-height: 420px;
 }
 
 .recipe-visual-card-sm {
@@ -3495,6 +3541,10 @@ body.theme-light .recipe-visual-placeholder {
         flex-direction: column;
         align-items: flex-start;
     }
+
+    body.recipes-page .submit-page-wrapper {
+        width: min(1000px, 100%);
+    }
 }
 
 @media (max-width: 640px) {
@@ -3509,6 +3559,14 @@ body.theme-light .recipe-visual-placeholder {
 
     .recipes-card-grid {
         grid-template-columns: 1fr;
+    }
+
+    body.recipes-page .submit-page-wrapper {
+        padding-bottom: 28px;
+    }
+
+    .recipes-detail-card {
+        padding: 24px 20px !important;
     }
 
     .recipes-card-media,

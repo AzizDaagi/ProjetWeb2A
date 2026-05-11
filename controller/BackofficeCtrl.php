@@ -270,6 +270,9 @@ class BackofficeCtrl
         $proteines = isset($data['proteines']) ? (float) $data['proteines'] : 0;
         $glucides = isset($data['glucides']) ? (float) $data['glucides'] : 0;
         $lipides = isset($data['lipides']) ? (float) $data['lipides'] : 0;
+        $sucre = isset($data['sucre_g']) && $data['sucre_g'] !== '' ? (float) $data['sucre_g'] : 0;
+        $fibres = isset($data['fibres']) && $data['fibres'] !== '' ? (float) $data['fibres'] : 0;
+        $imageUrl = trim((string) ($data['image_url'] ?? ''));
         $unite = $data['unite'] ?? 'g';
         $type = $data['type'] ?? '';
 
@@ -279,6 +282,8 @@ class BackofficeCtrl
             $proteines < 0 ||
             $glucides < 0 ||
             $lipides < 0 ||
+            $sucre < 0 ||
+            $fibres < 0 ||
             !in_array($unite, $this->unitesAutorisees, true) ||
             !in_array($type, $this->typesAutorises, true)
         ) {
@@ -293,6 +298,9 @@ class BackofficeCtrl
             'proteines' => $proteines,
             'glucides' => $glucides,
             'lipides' => $lipides,
+            'sucre_g' => $sucre,
+            'fibres' => $fibres,
+            'image_url' => $imageUrl !== '' ? $imageUrl : null,
             'type' => $type,
         ];
     }

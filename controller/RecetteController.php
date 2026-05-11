@@ -7,60 +7,40 @@ require_once __DIR__ . '/../model/aliment.php';
 class RecetteController
 {
     private $db;
+    private $recetteModel;
     private $alimentModel;
 
     public function __construct($pdo = null)
     {
         $this->db = $pdo instanceof PDO ? $pdo : Database::getConnection();
+        $this->recetteModel = new Recette($this->db);
         $this->alimentModel = new Aliment($this->db);
     }
 
     public function listRecettes()
     {
-        try {
-            $query = $this->db->query('SELECT * FROM recettes ORDER BY id DESC');
-            return $this->normalizeRecetteRows($query->fetchAll(PDO::FETCH_ASSOC));
-        } catch (Throwable $exception) {
-            return [];
-        }
+        return $this->recetteModel->getAll();
     }
 
     public function countRecettes()
     {
-        try {
-            return (int) $this->db->query('SELECT COUNT(*) FROM recettes')->fetchColumn();
-        } catch (Throwable $exception) {
-            return 0;
-        }
+        return $this->recetteModel->countAll();
     }
 
     public function getLatestRecettes($limit = 5)
     {
-        $limit = max(1, (int) $limit);
-
-        try {
-            $query = $this->db->query("SELECT * FROM recettes ORDER BY id DESC LIMIT {$limit}");
-            return $this->normalizeRecetteRows($query->fetchAll(PDO::FETCH_ASSOC));
-        } catch (Throwable $exception) {
-            return [];
-        }
+        return $this->recetteModel->getLatest($limit);
     }
 
     public function getRecette($id)
     {
-        try {
-            $query = $this->db->prepare('SELECT * FROM recettes WHERE id = :id LIMIT 1');
-            $query->execute(['id' => (int) $id]);
-            return $this->normalizeRecetteRow($query->fetch(PDO::FETCH_ASSOC) ?: null);
-        } catch (Throwable $exception) {
-            return null;
-        }
+        return $this->recetteModel->findById($id);
     }
 
     public function listAliments()
     {
         try {
-            return $this->normalizeAlimentRows($this->alimentModel->getAll());
+            return $this->normalizeAlimentRows($this->alimentModel->getForRecipeSelection());
         } catch (Throwable $exception) {
             return [];
         }
@@ -69,7 +49,7 @@ class RecetteController
     public function getAliment($id)
     {
         try {
-            return $this->normalizeAlimentRow($this->alimentModel->getById($id));
+            return $this->normalizeAlimentRow($this->alimentModel->findById($id));
         } catch (Throwable $exception) {
             return null;
         }
@@ -77,106 +57,37 @@ class RecetteController
 
     public function getAlimentsByRecette($idRecette)
     {
-        try {
-            $query = $this->db->prepare(
-                'SELECT a.*, ra.quantite
-                 FROM recette_aliment ra
-                 INNER JOIN aliments a ON a.id = ra.id_aliment
-                 WHERE ra.id_recette = :id_recette
-                 ORDER BY a.nom ASC'
-            );
-            $query->execute(['id_recette' => (int) $idRecette]);
-
-            return $this->normalizeAlimentRows($query->fetchAll(PDO::FETCH_ASSOC));
-        } catch (Throwable $exception) {
-            return [];
-        }
+        return $this->recetteModel->getAlimentsByRecette($idRecette);
     }
 
     public function addRecette($nom, $description, $tempsPreparation, $niveauDifficulte, $imageUrl = null, $alimentsQuantites = [])
     {
-        try {
-            $query = $this->db->prepare(
-                'INSERT INTO recettes (nom, description, temps_preparation, niveau_difficulte, image_url)
-                 VALUES (:nom, :description, :temps_preparation, :niveau_difficulte, :image_url)'
-            );
-            $created = $query->execute([
-                'nom' => trim((string) $nom),
-                'description' => trim((string) $description),
-                'temps_preparation' => trim((string) $tempsPreparation),
-                'niveau_difficulte' => trim((string) $niveauDifficulte),
-                'image_url' => $this->normalizeImagePath($imageUrl),
-            ]);
-
-            if (!$created) {
-                return false;
-            }
-
-            $recetteId = (int) $this->db->lastInsertId();
-            $this->replaceRecetteAliments($recetteId, $alimentsQuantites);
-
-            return true;
-        } catch (Throwable $exception) {
-            return false;
-        }
+        return $this->recetteModel->create(
+            $nom,
+            $description,
+            $tempsPreparation,
+            $niveauDifficulte,
+            $imageUrl,
+            (array) $alimentsQuantites
+        );
     }
 
     public function updateRecette($id, $nom, $description, $tempsPreparation, $niveauDifficulte, $imageUrl = null, $alimentsQuantites = [])
     {
-        try {
-            $query = $this->db->prepare(
-                'UPDATE recettes
-                 SET nom = :nom,
-                     description = :description,
-                     temps_preparation = :temps_preparation,
-                     niveau_difficulte = :niveau_difficulte,
-                     image_url = :image_url
-                 WHERE id = :id'
-            );
-            $updated = $query->execute([
-                'id' => (int) $id,
-                'nom' => trim((string) $nom),
-                'description' => trim((string) $description),
-                'temps_preparation' => trim((string) $tempsPreparation),
-                'niveau_difficulte' => trim((string) $niveauDifficulte),
-                'image_url' => $this->normalizeImagePath($imageUrl),
-            ]);
-
-            if (!$updated) {
-                return false;
-            }
-
-            $this->replaceRecetteAliments((int) $id, $alimentsQuantites);
-            return true;
-        } catch (Throwable $exception) {
-            return false;
-        }
+        return $this->recetteModel->updateRecipe(
+            $id,
+            $nom,
+            $description,
+            $tempsPreparation,
+            $niveauDifficulte,
+            $imageUrl,
+            (array) $alimentsQuantites
+        );
     }
 
     public function deleteRecette($id)
     {
-        try {
-            $this->db->beginTransaction();
-
-            $deleteAssociations = $this->db->prepare('DELETE FROM recette_aliment WHERE id_recette = :id');
-            $deleteAssociations->execute(['id' => (int) $id]);
-
-            $query = $this->db->prepare('DELETE FROM recettes WHERE id = :id');
-            $deleted = $query->execute(['id' => (int) $id]);
-
-            if ($deleted) {
-                $this->db->commit();
-                return true;
-            }
-
-            $this->db->rollBack();
-            return false;
-        } catch (Throwable $exception) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            return false;
-        }
+        return $this->recetteModel->delete($id);
     }
 
     public function checkEquilibreNutritionnel($alimentsQuantites)
@@ -235,25 +146,7 @@ class RecetteController
 
     public function calculerNutritionTotale($idRecette)
     {
-        $totaux = [
-            'calories' => 0.0,
-            'proteines' => 0.0,
-            'glucides' => 0.0,
-            'lipides' => 0.0,
-            'fibres' => 0.0,
-        ];
-
-        foreach ($this->getAlimentsByRecette($idRecette) as $aliment) {
-            $quantite = (float) ($aliment['quantite'] ?: 0);
-
-            $totaux['calories'] += ((float) ($aliment['calories'] ?? 0) * $quantite) / 100;
-            $totaux['proteines'] += ((float) ($aliment['proteines'] ?? 0) * $quantite) / 100;
-            $totaux['glucides'] += ((float) ($aliment['glucides'] ?? 0) * $quantite) / 100;
-            $totaux['lipides'] += ((float) ($aliment['lipides'] ?? 0) * $quantite) / 100;
-            $totaux['fibres'] += ((float) ($aliment['fibres'] ?? 0) * $quantite) / 100;
-        }
-
-        return $totaux;
+        return $this->recetteModel->calculateNutritionTotals($idRecette);
     }
 
     public function generateRecipeFromConstraints($maxKcal, $minProt, $maxLipides, $dietType)
@@ -585,30 +478,7 @@ class RecetteController
 
     public function appliquerOptimisation($idRecette, $nouvellesQuantites)
     {
-        $nouvellesQuantites = $this->sanitizeQuantitesMap($nouvellesQuantites);
-        if ((int) $idRecette <= 0 || empty($nouvellesQuantites)) {
-            return false;
-        }
-
-        try {
-            $stmt = $this->db->prepare(
-                'UPDATE recette_aliment
-                 SET quantite = :qte
-                 WHERE id_recette = :id_recette AND id_aliment = :id_aliment'
-            );
-
-            foreach ($nouvellesQuantites as $idAliment => $quantite) {
-                $stmt->execute([
-                    'qte' => (float) $quantite,
-                    'id_recette' => (int) $idRecette,
-                    'id_aliment' => (int) $idAliment,
-                ]);
-            }
-
-            return true;
-        } catch (Throwable $exception) {
-            return false;
-        }
+        return $this->recetteModel->applyOptimisation($idRecette, (array) $nouvellesQuantites);
     }
 
     public function getStatistiquesNutritionnelles()
@@ -664,31 +534,6 @@ class RecetteController
         ];
     }
 
-    private function replaceRecetteAliments($idRecette, array $alimentsQuantites)
-    {
-        $alimentsQuantites = $this->sanitizeQuantitesMap($alimentsQuantites);
-
-        $delete = $this->db->prepare('DELETE FROM recette_aliment WHERE id_recette = :id_recette');
-        $delete->execute(['id_recette' => (int) $idRecette]);
-
-        if (empty($alimentsQuantites)) {
-            return;
-        }
-
-        $insert = $this->db->prepare(
-            'INSERT INTO recette_aliment (id_recette, id_aliment, quantite)
-             VALUES (:id_recette, :id_aliment, :quantite)'
-        );
-
-        foreach ($alimentsQuantites as $idAliment => $quantite) {
-            $insert->execute([
-                'id_recette' => (int) $idRecette,
-                'id_aliment' => (int) $idAliment,
-                'quantite' => (float) $quantite,
-            ]);
-        }
-    }
-
     private function sanitizeQuantitesMap($alimentsQuantites)
     {
         $cleaned = [];
@@ -715,25 +560,8 @@ class RecetteController
 
     private function fetchAlimentsByIds(array $ids)
     {
-        $ids = array_values(array_filter(array_map('intval', $ids), function ($id) {
-            return $id > 0;
-        }));
-
-        if (empty($ids)) {
-            return [];
-        }
-
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
         try {
-            $stmt = $this->db->prepare(
-                "SELECT id, nom, calories, proteines, glucides, lipides, type, image_url, fibres
-                 FROM aliments
-                 WHERE id IN ({$placeholders})"
-            );
-            $stmt->execute($ids);
-
-            return $this->normalizeAlimentRows($stmt->fetchAll(PDO::FETCH_ASSOC));
+            return $this->normalizeAlimentRows($this->alimentModel->findManyByIds($ids));
         } catch (Throwable $exception) {
             return [];
         }

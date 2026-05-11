@@ -2,12 +2,13 @@
 $pageTitle = $pageTitle ?? 'Backoffice';
 $adminInitials = $adminInitials ?? 'AD';
 $adminRole = $adminRole ?? 'Administrateur';
-$backofficeReturnUrl = $backofficeReturnUrl ?? 'index.php?controller=backoffice&action=dashboard';
+$backofficeReturnUrl = $backofficeReturnUrl ?? 'index.php?action=admin-dashboard';
 $backofficeReturnLabel = $backofficeReturnLabel ?? 'Retour au dashboard';
 $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
 $basePath = rtrim(dirname($scriptName), '/');
 $basePath = $basePath === '.' ? '' : $basePath;
 $assetBase = $basePath . '/view/back/assets';
+$assetVersion = time();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -17,6 +18,9 @@ $assetBase = $basePath . '/view/back/assets';
     <title><?= htmlspecialchars((string) $pageTitle) ?> | Smart Nutrition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="<?= htmlspecialchars($assetBase) ?>/css/style.css">
+    <?php if (!empty($loadMainAppAssets)): ?>
+        <link rel="stylesheet" href="<?= htmlspecialchars($basePath) ?>/view/assets/style.css?v=<?= $assetVersion ?>">
+    <?php endif; ?>
 </head>
 <body class="admin-template theme-dark">
 <header class="admin-topbar">

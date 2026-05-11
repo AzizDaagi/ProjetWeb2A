@@ -1,3 +1,4 @@
+<!-- ADMIN_DASHBOARD_USER_OK -->
 <div class="admin-page">
     <?php
     $pieSegments = (isset($pieSegments) && is_array($pieSegments)) ? $pieSegments : [

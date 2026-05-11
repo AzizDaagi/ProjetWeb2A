@@ -4,11 +4,12 @@ $successMessage = $_SESSION['admin_aliment_success'] ?? null;
 $errorMessage = $_SESSION['admin_aliment_error'] ?? null;
 unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
 ?>
+<!-- OFFICIAL_ALIMENTS_BACKOFFICE -->
 <div class="admin-page">
     <div class="admin-page-head admin-page-head-inline">
         <div>
             <h1><i class="fa-solid fa-apple-whole icon"></i> Suivi nutritionnel</h1>
-            <p class="subtitle">Gestion du catalogue des aliments utilises dans le suivi nutritionnel.</p>
+            <p class="subtitle">Catalogue officiel des aliments reutilise par le suivi nutritionnel et les recettes.</p>
         </div>
 
         <a href="index.php?controller=backoffice&action=suiviCreate" class="admin-btn admin-btn-primary">
@@ -34,8 +35,10 @@ unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
                     <th>Prot.</th>
                     <th>Gluc.</th>
                     <th>Lip.</th>
+                    <th>Fibres</th>
                     <th>Unite</th>
                     <th>Type</th>
+                    <th>Image</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -48,8 +51,10 @@ unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
                             <td><?= htmlspecialchars((string) ($aliment['proteines'] ?? 0)) ?> g</td>
                             <td><?= htmlspecialchars((string) ($aliment['glucides'] ?? 0)) ?> g</td>
                             <td><?= htmlspecialchars((string) ($aliment['lipides'] ?? 0)) ?> g</td>
+                            <td><?= htmlspecialchars((string) ($aliment['fibres'] ?? 0)) ?> g</td>
                             <td><?= htmlspecialchars((string) ($aliment['unite'] ?? 'g')) ?></td>
                             <td><span class="admin-badge"><?= htmlspecialchars((string) ($aliment['type'] ?? '-')) ?></span></td>
+                            <td><span class="admin-badge"><?= !empty($aliment['image_url']) ? 'Oui' : '-' ?></span></td>
                             <td>
                                 <div class="admin-action-group">
                                     <a href="index.php?controller=backoffice&action=suiviEdit&id=<?= urlencode((string) $aliment['id']) ?>" class="admin-btn admin-btn-secondary admin-btn-sm">
@@ -67,7 +72,7 @@ unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" class="admin-empty-cell">Aucun aliment enregistre pour le moment.</td>
+                        <td colspan="10" class="admin-empty-cell">Aucun aliment enregistre pour le moment.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

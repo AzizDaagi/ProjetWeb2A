@@ -653,6 +653,7 @@
 
 <body>
     <?php require __DIR__ . '/../partials/navbar.php'; ?>
+    <?php require __DIR__ . '/../partials/nutrition_navbar.php'; ?>
     <?php
     $alimentErrors = $_SESSION['aliment_error'] ?? [];
     $alimentSuccess = $_SESSION['aliment_success'] ?? null;
@@ -689,37 +690,6 @@
 
     unset($_SESSION['aliment_error'], $_SESSION['aliment_success']);
     ?>
-
-    <div class="hero-wrapper">
-        <div class="cycle-diagram">
-            <svg class="orbit-ring" viewBox="0 0 400 400">
-                <circle cx="200" cy="200" r="140" class="ring-track" />
-                <circle cx="200" cy="200" r="140" class="ring-glow" />
-            </svg>
-            <div class="node node-1">
-                <div class="node-icon"><i class="fa-solid fa-leaf"></i></div>
-            </div>
-            <div class="node node-2">
-                <div class="node-icon"><i class="fa-solid fa-apple-whole"></i></div>
-            </div>
-            <div class="node node-3">
-                <div class="node-icon"><i class="fa-solid fa-person-running"></i></div>
-            </div>
-            <div class="node node-4">
-                <div class="node-icon"><i class="fa-solid fa-utensils"></i></div>
-            </div>
-            <div class="center-piece">
-                <div class="pulse-core"></div>
-                <h3>Smart<br>System</h3>
-            </div>
-        </div>
-
-        <div class="hero-content">
-            <h1>Smart Nutrition</h1>
-            <p class="subtitle-text">Sustainable &amp; Intelligent Food System</p>
-            <p class="description-text">Analysez et suivez votre alimentation en temps reel</p>
-        </div>
-    </div>
 
     <?php if (!empty($details)): ?>
         <div class="section-wrapper">
@@ -852,7 +822,7 @@
             <?php endif; ?>
 
             <div class="calorie-badge">
-                <span class="fire-icon">ðŸ”¥</span>
+                <span class="fire-icon"></span>
                 <div>
                     <div class="calorie-value">
                         <?= round((float) $total) ?> kcal

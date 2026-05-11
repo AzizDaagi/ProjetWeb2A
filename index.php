@@ -123,6 +123,9 @@ if ($action === 'home') {
 } elseif ($action === 'users-list') {
     $user = new UserController();
     $user->usersList();
+} elseif ($action === 'users-search') {
+    $user = new UserController();
+    $user->usersSearch();
 } elseif ($action === 'users-report') {
     $user = new UserController();
     $user->usersReport();
