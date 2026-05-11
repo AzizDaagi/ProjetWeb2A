@@ -59,6 +59,9 @@
             Bienvenue sur votre assistant nutritionnel personnel.<br>
             Analysez, suivez et optimisez votre nutrition en temps reel.
         </p>
+        <a href="/projet-web-25-26/index.php?action=front-office-integration" class="btn">
+            Ouvrir le Front Office
+        </a>
     </div>
 
     <div id="homeTopicDescription" class="topic-description-card" tabindex="-1">

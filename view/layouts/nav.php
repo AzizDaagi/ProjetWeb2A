@@ -15,6 +15,9 @@
 
     <?php if (!$isAdminNavbar): ?>
     <ul class="navbar-menu">
+        <li><a href="/projet-web-25-26/index.php?action=front-office-integration" class="nav-link">
+            <i class="fa-solid fa-rocket"></i> Front Office
+        </a></li>
         <li><a href="/projet-web-25-26/index.php?action=profile" class="nav-link">
             <i class="fa-solid fa-user"></i> Mon profile 
         </a></li>

@@ -213,15 +213,11 @@ if ($action === 'home') {
     include __DIR__ . '/view/front/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 } elseif ($action === 'tracking-management') {
-    $pageTitle = 'Activite sportif';
-    $moduleTitle = 'Activite sportif';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez suivre les activites sportives et la progression des utilisateurs.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
-    }
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    header('Location: ' . $baseUrl . '/index.php?controller=suivi&action=index');
+    exit;
+} elseif ($action === 'front-office-integration') {
+    header('Location: ' . $baseUrl . '/index.php?controller=suivi&action=index');
+    exit;
 } elseif ($action === 'planner-management') {
     header('Location: ' . $baseUrl . '/index.php?action=suivi');
     exit;
