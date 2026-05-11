@@ -2,6 +2,11 @@
 require_once __DIR__ . '/../model/Activite.php';
 
 class AdminController {
+    private function startSessionIfNeeded() {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+    }
 
     public function loginView() {
         if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
@@ -28,7 +33,7 @@ class AdminController {
 
             // Check correctness
             if ($code === '000000') {
-                session_start();
+                $this->startSessionIfNeeded();
                 $_SESSION['admin_logged_in'] = true;
                 header('Location: index.php?action=admin_dashboard');
                 exit;
@@ -42,7 +47,7 @@ class AdminController {
     }
 
     public function dashboard() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -58,7 +63,7 @@ class AdminController {
     }
 
     public function logout() {
-        session_start();
+        $this->startSessionIfNeeded();
         session_destroy();
         header('Location: index.php?action=home');
         exit;

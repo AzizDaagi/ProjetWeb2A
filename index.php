@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . "/utils/Env.php";
+Env::load(__DIR__ . "/.env");
+
 session_start();
 
 require_once __DIR__ . "/controller/FrontController.php";

@@ -3,9 +3,14 @@ require_once __DIR__ . '/../model/Activite.php';
 require_once __DIR__ . '/../model/Exercice.php';
 
 class ActiviteController {
+    private function startSessionIfNeeded() {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+    }
 
     public function index() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -17,7 +22,7 @@ class ActiviteController {
     }
 
     public function show() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -43,7 +48,7 @@ class ActiviteController {
     }
 
     public function createActivite() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -94,7 +99,7 @@ class ActiviteController {
     }
 
     public function addExercice() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -143,7 +148,7 @@ class ActiviteController {
     }
 
     public function editExercice() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -165,7 +170,7 @@ class ActiviteController {
     }
 
     public function updateExercice() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -218,7 +223,7 @@ class ActiviteController {
     }
 
     public function deleteExercice() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -238,7 +243,7 @@ class ActiviteController {
     }
 
     public function editActivite() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -260,7 +265,7 @@ class ActiviteController {
     }
 
     public function updateActivite() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -305,7 +310,7 @@ class ActiviteController {
     }
 
     public function deleteActivite() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;

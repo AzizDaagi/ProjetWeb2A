@@ -21,6 +21,8 @@ $sidebarActions = [
     'admin_delete_request'
 ];
 $useSidebar = $useSidebar ?? in_array($action, $sidebarActions, true);
+$isAdminTemplate = $useSidebar;
+$showFooter = $useSidebar ? false : $showFooter;
 
 require_once __DIR__ . '/header.php';
 ?>
@@ -60,7 +62,7 @@ require_once __DIR__ . '/header.php';
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 
-<div class="custom-backoffice-wrapper" style="max-width: 1200px; margin: 0 auto; width: 100%; padding: 2rem 1rem;">
+<div class="custom-backoffice-wrapper<?= $useSidebar ? ' admin-page' : '' ?>" style="max-width: <?= $useSidebar ? 'none' : '1200px' ?>; margin: 0 auto; width: 100%; padding: <?= $useSidebar ? '0' : '2rem 1rem' ?>;">
     <?php echo $content ?? ''; ?>
 </div>
 

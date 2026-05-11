@@ -3,12 +3,18 @@ require_once __DIR__ . '/../model/Activite.php';
 require_once __DIR__ . '/../model/Exercice.php';
 
 class FrontController {
+    private function startSessionIfNeeded() {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+    }
+
     private function encode($str) {
         return utf8_decode($str);
     }
 
     public function home() {
-        require_once __DIR__ . '/../View/front_nutrition_form.php';
+        require_once __DIR__ . '/../View/front_home.php';
     }
 
     public function listActivites() {
@@ -91,7 +97,7 @@ class FrontController {
             
             // Generate Suggestions
             $activiteModel = new Activite();
-            session_start();
+            $this->startSessionIfNeeded();
             $excludeIds = $_SESSION['last_suggested_ids'] ?? [];
             $suggestedActs = $activiteModel->getSuggestedActivities($goal, $excludeIds);
             $actNames = array_column($suggestedActs, 'nom_activite');
@@ -129,7 +135,19 @@ class FrontController {
 
                 // Send confirmation email via PHPMailer/Brevo
                 require_once __DIR__ . '/../utils/MailService.php';
-                MailService::sendThankYouEmail($email, $name);
+                $mailSent = MailService::sendThankYouEmail(
+                    $email,
+                    $name,
+                    $goal,
+                    (float) $weight,
+                    !empty($height) ? (float) $height : null
+                );
+                $mailResult = MailService::getLastResult();
+                $_SESSION['last_mail_status'] = $mailSent ? 'sent' : 'failed';
+                $_SESSION['last_mail_recipient'] = $email;
+                $_SESSION['last_mail_transport'] = $mailResult['transport'] ?? null;
+                $_SESSION['last_mail_message_id'] = $mailResult['message_id'] ?? null;
+                $_SESSION['last_mail_error'] = $mailResult['error'] ?? null;
 
                 header("Location: index.php?action=nutrition_success");
                 exit;
@@ -141,6 +159,7 @@ class FrontController {
     }
 
     public function nutritionSuccess() {
+        $this->startSessionIfNeeded();
         require_once __DIR__ . '/../View/front_nutrition_success.php';
     }
 

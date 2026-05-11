@@ -1,59 +1,55 @@
-<nav class="navbar" style="padding: 10px 16px; min-height: 100px;">
+<nav class="navbar">
     <div class="navbar-brand">
-        <a href="<?= $basePath ?>/index.php?action=home" style="display: flex; align-items: center;">
+        <a href="<?= $basePath ?>/index.php?action=home">
             <img
-                src="<?= $basePath ?>/2-removebg-preview.png"
+                src="<?= $basePath ?>/View/assets/images/logo.png"
                 alt="Smart Nutrition"
                 class="brand-logo"
-                style="height: 100px; width: auto; object-fit: contain; margin-right: 20px; transition: 0.3s;"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
             >
-            <span class="brand-fallback" style="font-size: 1.5rem;"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
+            <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
         </a>
     </div>
 
     <ul class="navbar-menu">
         <li><a href="<?= $basePath ?>/index.php?action=activites" class="nav-link">
-            <i class="fa-solid fa-dumbbell"></i> Activité Sportif
+            <i class="fa-solid fa-chart-line"></i> Activite sportif
         </a></li>
-        <li><a href="<?= $basePath ?>/index.php?action=nutrition_request" class="nav-link" style="color: #34d399;">
-            <i class="fa-solid fa-file-waveform"></i> Bilan Nutritionnel
-        </a></li>
-        <li><a href="#" class="nav-link">
-            <i class="fa-solid fa-utensils"></i> Recettes
+        <li><a href="<?= $basePath ?>/index.php?action=nutrition_request" class="nav-link">
+            <i class="fa-solid fa-file-waveform"></i> Bilan nutritionnel
         </a></li>
         <li><a href="#" class="nav-link">
-            <i class="fa-solid fa-cart-shopping"></i> eCommerce
+            <i class="fa-solid fa-book-open"></i> Recette alimentation
         </a></li>
         <li><a href="#" class="nav-link">
-            <i class="fa-solid fa-users"></i> Communauté
+            <i class="fa-solid fa-apple-whole"></i> Ecommerce
         </a></li>
         <li><a href="#" class="nav-link">
-            <i class="fa-solid fa-calendar"></i> Planning
+            <i class="fa-solid fa-users"></i> Communaute
         </a></li>
         <li><a href="#" class="nav-link">
-            <i class="fa-solid fa-user-gear"></i> Utilisateurs
+            <i class="fa-solid fa-calendar-check"></i> Suivi nutritionnel
         </a></li>
-        <li><a href="<?= $basePath ?>/index.php?action=admin_login" class="nav-link" style="color: var(--accent); border-color: var(--accent);">
+        <li><a href="<?= $basePath ?>/index.php?action=admin_login" class="nav-link">
             <i class="fa-solid fa-shield-halved"></i> Admin
         </a></li>
     </ul>
 
     <div class="navbar-footer">
-        <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Toggle color mode" aria-pressed="false">
-            <i class="fa-solid fa-moon"></i> Dark
+        <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
+            <i class="fa-solid fa-moon"></i> Sombre
         </button>
         <?php if (isset($_SESSION['user_id'])): ?>
-            <p class="user-info">Signed in: <strong><?= htmlspecialchars($_SESSION['user_name'] ?? 'User') ?></strong></p>
+            <p class="user-info">Connecte: <strong><?= htmlspecialchars($_SESSION['user_name'] ?? 'Utilisateur') ?></strong></p>
             <a href="<?= $basePath ?>/index.php?action=logout" class="nav-link logout">
-                <i class="fa-solid fa-sign-out-alt"></i> Logout
+                <i class="fa-solid fa-sign-out-alt"></i> Deconnexion
             </a>
         <?php else: ?>
             <a href="<?= $basePath ?>/index.php?action=login" class="nav-link">
-                <i class="fa-solid fa-lock"></i> Login
+                <i class="fa-solid fa-lock"></i> Connexion
             </a>
             <a href="<?= $basePath ?>/index.php?action=register" class="nav-link register">
-                <i class="fa-solid fa-user-plus"></i> Register
+                <i class="fa-solid fa-user-plus"></i> Inscription
             </a>
         <?php endif; ?>
     </div>

@@ -2,9 +2,14 @@
 require_once __DIR__ . '/../model/NutritionRequest.php';
 
 class NutritionRequestController {
+    private function startSessionIfNeeded() {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+    }
 
     public function index() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -17,7 +22,7 @@ class NutritionRequestController {
     }
 
     public function edit() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -48,7 +53,7 @@ class NutritionRequestController {
     }
 
     public function update() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
@@ -75,7 +80,7 @@ class NutritionRequestController {
     }
 
     public function delete() {
-        session_start();
+        $this->startSessionIfNeeded();
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header('Location: index.php?action=admin_login');
             exit;
