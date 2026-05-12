@@ -31,7 +31,7 @@
             <i class="fa-solid fa-users"></i> Communaute
         </a></li>
         <li><a href="/smart_nutrition/index.php?action=planner-management" class="nav-link">
-            <i class="fa-solid fa-calendar-check"></i> Planning
+            <i class="fa-solid fa-calendar-check"></i> suivi nutritionnel
         </a></li>
     </ul>
     <?php endif; ?>
