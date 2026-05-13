@@ -1,3 +1,4 @@
+<?php $baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>
 <div class="hero-wrapper">
     <div class="cycle-diagram">
         <svg class="orbit-ring" viewBox="0 0 400 400">
@@ -70,7 +71,7 @@
         id="homeWeatherCard"
         class="home-weather-card is-loading"
         data-weather-card="true"
-        data-weather-endpoint="/projet-web-25-26/index.php?action=weather-sport"
+        data-weather-endpoint="<?= $baseUrl ?>/index.php?action=weather-sport"
         aria-live="polite"
     >
         <div class="home-weather-head">

@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__ . '/../model/Recette.php';
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../model/Database.php';
 
 class RecetteController {
     private $db;
 
-    public function __construct() {
-        $this->db = Config::getConnexion();
+    public function __construct($pdo = null) {
+        $this->db = $pdo ?: Database::getConnection();
     }
 
     public function listRecettes() {
@@ -31,23 +31,23 @@ class RecetteController {
     }
 
     // Récupérer les aliments associés à une recette avec leur quantité
-    public function getAlimentsByRecette($id_recette) {
+    public function getAlimentsByRecette($recette_id) {
         $query = $this->db->prepare("
             SELECT a.*, ra.quantite FROM aliments a
-            JOIN recette_aliment ra ON a.id = ra.id_aliment
-            WHERE ra.id_recette = :id_recette
+            JOIN recette_aliment ra ON a.id = ra.aliment_id
+            WHERE ra.recette_id = :recette_id
         ");
-        $query->execute(['id_recette' => $id_recette]);
+        $query->execute(['recette_id' => $recette_id]);
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function addRecette($nom, $description, $temps_preparation, $niveau_difficulte, $image_url = null, $aliments_quantites = []) {
-        $query = $this->db->prepare("INSERT INTO recettes (nom, description, temps_preparation, niveau_difficulte, image_url) VALUES (:nom, :description, :temps_preparation, :niveau_difficulte, :image_url)");
+    public function addRecette($nom, $description, $temps_preparation, $difficulte, $image_url = null, $aliments_quantites = []) {
+        $query = $this->db->prepare("INSERT INTO recettes (nom, description, temps_preparation, difficulte, image_url) VALUES (:nom, :description, :temps_preparation, :difficulte, :image_url)");
         $query->execute([
             'nom' => $nom,
             'description' => $description,
             'temps_preparation' => $temps_preparation,
-            'niveau_difficulte' => $niveau_difficulte,
+            'difficulte' => $difficulte,
             'image_url' => $image_url
         ]);
         
@@ -55,38 +55,38 @@ class RecetteController {
 
         // Insérer les aliments associés avec leur quantité
         if (!empty($aliments_quantites)) {
-            $stmt = $this->db->prepare("INSERT INTO recette_aliment (id_recette, id_aliment, quantite) VALUES (:id_recette, :id_aliment, :quantite)");
-            foreach ($aliments_quantites as $id_aliment => $quantite) {
+            $stmt = $this->db->prepare("INSERT INTO recette_aliment (recette_id, aliment_id, quantite) VALUES (:recette_id, :aliment_id, :quantite)");
+            foreach ($aliments_quantites as $aliment_id => $quantite) {
                 $stmt->execute([
-                    'id_recette' => $recetteId, 
-                    'id_aliment' => $id_aliment,
+                    'recette_id' => $recetteId, 
+                    'aliment_id' => $aliment_id,
                     'quantite' => $quantite
                 ]);
             }
         }
     }
 
-    public function updateRecette($id, $nom, $description, $temps_preparation, $niveau_difficulte, $image_url = null, $aliments_quantites = []) {
-        $query = $this->db->prepare("UPDATE recettes SET nom = :nom, description = :description, temps_preparation = :temps_preparation, niveau_difficulte = :niveau_difficulte, image_url = :image_url WHERE id = :id");
+    public function updateRecette($id, $nom, $description, $temps_preparation, $difficulte, $image_url = null, $aliments_quantites = []) {
+        $query = $this->db->prepare("UPDATE recettes SET nom = :nom, description = :description, temps_preparation = :temps_preparation, difficulte = :difficulte, image_url = :image_url WHERE id = :id");
         $query->execute([
             'nom' => $nom,
             'description' => $description,
             'temps_preparation' => $temps_preparation,
-            'niveau_difficulte' => $niveau_difficulte,
+            'difficulte' => $difficulte,
             'image_url' => $image_url,
             'id' => $id
         ]);
 
         // Mettre à jour les aliments associés (supprimer puis recréer)
-        $del = $this->db->prepare("DELETE FROM recette_aliment WHERE id_recette = :id_recette");
-        $del->execute(['id_recette' => $id]);
+        $del = $this->db->prepare("DELETE FROM recette_aliment WHERE recette_id = :recette_id");
+        $del->execute(['recette_id' => $id]);
 
         if (!empty($aliments_quantites)) {
-            $stmt = $this->db->prepare("INSERT INTO recette_aliment (id_recette, id_aliment, quantite) VALUES (:id_recette, :id_aliment, :quantite)");
-            foreach ($aliments_quantites as $id_aliment => $quantite) {
+            $stmt = $this->db->prepare("INSERT INTO recette_aliment (recette_id, aliment_id, quantite) VALUES (:recette_id, :aliment_id, :quantite)");
+            foreach ($aliments_quantites as $aliment_id => $quantite) {
                 $stmt->execute([
-                    'id_recette' => $id, 
-                    'id_aliment' => $id_aliment,
+                    'recette_id' => $id, 
+                    'aliment_id' => $aliment_id,
                     'quantite' => $quantite
                 ]);
             }
@@ -161,15 +161,16 @@ class RecetteController {
         return $warnings;
     }
 
-    public function calculerNutritionTotale($id_recette) {
-        $aliments = $this->getAlimentsByRecette($id_recette);
+    public function calculerNutritionTotale($recette_id) {
+        $aliments = $this->getAlimentsByRecette($recette_id);
         
         $totaux = [
             'calories' => 0,
             'proteines' => 0,
             'glucides' => 0,
             'lipides' => 0,
-            'fibres' => 0
+            'fibres' => 0,
+            'sucre_g' => 0
         ];
 
         foreach ($aliments as $aliment) {
@@ -183,6 +184,11 @@ class RecetteController {
             // Si fibres existe dans la table
             if (isset($aliment['fibres'])) {
                 $totaux['fibres'] += ((float)$aliment['fibres'] * $qte) / 100;
+            }
+            
+            // Si sucre_g existe dans la table
+            if (isset($aliment['sucre_g'])) {
+                $totaux['sucre_g'] += ((float)$aliment['sucre_g'] * $qte) / 100;
             }
         }
         
@@ -455,14 +461,14 @@ class RecetteController {
     /**
      * Applique une version optimisée en mettant à jour les quantités dans la DB.
      */
-    public function appliquerOptimisation($id_recette, $nouvelles_quantites) {
-        $id_recette = (int)$id_recette;
-        $stmt = $this->db->prepare("UPDATE recette_aliment SET quantite = :qte WHERE id_recette = :id_recette AND id_aliment = :id_aliment");
-        foreach ($nouvelles_quantites as $id_aliment => $qte) {
+    public function appliquerOptimisation($recette_id, $nouvelles_quantites) {
+        $recette_id = (int)$recette_id;
+        $stmt = $this->db->prepare("UPDATE recette_aliment SET quantite = :qte WHERE recette_id = :recette_id AND aliment_id = :aliment_id");
+        foreach ($nouvelles_quantites as $aliment_id => $qte) {
             $stmt->execute([
                 'qte'        => (float)$qte,
-                'id_recette' => $id_recette,
-                'id_aliment' => (int)$id_aliment
+                'recette_id' => $recette_id,
+                'aliment_id' => (int)$aliment_id
             ]);
         }
     }
@@ -526,4 +532,3 @@ class RecetteController {
         ];
     }
 }
-?>

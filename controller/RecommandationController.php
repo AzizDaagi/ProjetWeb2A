@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__ . '/../model/Recommandation.php';
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../model/Database.php';
 
 class RecommandationController {
     private $db;
 
     public function __construct() {
-        $this->db = Config::getConnexion();
+        $this->db = Database::getConnection();
     }
 
     public function listRecommandations() {
@@ -38,4 +38,3 @@ class RecommandationController {
         $query->execute(['id' => $id]);
     }
 }
-?>

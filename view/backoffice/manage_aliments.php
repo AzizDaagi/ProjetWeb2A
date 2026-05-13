@@ -1,6 +1,7 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Smart Nutrition | Gestion des Aliments';
-require_once __DIR__ . '/../../controler/AlimentController.php';
+require_once __DIR__ . '/../../controller/AlimentController.php';
 
 $controller = new AlimentController();
 
@@ -17,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetPath = $uploadDir . $fileName;
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $image_url = '/projetwebmalek/view/uploads/aliments/' . $fileName;
+                $image_url = $baseUrl . '/view/uploads/aliments/' . $fileName;
             }
         }
 
@@ -36,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'delete') {
             $controller->deleteAliment($_POST['id']);
         }
-        header('Location: manage_aliments.php');
+        header('Location: ' . $baseUrl . '/index.php?action=admin-aliments');
         exit;
     }
 }
@@ -69,7 +70,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
     </p>
 
     <!-- Animated gradient back button -->
-    <a href="index.php" class="submit-back-btn">
+    <a href="<?= $baseUrl ?>/index.php?action=admin-dashboard" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour au Dashboard
     </a>
 
@@ -83,7 +84,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
             <?php endif; ?>
         </h1>
 
-        <form method="POST" action="manage_aliments.php" id="aliment-form" enctype="multipart/form-data" novalidate>
+        <form method="POST" action="<?= $baseUrl ?>/index.php?action=admin-aliments" id="aliment-form" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="action" id="action-input" value="<?= $alimentToEdit ? 'update' : 'add' ?>">
             <input type="hidden" name="id"     id="form-id" value="<?= $alimentToEdit ? htmlspecialchars($alimentToEdit['id']) : '' ?>">
             <input type="hidden" name="existing_image_url" value="<?= $alimentToEdit ? htmlspecialchars($alimentToEdit['image_url'] ?? '') : '' ?>">
@@ -158,7 +159,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                 <?php endif; ?>
             </button>
             <?php if ($alimentToEdit): ?>
-                <a href="manage_aliments.php" class="submit-btn-cancel" style="display:inline-flex; text-decoration:none; justify-content:center; align-items:center;">
+                <a href="<?= $baseUrl ?>/index.php?action=admin-aliments" class="submit-btn-cancel" style="display:inline-flex; text-decoration:none; justify-content:center; align-items:center;">
                     <i class="fa-solid fa-xmark"></i> Annuler
                 </a>
             <?php endif; ?>

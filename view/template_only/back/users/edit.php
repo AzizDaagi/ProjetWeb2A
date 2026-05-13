@@ -12,6 +12,6 @@
     </div>
 
     <div class="actions">
-        <a href="/smart_nutrition/index.php?action=users-list" class="btn secondary">Back to list</a>
+        <a href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=users-list" class="btn secondary">Back to list</a>
     </div>
 </div>

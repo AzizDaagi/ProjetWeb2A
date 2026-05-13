@@ -1,6 +1,7 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Options: Règles & Recommandations';
-require_once __DIR__ . '/../../controler/RecommandationController.php';
+require_once __DIR__ . '/../../controller/RecommandationController.php';
 
 $controller = new RecommandationController();
 
@@ -11,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'delete') {
             $controller->deleteRecommandation($_POST['id']);
         }
-        header('Location: manage_recommandations.php');
+        header('Location: ' . $baseUrl . '/index.php?action=admin-recommendations');
         exit;
     }
 }
@@ -29,7 +30,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
     <div class="submit-page-wrapper">
     
     <h1>Créer une Recommandation Nutritionnelle</h1>
-    <form method="POST" action="" id="reco-form" novalidate>
+    <form method="POST" action="<?= $baseUrl ?>/index.php?action=admin-recommendations" id="reco-form" novalidate>
         <input type="hidden" name="action" value="add">
         
         <div class="form-group">

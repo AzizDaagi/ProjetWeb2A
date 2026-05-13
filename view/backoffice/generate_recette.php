@@ -1,6 +1,7 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Smart Nutrition | Moteur de Génération';
-require_once __DIR__ . '/../../controler/RecetteController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
 
 $controller = new RecetteController();
 
@@ -33,7 +34,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
         Moteur de Génération de Recettes sous Contraintes
     </p>
 
-    <a href="manage_recettes.php" class="submit-back-btn">
+    <a href="<?= $baseUrl ?>/index.php?action=admin-recipes" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour aux recettes
     </a>
 
@@ -49,7 +50,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="generate_recette.php">
+        <form method="POST" action="<?= $baseUrl ?>/index.php?action=recipe-generate">
             <input type="hidden" name="generate" value="1">
             
             <div class="submit-form-row">
@@ -126,7 +127,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
             </p>
         </div>
 
-        <form action="manage_recettes.php" method="POST">
+        <form action="<?= $baseUrl ?>/index.php?action=admin-recipes" method="POST">
             <input type="hidden" name="action" value="add">
             
             <h3 style="margin:0 0 14px;font-size:16px;">Créer la recette finale</h3>
@@ -143,7 +144,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
                     <label>Difficulté</label>
-                    <select name="niveau_difficulte" required>
+                    <select name="difficulte" required>
                         <option value="Très Facile" selected>Très Facile</option>
                         <option value="Facile">Facile</option>
                         <option value="Moyen">Moyen</option>

@@ -1,9 +1,10 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Backoffice - Tableau de bord';
 
-require_once __DIR__ . '/../../controler/RecetteController.php';
-require_once __DIR__ . '/../../controler/AlimentController.php';
-require_once __DIR__ . '/../../controler/UserController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
+require_once __DIR__ . '/../../controller/AlimentController.php';
+require_once __DIR__ . '/../../controller/UserController.php';
 
 $recetteController = new RecetteController();
 $alimentController = new AlimentController();
@@ -13,11 +14,11 @@ $userController = new UserController();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'delete_recette' && isset($_POST['id'])) {
         $recetteController->deleteRecette($_POST['id']);
-        header('Location: index.php');
+        header('Location: ' . $baseUrl . '/index.php?action=admin-dashboard');
         exit;
     } elseif ($_POST['action'] === 'delete_aliment' && isset($_POST['id'])) {
         $alimentController->deleteAliment($_POST['id']);
-        header('Location: index.php');
+        header('Location: ' . $baseUrl . '/index.php?action=admin-dashboard');
         exit;
     }
 }
@@ -102,7 +103,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
     <section class="admin-widget admin-recent-widget" style="margin-top: 30px;">
         <div class="admin-widget-head">
             <h2>Utilisateurs récents</h2>
-            <a href="manage_users.php" class="btn-edit">Voir tout</a>
+            <a href="<?= $baseUrl ?>/index.php?action=users-list" class="btn-edit">Voir tout</a>
         </div>
         <table class="users-table">
             <thead>
@@ -145,7 +146,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                 <button type="button" id="sortRecettesCalories" class="btn-admin-secondary" style="font-size:13px;">
                     <i class="fa-solid fa-arrow-down-short-wide"></i> Tri Calories
                 </button>
-                <a href="manage_recettes.php" class="btn-admin" style="background: #2ecc71; color: white;"><i class="fa-solid fa-plus"></i> Ajouter</a>
+                <a href="<?= $baseUrl ?>/index.php?action=admin-recipes" class="btn-admin" style="background: #2ecc71; color: white;"><i class="fa-solid fa-plus"></i> Ajouter</a>
             </div>
         </div>
         <div style="overflow-x: auto;">
@@ -181,10 +182,10 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                                 <td><i class="fa-regular fa-clock" style="opacity:0.5;margin-right:5px;"></i><?= htmlspecialchars((string) $recette['temps_preparation']) ?></td>
                                 <td><i class="fa-solid fa-fire" style="color: #e74c3c; opacity:0.8;margin-right:5px;"></i><?= $totalCal ?> kcal</td>
                                 <td style="text-align:right;">
-                                    <a href="manage_recettes.php?edit_id=<?= $recette['id'] ?>" class="btn-edit" style="border: none; cursor: pointer; padding: 8px 12px; margin-right: 5px;">
+                                    <a href="<?= $baseUrl ?>/index.php?action=admin-recipes&edit_id=<?= $recette['id'] ?>" class="btn-edit" style="border: none; cursor: pointer; padding: 8px 12px; margin-right: 5px;">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
-                                    <form method="POST" action="index.php" style="display:inline;" onsubmit="return confirm('Supprimer cette recette ?');">
+                                    <form method="POST" action="<?= $baseUrl ?>/index.php?action=admin-dashboard" style="display:inline;" onsubmit="return confirm('Supprimer cette recette ?');">
                                         <input type="hidden" name="action" value="delete_recette">
                                         <input type="hidden" name="id" value="<?= $recette['id'] ?>">
                                         <button type="submit" class="btn-delete-user" style="background: transparent; color: #e74c3c; border: none; cursor: pointer; padding: 8px 12px;">
@@ -213,7 +214,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                 <button type="button" id="sortAlimentsCategory" class="btn-admin-secondary" style="font-size:13px;">
                     <i class="fa-solid fa-layer-group"></i> Tri Catégorie
                 </button>
-                <a href="manage_aliments.php" class="btn-admin" style="background: #2ecc71; color: white;"><i class="fa-solid fa-plus"></i> Ajouter</a>
+                <a href="<?= $baseUrl ?>/index.php?action=admin-aliments" class="btn-admin" style="background: #2ecc71; color: white;"><i class="fa-solid fa-plus"></i> Ajouter</a>
             </div>
         </div>
         <div style="overflow-x: auto;">
@@ -240,10 +241,10 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                                 </td>
                                 <td><i class="fa-solid fa-fire" style="color: #e74c3c; opacity:0.8;margin-right:5px;"></i><?= htmlspecialchars((string) $aliment['calories']) ?> kcal</td>
                                 <td style="text-align:right;">
-                                    <a href="manage_aliments.php?edit_id=<?= $aliment['id'] ?>" class="btn-edit" style="border: none; cursor: pointer; padding: 8px 12px; margin-right: 5px;">
+                                    <a href="<?= $baseUrl ?>/index.php?action=admin-aliments&edit_id=<?= $aliment['id'] ?>" class="btn-edit" style="border: none; cursor: pointer; padding: 8px 12px; margin-right: 5px;">
                                         <i class="fa-solid fa-pen"></i>
                                     </a>
-                                    <form method="POST" action="index.php" style="display:inline;" onsubmit="return confirm('Supprimer cet aliment ?');">
+                                    <form method="POST" action="<?= $baseUrl ?>/index.php?action=admin-dashboard" style="display:inline;" onsubmit="return confirm('Supprimer cet aliment ?');">
                                         <input type="hidden" name="action" value="delete_aliment">
                                         <input type="hidden" name="id" value="<?= $aliment['id'] ?>">
                                         <button type="submit" class="btn-delete-user" style="background: transparent; color: #e74c3c; border: none; cursor: pointer; padding: 8px 12px;">

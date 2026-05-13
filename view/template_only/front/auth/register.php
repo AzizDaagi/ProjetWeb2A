@@ -12,7 +12,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/smart_nutrition/index.php?action=register" id="register-form" novalidate>
+    <form method="POST" action="<?= $baseUrl ?>/index.php?action=register" id="register-form" novalidate>
         <div class="field">
             <label><i class="fa-solid fa-user icon"></i>Last Name</label>
             <input type="text" name="nom" id="nom-input" value="<?= htmlspecialchars($old['nom'] ?? '') ?>" placeholder="Last name">
@@ -36,7 +36,7 @@
         <button type="submit" class="btn-accent"><i class="fa-solid fa-user-plus icon success"></i>Sign up</button>
     </form>
 
-    <p class="link-text">Already registered? <a href="/smart_nutrition/index.php?action=login">Sign in</a></p>
+    <p class="link-text">Already registered? <a href="<?= $baseUrl ?>/index.php?action=login">Sign in</a></p>
 </div>
 
 <script>

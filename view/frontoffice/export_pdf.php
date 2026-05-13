@@ -6,8 +6,8 @@
  *   export_pdf.php?type=recette&id=5
  *   export_pdf.php?type=statistiques
  */
-require_once __DIR__ . '/../../controler/RecetteController.php';
-require_once __DIR__ . '/../../controler/AlimentController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
+require_once __DIR__ . '/../../controller/AlimentController.php';
 
 $controller      = new RecetteController();
 $alimentCtrl     = new AlimentController();
@@ -211,7 +211,7 @@ $exportDate = date('d/m/Y à H:i');
         <td><strong><?= htmlspecialchars($r['nom']) ?></strong></td>
         <td><span class="c-cal" style="font-weight:700;"><?= $cal ?> kcal</span></td>
         <td><?= htmlspecialchars($r['temps_preparation']) ?></td>
-        <td><?= htmlspecialchars($r['niveau_difficulte']) ?></td>
+        <td><?= htmlspecialchars($r['difficulte']) ?></td>
         <td>
           <?php if (!empty($als)): ?>
             <?php foreach ($als as $a): ?>
@@ -237,7 +237,7 @@ $exportDate = date('d/m/Y à H:i');
   <p class="subtitle">
     ⏱ <?= htmlspecialchars($recette['temps_preparation']) ?>
     &nbsp;&bull;&nbsp;
-    📊 <?= htmlspecialchars($recette['niveau_difficulte']) ?>
+    📊 <?= htmlspecialchars($recette['difficulte']) ?>
   </p>
 
   <!-- Valeurs nutritionnelles -->

@@ -2,7 +2,7 @@
 
 session_start();
 
-$baseUrl = '/projet-web-25-26';
+$baseUrl = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 
 require_once __DIR__ . '/env.php';
 
@@ -103,33 +103,16 @@ if ($action === 'home') {
 } elseif ($action === 'logout') {
     $user = new UserController();
     $user->logout();
-} elseif ($action === 'users-list') {
-    $user = new UserController();
-    $user->usersList();
-} elseif ($action === 'users-search') {
-    $user = new UserController();
-    $user->usersSearch();
-} elseif ($action === 'users-report') {
-    $user = new UserController();
-    $user->usersReport();
-} elseif ($action === 'edit-user') {
-    $user = new UserController();
-    $user->editUser();
-} elseif ($action === 'create-user') {
-    $user = new UserController();
-    $user->createUser();
-} elseif ($action === 'store-user') {
-    $user = new UserController();
-    $user->storeUser();
-} elseif ($action === 'update-user') {
-    $user = new UserController();
-    $user->updateUser();
-} elseif ($action === 'delete-user') {
-    $user = new UserController();
-    $user->deleteUser();
 } elseif ($action === 'admin-dashboard') {
-    $user = new UserController();
-    $user->adminDashboard();
+    include __DIR__ . '/view/backoffice/index.php';
+} elseif ($action === 'users-list') {
+    include __DIR__ . '/view/backoffice/manage_users.php';
+} elseif ($action === 'admin-recipes') {
+    include __DIR__ . '/view/backoffice/manage_recettes.php';
+} elseif ($action === 'admin-aliments') {
+    include __DIR__ . '/view/backoffice/manage_aliments.php';
+} elseif ($action === 'admin-recommendations') {
+    include __DIR__ . '/view/backoffice/manage_recommandations.php';
 } elseif ($action === 'auth-management') {
     $pageTitle = 'Authentification';
     if ($isAdminSession) {
@@ -142,6 +125,8 @@ if ($action === 'home') {
     include __DIR__ . '/view/frontoffice/liste_recettes.php';
 } elseif ($action === 'recipe-details') {
     include __DIR__ . '/view/frontoffice/details_recette.php';
+} elseif ($action === 'recipe-details-aliment') {
+    include __DIR__ . '/view/frontoffice/details_aliment.php';
 } elseif ($action === 'recipe-generate') {
     include __DIR__ . '/view/frontoffice/generate_recette.php';
 } elseif ($action === 'recipe-optimize') {
@@ -152,10 +137,6 @@ if ($action === 'home') {
     include __DIR__ . '/view/frontoffice/stats_nutrition.php';
 } elseif ($action === 'recipe-export') {
     include __DIR__ . '/view/frontoffice/export_pdf.php';
-} elseif ($action === 'admin-recipes') {
-    include __DIR__ . '/view/backoffice/manage_recettes.php';
-} elseif ($action === 'admin-recommendations') {
-    include __DIR__ . '/view/backoffice/manage_recommandations.php';
 } elseif ($action === 'foods-management') {
     $pageTitle = 'Ecommerce';
     $moduleTitle = 'Ecommerce';

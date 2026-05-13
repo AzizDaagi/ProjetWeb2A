@@ -1,4 +1,5 @@
-<div class="container admin-dashboard users-list-page admin-page" data-users-search-endpoint="/projet-web-25-26/index.php?action=users-search">
+<?php $baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>
+<div class="container admin-dashboard users-list-page admin-page" data-users-search-endpoint="<?= $baseUrl ?>/index.php?action=users-search">
     <h1><i class="fa-solid fa-users icon"></i> Utilisateurs</h1>
     <p class="subtitle">Liste complete des utilisateurs inscrits</p>
 
@@ -23,7 +24,7 @@
 
         <div class="users-tools-meta">
             <span id="usersResultsCount" class="users-results-count"><?= (int) ($usersCount ?? count($users)) ?> utilisateur(s)</span>
-    <a href="/projet-web-25-26/index.php?action=create-user" class="btn-admin">
+    <a href="<?= $baseUrl ?>/index.php?action=create-user" class="btn-admin">
                 <i class="fa-solid fa-user-plus"></i> Ajouter un utilisateur
             </a>
             <button type="button" class="btn-admin-secondary users-export-btn" data-users-export>
@@ -62,10 +63,10 @@
                         <td><?= htmlspecialchars((string) ($u['objectif'] ?? '')) ?></td>
                         <td><?= htmlspecialchars($u['email']) ?></td>
                         <td class="users-actions">
-                                <a href="/projet-web-25-26/index.php?action=edit-user&id=<?= $u['id'] ?>" class="btn-edit">
+                                <a href="<?= $baseUrl ?>/index.php?action=edit-user&id=<?= $u['id'] ?>" class="btn-edit">
                                 <i class="fa-solid fa-pen"></i> Modifier
                             </a>
-                                <form method="POST" action="/projet-web-25-26/index.php?action=delete-user" class="inline-form" onsubmit="return confirm('Supprimer cet utilisateur ?');" novalidate>
+                                <form method="POST" action="<?= $baseUrl ?>/index.php?action=delete-user" class="inline-form" onsubmit="return confirm('Supprimer cet utilisateur ?');" novalidate>
                                 <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
                                 <button type="submit" class="btn-delete-user">
                                     <i class="fa-solid fa-trash"></i> Supprimer
@@ -83,5 +84,5 @@
         </table>
     </div>
 
-    <a href="/projet-web-25-26/index.php?action=profile" class="btn-admin-secondary">Retour au profil</a>
+    <a href="<?= $baseUrl ?>/index.php?action=profile" class="btn-admin-secondary">Retour au profil</a>
 </div>

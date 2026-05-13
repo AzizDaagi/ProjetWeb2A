@@ -14,16 +14,16 @@
     </div>
 
     <div class="actions admin-actions">
-        <a href="/smart_nutrition/index.php?action=users-list" class="btn">
+        <a href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=users-list" class="btn">
             <i class="fa-solid fa-users"></i> Manage Users
         </a>
-        <a href="/smart_nutrition/index.php?action=recipes-management" class="btn">
+        <a href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=recipes-management" class="btn">
             <i class="fa-solid fa-book-open"></i> Manage Recipes
         </a>
-        <a href="/smart_nutrition/index.php?action=foods-management" class="btn">
+        <a href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=foods-management" class="btn">
             <i class="fa-solid fa-apple-whole"></i> Manage Foods
         </a>
-        <a href="/smart_nutrition/index.php?action=recommendations-management" class="btn">
+        <a href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=recommendations-management" class="btn">
             <i class="fa-solid fa-chart-line"></i> Nutrition Recommendations
         </a>
     </div>

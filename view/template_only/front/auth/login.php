@@ -11,7 +11,7 @@
         <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <form method="POST" action="/smart_nutrition/index.php?action=login" id="login-form" novalidate>
+    <form method="POST" action="<?= $baseUrl ?>/index.php?action=login" id="login-form" novalidate>
         <div class="field">
             <label><i class="fa-solid fa-envelope icon"></i>Email</label>
             <input type="email" name="email" id="email-input" placeholder="Enter your email">
@@ -33,7 +33,7 @@
         <button type="submit"><i class="fa-solid fa-right-to-bracket icon success"></i>Sign in</button>
     </form>
 
-    <p class="link-text">No account yet? <a href="/smart_nutrition/index.php?action=register">Sign up</a></p>
+    <p class="link-text">No account yet? <a href="<?= $baseUrl ?>/index.php?action=register">Sign up</a></p>
 </div>
 
 <script>

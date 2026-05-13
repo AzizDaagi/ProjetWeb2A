@@ -8,7 +8,7 @@
 // Démarrer l'output buffering immédiatement pour garantir la redirection
 ob_start();
 
-require_once __DIR__ . '/../../controler/RecetteController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
 
 // Sécurité : on n'accepte que les POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

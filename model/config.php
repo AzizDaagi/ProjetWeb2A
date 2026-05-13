@@ -15,7 +15,7 @@ if (!function_exists('app_env_value')) {
 }
 
 return [
-    'app_url' => app_env_value('APP_URL', 'http://localhost/projet-web-25-26'),
+    'app_url' => app_env_value('APP_URL', '/'),
     'firebase_web_api_key' => app_env_value('FIREBASE_WEB_API_KEY'),
     'firebase_project_id' => app_env_value('FIREBASE_PROJECT_ID'),
     'firebase_auth_domain' => app_env_value('FIREBASE_AUTH_DOMAIN'),

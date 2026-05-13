@@ -1,6 +1,7 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Détails de l\'Aliment';
-require_once __DIR__ . '/../../controler/AlimentController.php';
+require_once __DIR__ . '/../../controller/AlimentController.php';
 
 $controller = new AlimentController();
 $aliment = null;
@@ -13,10 +14,10 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
 ?>
 
 
-<div class="submit-page-wrapper" style="max-width:820px;">
+<div class="submit-page-wrapper" style="max-width:1200px; margin: 0 auto; padding: 24px;">
 
     <!-- Back button -->
-    <a href="liste_recettes.php" class="submit-back-btn">
+    <a href="<?= $baseUrl ?>/index.php?action=recipes-management" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
     </a>
 
@@ -25,13 +26,22 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
     <div class="submit-form-card" style="padding:36px 32px;">
 
         <!-- Image -->
-        <?php if (!empty($aliment['image_url'])): ?>
-        <div style="width:100%;height:300px;border-radius:10px;overflow:hidden;margin-bottom:28px;background:rgba(30,39,46,1);">
-            <img src="<?= htmlspecialchars((string)$aliment['image_url']) ?>"
-                 alt="<?= htmlspecialchars((string)$aliment['nom']) ?>"
-                 style="width:100%;height:100%;object-fit:cover;">
+        <!-- Image Section with Fallback -->
+        <div style="width:100%; height:320px; border-radius:14px; overflow:hidden; margin-bottom:28px; background:rgba(30,39,46,0.5); border:1px solid rgba(255,255,255,0.08); position:relative;">
+            <?php if (!empty($aliment['image_url'])): ?>
+                <img src="<?= htmlspecialchars((string)$aliment['image_url']) ?>"
+                     alt="<?= htmlspecialchars((string)$aliment['nom']) ?>"
+                     style="width:100%; height:100%; object-fit:cover;"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="product-card-img-placeholder" style="display:none; height:100%; font-size:64px;">
+                    <i class="fa-solid fa-apple-whole"></i>
+                </div>
+            <?php else: ?>
+                <div class="product-card-img-placeholder" style="height:100%; font-size:64px;">
+                    <i class="fa-solid fa-apple-whole"></i>
+                </div>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
 
         <!-- Title + badge row -->
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
@@ -50,7 +60,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
         </div>
 
         <!-- Macros grid -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px; margin-bottom:20px;">
             <div style="background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.25);border-radius:10px;padding:16px;text-align:center;">
                 <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Protéines</p>
                 <strong style="font-size:22px;color:#3498db;"><?= htmlspecialchars((string)$aliment['proteines']) ?></strong>
@@ -83,7 +93,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
         <i class="fa-solid fa-circle-exclamation" style="font-size:40px;color:#e74c3c;display:block;margin-bottom:16px;"></i>
         <h2 style="margin:0 0 10px;">Aliment introuvable</h2>
         <p style="color:rgba(236,240,241,0.5);margin-bottom:24px;">Cet aliment n'existe pas ou a été supprimé.</p>
-        <a href="liste_recettes.php" class="submit-back-btn" style="margin-bottom:0;">Retour au catalogue</a>
+        <a href="<?= $baseUrl ?>/index.php?action=recipes-management" class="submit-back-btn" style="margin-bottom:0;">Retour au catalogue</a>
     </div>
     <?php endif; ?>
 </div>

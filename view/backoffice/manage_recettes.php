@@ -1,7 +1,8 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Smart Nutrition | Gestion des Recettes';
-require_once __DIR__ . '/../../controler/RecetteController.php';
-require_once __DIR__ . '/../../controler/AlimentController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
+require_once __DIR__ . '/../../controller/AlimentController.php';
 
 $controller      = new RecetteController();
 $alimentController = new AlimentController();
@@ -31,14 +32,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $targetPath = $uploadDir . $fileName;
             
             if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                $image_url = '/projetwebmalek/view/uploads/recettes/' . $fileName;
+                $image_url = $baseUrl . '/view/uploads/recettes/' . $fileName;
             }
         }
 
         if ($_POST['action'] === 'add') {
             $controller->addRecette(
                 $_POST['nom'], $_POST['description'], $_POST['temps_preparation'],
-                $_POST['niveau_difficulte'], $image_url, $aliments_quantites
+                $_POST['difficulte'], $image_url, $aliments_quantites
             );
             $warnings = $controller->checkEquilibreNutritionnel($aliments_quantites);
             if (!empty($warnings)) {
@@ -47,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'update') {
             $controller->updateRecette(
                 $_POST['id'], $_POST['nom'], $_POST['description'], $_POST['temps_preparation'],
-                $_POST['niveau_difficulte'], $image_url, $aliments_quantites
+                $_POST['difficulte'], $image_url, $aliments_quantites
             );
             $warnings = $controller->checkEquilibreNutritionnel($aliments_quantites);
             if (!empty($warnings)) {
@@ -56,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'delete') {
             $controller->deleteRecette($_POST['id']);
         }
-        header('Location: manage_recettes.php');
+        header('Location: ' . $baseUrl . '/index.php?action=admin-recipes');
         exit;
     }
 }
@@ -107,7 +108,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
         Créez et gérez vos recettes. Associez-leur des aliments pour calculer leurs apports.
     </p>
 
-    <a href="index.php" class="submit-back-btn">
+    <a href="<?= $baseUrl ?>/index.php?action=admin-dashboard" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour au Dashboard
     </a>
 
@@ -131,7 +132,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
             <?php endif; ?>
         </h1>
 
-        <form method="POST" action="manage_recettes.php" id="recette-form" enctype="multipart/form-data" novalidate>
+        <form method="POST" action="<?= $baseUrl ?>/index.php?action=admin-recipes" id="recette-form" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="action" id="action-input" value="<?= $recetteToEdit ? 'update' : 'add' ?>">
             <input type="hidden" name="id"     id="form-id" value="<?= $recetteToEdit ? htmlspecialchars($recetteToEdit['id']) : '' ?>">
             <input type="hidden" name="existing_image_url" value="<?= $recetteToEdit ? htmlspecialchars($recetteToEdit['image_url'] ?? '') : '' ?>">
@@ -177,7 +178,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <p style="color:rgba(236,240,241,0.4);margin:0;font-size:13px;">
-                            Aucun aliment disponible. <a href="manage_aliments.php" style="color:#2ecc71;">Créez-en un d'abord.</a>
+                            Aucun aliment disponible. <a href="<?= $baseUrl ?>/index.php?action=admin-aliments" style="color:#2ecc71;">Créez-en un d'abord.</a>
                         </p>
                     <?php endif; ?>
                 </div>
@@ -198,13 +199,13 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                            placeholder="ex: 30 minutes" value="<?= $recetteToEdit ? htmlspecialchars($recetteToEdit['temps_preparation']) : '' ?>">
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                    <label for="diff-input">Niveau de difficulté</label>
-                    <select name="niveau_difficulte" id="diff-input">
+                    <label for="diff-input">Difficulté</label>
+                    <select name="difficulte" id="diff-input">
                         <option value="">Sélectionnez un niveau</option>
                         <?php 
                         $diffs = ['Très Facile', 'Facile', 'Moyen', 'Difficile', 'Expert'];
                         foreach($diffs as $d) {
-                            $selected = ($recetteToEdit && $recetteToEdit['niveau_difficulte'] === $d) ? 'selected' : '';
+                            $selected = ($recetteToEdit && $recetteToEdit['difficulte'] === $d) ? 'selected' : '';
                             echo "<option value=\"$d\" $selected>$d</option>";
                         }
                         ?>
@@ -232,7 +233,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                 <?php endif; ?>
             </button>
             <?php if ($recetteToEdit): ?>
-                <a href="manage_recettes.php" class="submit-btn-cancel" style="display:inline-flex; text-decoration:none; justify-content:center; align-items:center;">
+                <a href="<?= $baseUrl ?>/index.php?action=admin-recipes" class="submit-btn-cancel" style="display:inline-flex; text-decoration:none; justify-content:center; align-items:center;">
                     <i class="fa-solid fa-xmark"></i> Annuler
                 </a>
             <?php endif; ?>

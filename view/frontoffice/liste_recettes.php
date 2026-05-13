@@ -1,7 +1,8 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Smart Nutrition | Produits';
-require_once __DIR__ . '/../../controler/RecetteController.php';
-require_once __DIR__ . '/../../controler/AlimentController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
+require_once __DIR__ . '/../../controller/AlimentController.php';
 
 $controller        = new RecetteController();
 $alimentController = new AlimentController();
@@ -68,24 +69,25 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
             <p class="catalog-eyebrow">Catalog approuvé</p>
             <h2><i class="fa-solid fa-book-open"></i> Nos Recettes</h2>
         </div>
-        <div class="catalog-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <input type="text" id="searchFrontRecettes" placeholder="Rechercher une recette..." style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width:200px; font-family:inherit; font-size:14px;">
-            <a href="/projetwebmalek/view/backoffice/manage_recettes.php"
-               class="catalog-btn catalog-btn-primary">
-                <i class="fa-solid fa-plus"></i> Créer recette
+        <div class="catalog-actions" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+            <div style="position:relative; flex-grow:1; max-width:300px;">
+                <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(255,255,255,0.4);"></i>
+                <input type="text" id="searchFrontRecettes" placeholder="Rechercher une recette..." 
+                       style="padding: 10px 12px 10px 38px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; width:100%; font-family:inherit; font-size:14px; outline:none; transition:all 0.3s;">
+            </div>
+            
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-generate" class="catalog-btn catalog-btn-blue" title="Générer par IA">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> IA
             </a>
-            <a href="/projetwebmalek/view/backoffice/manage_aliments.php"
-               class="catalog-btn catalog-btn-blue">
-                <i class="fa-solid fa-apple-whole"></i> Gérer aliments
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-stats" class="catalog-btn catalog-btn-green" title="Voir Statistiques">
+                <i class="fa-solid fa-chart-pie"></i> Stats
             </a>
-            <a href="/projetwebmalek/view/backoffice/index.php"
-               class="catalog-btn catalog-btn-green">
-                <i class="fa-solid fa-user-shield"></i> Admin
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-export&type=liste" target="_blank" class="catalog-btn" 
+               style="background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.3); color:#e74c3c;">
+                <i class="fa-solid fa-file-pdf"></i> PDF
             </a>
-            <a href="export_pdf.php?type=liste" target="_blank"
-               class="catalog-btn"
-               style="background:rgba(231,76,60,0.15);border-color:rgba(231,76,60,0.4);color:#e74c3c;">
-                <i class="fa-solid fa-file-pdf"></i> Export PDF
+            <a href="<?= $baseUrl ?>/index.php?action=admin-recipes" class="catalog-btn catalog-btn-primary">
+                <i class="fa-solid fa-plus"></i> Créer
             </a>
         </div>
     </div>
@@ -93,11 +95,15 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
     <div class="product-grid">
         <?php if (!empty($recettes)): ?>
             <?php foreach ($recettes as $r): ?>
-                <a href="details_recette.php?id=<?= $r['id'] ?>" class="product-card recette-card" data-nom="<?= htmlspecialchars(strtolower((string)$r['nom'])) ?>">
+                <a href="<?= $baseUrl ?>/index.php?action=recipe-details&id=<?= $r['id'] ?>" class="recette-card" data-nom="<?= htmlspecialchars(strtolower((string)$r['nom'])) ?>">
                     <div class="product-card-img">
                         <?php if (!empty($r['image_url'])): ?>
                             <img src="<?= htmlspecialchars((string)$r['image_url']) ?>"
-                                 alt="<?= htmlspecialchars((string)$r['nom']) ?>">
+                                 alt="<?= htmlspecialchars((string)$r['nom']) ?>"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="product-card-img-placeholder" style="display:none;">
+                                <i class="fa-solid fa-utensils"></i>
+                            </div>
                         <?php else: ?>
                             <div class="product-card-img-placeholder">
                                 <i class="fa-solid fa-utensils"></i>
@@ -107,14 +113,23 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
                     <div class="product-card-body">
                         <div class="product-card-title-row">
                             <h3 class="product-card-title"><?= htmlspecialchars((string)$r['nom']) ?></h3>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-bottom:12px;">
                             <span class="product-card-badge badge-orange">
                                 <i class="fa-solid fa-clock"></i>
                                 <?= htmlspecialchars((string)$r['temps_preparation']) ?>
                             </span>
+                            <span class="product-card-badge badge-blue">
+                                <i class="fa-solid fa-chart-simple"></i>
+                                <?= htmlspecialchars((string)($r['difficulte'] ?? 'Moyen')) ?>
+                            </span>
                         </div>
                         <p class="product-card-desc">
-                            <?= htmlspecialchars((string)($r['description'] ?? $r['niveau_difficulte'] ?? '')) ?>
+                            <?= htmlspecialchars((string)($r['description'] ?? 'Aucune description disponible.')) ?>
                         </p>
+                        <div style="margin-top:auto; padding-top:15px; border-top:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:12px; color:var(--primary); font-weight:700;">Voir détails <i class="fa-solid fa-arrow-right"></i></span>
+                        </div>
                     </div>
                 </a>
             <?php endforeach; ?>
@@ -138,7 +153,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
         </div>
         <div class="catalog-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <input type="text" id="searchFrontAliments" placeholder="Rechercher un aliment..." style="padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; width:200px; font-family:inherit; font-size:14px;">
-            <a href="/projetwebmalek/view/backoffice/manage_aliments.php"
+            <a href="<?= $baseUrl ?>/index.php?action=admin-aliments"
                class="catalog-btn catalog-btn-primary">
                 <i class="fa-solid fa-plus"></i> Ajouter aliment
             </a>
@@ -148,11 +163,15 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
     <div class="product-grid">
         <?php if (!empty($aliments)): ?>
             <?php foreach ($aliments as $a): ?>
-                <a href="details_aliment.php?id=<?= $a['id'] ?>" class="product-card aliment-card" data-nom="<?= htmlspecialchars(strtolower((string)$a['nom'])) ?>">
+                <a href="<?= $baseUrl ?>/index.php?action=recipe-details-aliment&id=<?= $a['id'] ?>" class="product-card aliment-card" data-nom="<?= htmlspecialchars(strtolower((string)$a['nom'])) ?>">
                     <div class="product-card-img">
                         <?php if (!empty($a['image_url'])): ?>
                             <img src="<?= htmlspecialchars((string)$a['image_url']) ?>"
-                                 alt="<?= htmlspecialchars((string)$a['nom']) ?>">
+                                 alt="<?= htmlspecialchars((string)$a['nom']) ?>"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="product-card-img-placeholder" style="display:none;">
+                                <i class="fa-solid fa-leaf"></i>
+                            </div>
                         <?php else: ?>
                             <div class="product-card-img-placeholder">
                                 <i class="fa-solid fa-leaf"></i>

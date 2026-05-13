@@ -1,6 +1,7 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Smart Nutrition | Statistiques Nutritionnelles';
-require_once __DIR__ . '/../../controler/RecetteController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
 
 $controller = new RecetteController();
 $stats = $controller->getStatistiquesNutritionnelles();
@@ -31,10 +32,10 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
 <div class="submit-page-wrapper" style="max-width:900px;">
 
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
-        <a href="liste_recettes.php" class="submit-back-btn" style="margin-bottom:0;">
+        <a href="<?= $baseUrl ?>/index.php?action=recipes-management" class="submit-back-btn" style="margin-bottom:0;">
             <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
         </a>
-        <a href="export_pdf.php?type=statistiques" target="_blank"
+        <a href="<?= $baseUrl ?>/index.php?action=recipe-export&type=statistiques" target="_blank"
            style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;
                   background:rgba(52,152,219,0.15);border:1px solid rgba(52,152,219,0.4);
                   color:#3498db;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
@@ -152,7 +153,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
                     <strong style="color:#f39c12;font-size:15px;"><?= $pcN['lipides'] ?>g</strong>
                 </div>
             </div>
-            <a href="details_recette.php?id=<?= $pc['recette']['id'] ?>"
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-details&id=<?= $pc['recette']['id'] ?>"
                style="display:block;text-align:center;padding:9px;border-radius:7px;
                       background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);
                       color:#e74c3c;font-size:13px;font-weight:600;text-decoration:none;
@@ -191,7 +192,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
                     <strong style="color:#f39c12;font-size:15px;"><?= $mcN['lipides'] ?>g</strong>
                 </div>
             </div>
-            <a href="details_recette.php?id=<?= $mc['recette']['id'] ?>"
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-details&id=<?= $mc['recette']['id'] ?>"
                style="display:block;text-align:center;padding:9px;border-radius:7px;
                       background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.3);
                       color:#2ecc71;font-size:13px;font-weight:600;text-decoration:none;

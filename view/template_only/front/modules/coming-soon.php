@@ -7,7 +7,7 @@
     </p>
 
     <div class="actions">
-        <a class="btn" href="/smart_nutrition/index.php?action=home">
+        <a class="btn" href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=home">
             <i class="fa-solid fa-home"></i> Back to Home
         </a>
     </div>

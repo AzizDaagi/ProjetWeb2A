@@ -1,7 +1,7 @@
 <?php
 ob_start();
 $pageTitle = 'Smart Nutrition | Optimiser la Recette';
-require_once __DIR__ . '/../../controler/RecetteController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
 
 $controller = new RecetteController();
 $recette  = null;
@@ -83,14 +83,14 @@ function macroBadge($pct, $min, $max) {
 
 <div class="submit-page-wrapper" style="max-width:900px;">
 
-    <a href="details_recette.php?id=<?= $id_recette ?>" class="submit-back-btn">
+    <a href="<?= $baseUrl ?>/index.php?action=recipe-details&id=<?= $id_recette ?>" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour à la recette
     </a>
 
     <?php if (!$recette): ?>
     <div class="submit-form-card" style="text-align:center;padding:60px 30px;">
         <i class="fa-solid fa-circle-exclamation" style="font-size:40px;color:#e74c3c;margin-bottom:16px;"></i>
-        <p>Recette introuvable. <a href="liste_recettes.php" style="color:#2ecc71;">Retour au catalogue.</a></p>
+        <p>Recette introuvable. <a href="<?= $baseUrl ?>/index.php?action=recipes-management" style="color:#2ecc71;">Retour au catalogue.</a></p>
     </div>
     <?php else: ?>
 
@@ -110,7 +110,7 @@ function macroBadge($pct, $min, $max) {
         <p style="font-size:14px;color:rgba(236,240,241,0.6);margin-bottom:12px;">Choisissez votre objectif :</p>
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
             <?php foreach ($objectifLabels as $key => $info): ?>
-            <a href="optimiser_recette.php?id=<?= $id_recette ?>&objectif=<?= $key ?>"
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-optimize&id=<?= $id_recette ?>&objectif=<?= $key ?>"
                style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:10px;
                       text-decoration:none;transition:all .2s;
                       background:rgba(255,255,255,<?= $objectif === $key ? '0.07' : '0.03' ?>);
@@ -290,7 +290,7 @@ function macroBadge($pct, $min, $max) {
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
 
         <!-- Appliquer (enregistre en DB) -->
-        <form method="POST" action="save_optimisation.php" style="display:inline;">
+        <form method="POST" action="<?= $baseUrl ?>/index.php?action=recipe-save-optimization" style="display:inline;">
             <input type="hidden" name="id_recette" value="<?= $id_recette ?>">
             <input type="hidden" name="objectif" value="<?= htmlspecialchars($objectif) ?>">
             <?php foreach ($result['nouvelles_quantites'] as $al_id => $qte): ?>
@@ -303,7 +303,7 @@ function macroBadge($pct, $min, $max) {
         </form>
 
         <!-- Garder l'ancienne -->
-        <a href="details_recette.php?id=<?= $id_recette ?>" class="submit-btn"
+        <a href="<?= $baseUrl ?>/index.php?action=recipe-details&id=<?= $id_recette ?>" class="submit-btn"
            style="background:transparent;border:1px solid rgba(87,101,116,0.5);
                   color:rgba(236,240,241,0.7);box-shadow:none;text-decoration:none;display:inline-flex;">
             <i class="fa-solid fa-xmark"></i> Garder l'originale

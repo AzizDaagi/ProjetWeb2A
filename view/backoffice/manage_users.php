@@ -1,6 +1,7 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Gestion des Utilisateurs';
-require_once __DIR__ . '/../../controler/UserController.php';
+require_once __DIR__ . '/../../controller/UserController.php';
 
 $controller = new UserController();
 
@@ -11,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_POST['action'] === 'delete') {
             $controller->deleteUser($_POST['id']);
         }
-        header('Location: manage_users.php');
+        header('Location: ' . $baseUrl . '/index.php?action=users-list');
         exit;
     }
 }
@@ -76,7 +77,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                                         <i class="fa-solid fa-rotate"></i> Changer Rôle
                                     </button>
                                 </form>
-                                <form method="POST" action="manage_users.php" style="display:inline;" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                <form method="POST" action="<?= $baseUrl ?>/index.php?action=users-list" style="display:inline;" onsubmit="return confirm('Supprimer cet utilisateur ?');">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="id" value="<?= $u['id'] ?>">
                                     <button type="submit" class="btn-delete-user" style="background: transparent; color: #e74c3c; border: none; cursor: pointer; padding: 8px 12px;">

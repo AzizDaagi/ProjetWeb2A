@@ -1,6 +1,6 @@
 <?php
 $pageTitle = 'Smart Nutrition | Générateur de Recettes IA';
-require_once __DIR__ . '/../../controler/RecetteController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
 
 $controller = new RecetteController();
 
@@ -74,7 +74,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="generate_recette.php" id="gen-form">
+        <form method="POST" action="<?= $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') ?>/index.php?action=recipe-generate" id="gen-form">
             <input type="hidden" name="generate" value="1">
 
             <div class="submit-form-row">
@@ -223,7 +223,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
         </div>
 
         <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.07);">
-            <a href="generate_recette.php" class="submit-btn"
+            <a href="<?= $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') ?>/index.php?action=recipe-generate" class="submit-btn"
                style="background:rgba(155,89,182,0.2);border:1px solid rgba(155,89,182,0.4);
                       color:#9b59b6;box-shadow:none;display:inline-flex;text-decoration:none;width:auto;">
                 <i class="fa-solid fa-rotate"></i> Générer une autre combinaison

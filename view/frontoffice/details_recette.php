@@ -1,6 +1,7 @@
 <?php
+$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
 $pageTitle = 'Détails de la Recette';
-require_once __DIR__ . '/../../controler/RecetteController.php';
+require_once __DIR__ . '/../../controller/RecetteController.php';
 
 $controller        = new RecetteController();
 $recette           = null;
@@ -19,9 +20,9 @@ if (isset($_GET['id'])) {
 require_once __DIR__ . '/../template_only/layouts/header.php';
 ?>
 
-<div class="submit-page-wrapper" style="max-width:860px;">
+<div class="submit-page-wrapper" style="max-width:1200px; margin: 0 auto; padding: 24px;">
 
-    <a href="liste_recettes.php" class="submit-back-btn">
+    <a href="<?= $baseUrl ?>/index.php?action=recipes-management" class="submit-back-btn">
         <i class="fa-solid fa-arrow-left"></i> Retour au catalogue
     </a>
 
@@ -37,14 +38,22 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
     <?php if ($recette): ?>
     <div class="submit-form-card" style="padding:36px 32px;">
 
-        <!-- Image -->
-        <?php if (!empty($recette['image_url'])): ?>
-        <div style="width:100%;height:320px;border-radius:10px;overflow:hidden;margin-bottom:28px;background:rgba(30,39,46,1);">
-            <img src="<?= htmlspecialchars((string)$recette['image_url']) ?>"
-                 alt="<?= htmlspecialchars((string)$recette['nom']) ?>"
-                 style="width:100%;height:100%;object-fit:cover;">
+        <!-- Image Section with Fallback -->
+        <div style="width:100%; height:320px; border-radius:14px; overflow:hidden; margin-bottom:28px; background:rgba(30,39,46,0.5); border:1px solid rgba(255,255,255,0.08); position:relative;">
+            <?php if (!empty($recette['image_url'])): ?>
+                <img src="<?= htmlspecialchars((string)$recette['image_url']) ?>"
+                     alt="<?= htmlspecialchars((string)$recette['nom']) ?>"
+                     style="width:100%; height:100%; object-fit:cover;"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="product-card-img-placeholder" style="display:none; height:100%; font-size:64px;">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+            <?php else: ?>
+                <div class="product-card-img-placeholder" style="height:100%; font-size:64px;">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+            <?php endif; ?>
         </div>
-        <?php endif; ?>
 
         <!-- Title -->
         <h1 style="margin:0 0 20px;font-size:32px;font-weight:800;">
@@ -59,7 +68,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
             </span>
             <span class="product-card-badge badge-blue" style="font-size:14px;padding:8px 16px;">
                 <i class="fa-solid fa-chart-bar"></i>
-                <?= htmlspecialchars((string)$recette['niveau_difficulte']) ?>
+                <?= htmlspecialchars((string)$recette['difficulte']) ?>
             </span>
         </div>
 
@@ -93,7 +102,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
                        border-left:3px solid #f39c12;padding-left:10px;">
                 <i class="fa-solid fa-fire"></i> Valeurs Nutritionnelles Globales
             </h3>
-            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:20px;">
                 <div style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.25);border-radius:10px;padding:12px;text-align:center;">
                     <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:rgba(236,240,241,0.5);">Calories</p>
                     <strong style="font-size:20px;color:#e74c3c;"><?= round($nutrition_totale['calories']) ?></strong>
@@ -139,20 +148,20 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
 
         <!-- Action Buttons -->
         <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-            <a href="optimiser_recette.php?id=<?= $recette['id'] ?>"
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-optimize&id=<?= $recette['id'] ?>"
                class="submit-btn"
                style="background:linear-gradient(135deg,#2ecc71,#27ae60);
                       box-shadow:0 4px 15px rgba(46,204,113,0.35);
                       text-decoration:none;display:inline-flex;">
                 <i class="fa-solid fa-arrow-up-right-dots"></i> Optimiser cette recette
             </a>
-            <a href="export_pdf.php?type=recette&id=<?= $recette['id'] ?>" target="_blank"
+            <a href="<?= $baseUrl ?>/index.php?action=recipe-export&type=recette&id=<?= $recette['id'] ?>" target="_blank"
                style="display:inline-flex;align-items:center;gap:8px;padding:10px 18px;
                       background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);
                       color:#e74c3c;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;">
                 <i class="fa-solid fa-file-pdf"></i> Exporter PDF
             </a>
-            <a href="/projetwebmalek/view/backoffice/manage_recettes.php"
+            <a href="<?= $baseUrl ?>/index.php?action=admin-recipes"
                class="catalog-btn catalog-btn-blue" style="display:inline-flex;">
                 <i class="fa-solid fa-pen"></i> Modifier cette recette
             </a>
@@ -164,7 +173,7 @@ require_once __DIR__ . '/../template_only/layouts/header.php';
         <i class="fa-solid fa-circle-exclamation" style="font-size:40px;color:#e74c3c;display:block;margin-bottom:16px;"></i>
         <h2 style="margin:0 0 10px;">Recette introuvable</h2>
         <p style="color:rgba(236,240,241,0.5);margin-bottom:24px;">Cette recette n'existe pas ou a été supprimée.</p>
-        <a href="liste_recettes.php" class="submit-back-btn" style="margin-bottom:0;">Retour au catalogue</a>
+        <a href="<?= $baseUrl ?>/index.php?action=recipes-management" class="submit-back-btn" style="margin-bottom:0;">Retour au catalogue</a>
     </div>
     <?php endif; ?>
 </div>

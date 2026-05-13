@@ -28,10 +28,10 @@
                         </span>
                     </td>
                     <td class="users-actions">
-                        <a href="/smart_nutrition/index.php?action=edit-user&id=<?= $u['id'] ?>" class="btn-edit">
+                        <a href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=edit-user&id=<?= $u['id'] ?>" class="btn-edit">
                             <i class="fa-solid fa-pen"></i> Edit
                         </a>
-                        <form method="POST" action="/smart_nutrition/index.php?action=toggle-role" class="inline-form">
+                        <form method="POST" action="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=toggle-role" class="inline-form">
                             <input type="hidden" name="user_id" value="<?= (int) $u['id'] ?>">
                             <input type="hidden" name="current_role" value="<?= htmlspecialchars($currentRole) ?>">
                             <button type="submit" class="btn-role <?= $currentRole === 'admin' ? 'is-admin' : 'is-user' ?>">
@@ -49,5 +49,5 @@
         </tbody>
     </table>
 
-    <a href="/smart_nutrition/index.php?action=profile" class="btn secondary">Back to profile</a>
+    <a href="<?= ($baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\')) ?>/index.php?action=profile" class="btn secondary">Back to profile</a>
 </div>

@@ -32,7 +32,7 @@
 
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <?php $baseUrl = $baseUrl ?? '/projet-web-25-26'; ?>
+    <?php $baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>
     <script src="<?= htmlspecialchars($baseUrl) ?>/view/assets/app.js?v=<?= $assetVersion ?>"></script>
     <script src="<?= htmlspecialchars($baseUrl) ?>/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
 </body>
