@@ -12,15 +12,15 @@ $isObjectifActive = $currentController === 'objectif' || $currentAction === 'obj
 $isDashboardActive = $currentAction === 'nutrition_dashboard';
 ?>
 <nav class="nutrition-subnav" aria-label="Navigation nutrition">
-    <a href="/projet-web-25-26/index.php?action=suivi" class="nutrition-subnav__link<?= $isSuiviActive ? ' active' : '' ?>">
+    <a href="/Web/index.php?action=suivi" class="nutrition-subnav__link<?= $isSuiviActive ? ' active' : '' ?>">
         <i class="fa-solid fa-fire"></i>
         <span>Suivi</span>
     </a>
-    <a href="/projet-web-25-26/index.php?action=objectif" class="nutrition-subnav__link<?= $isObjectifActive ? ' active' : '' ?>">
+    <a href="/Web/index.php?action=objectif" class="nutrition-subnav__link<?= $isObjectifActive ? ' active' : '' ?>">
         <i class="fa-solid fa-bullseye"></i>
         <span>Objectifs</span>
     </a>
-    <a href="/projet-web-25-26/index.php?action=nutrition_dashboard" class="nutrition-subnav__link<?= $isDashboardActive ? ' active' : '' ?>">
+    <a href="/Web/index.php?action=nutrition_dashboard" class="nutrition-subnav__link<?= $isDashboardActive ? ' active' : '' ?>">
         <i class="fa-solid fa-chart-line"></i>
         <span>Dashboard</span>
     </a>

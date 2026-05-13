@@ -17,7 +17,7 @@ class UserController
 
     private function redirect($action)
     {
-        header('Location: /projet-web-25-26/index.php?action=' . $action);
+        header('Location: /Web/index.php?action=' . $action);
         exit;
     }
 
@@ -1095,7 +1095,7 @@ class UserController
         $pageTitle = 'Tableau de bord Admin';
         $isAdminTemplate = true;
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/back/dashboard.php';
+        include __DIR__ . '/../view/back/user_dashboard.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 
@@ -1104,7 +1104,7 @@ class UserController
         session_unset();
         session_destroy();
 
-        header('Location: /projet-web-25-26/index.php?action=login');
+        header('Location: /Web/index.php?action=login');
         exit;
     }
 }

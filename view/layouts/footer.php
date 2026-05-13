@@ -32,8 +32,12 @@
 
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <?php $baseUrl = $baseUrl ?? '/projet-web-25-26'; ?>
-    <script src="<?= htmlspecialchars($baseUrl) ?>/view/assets/app.js?v=<?= $assetVersion ?>"></script>
-    <script src="<?= htmlspecialchars($baseUrl) ?>/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
+    <script src="/Web/view/assets/app.js?v=<?= $assetVersion ?>"></script>
+    <script src="/Web/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
+    <?php if (!empty($additionalScripts) && is_array($additionalScripts)): ?>
+        <?php foreach ($additionalScripts as $scriptSrc): ?>
+            <script src="<?= htmlspecialchars($scriptSrc, ENT_QUOTES, 'UTF-8') ?>"></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </body>
 </html>

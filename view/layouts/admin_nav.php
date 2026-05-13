@@ -1,10 +1,37 @@
-<?php $currentAction = (string) ($_GET['action'] ?? ''); ?>
-<?php $currentController = (string) ($_GET['controller'] ?? ''); ?>
+<?php $currentAction = $_GET['action'] ?? ''; ?>
 <?php $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'store-user', 'edit-user', 'update-user', 'delete-user'], true); ?>
-<?php $isSuiviAdmin = $currentController === 'backoffice' && in_array($currentAction, ['suivi', 'suiviCreate', 'suiviStore', 'suiviEdit', 'suiviUpdate', 'suiviDelete'], true); ?>
-<?php $isObjectifsAdmin = $currentController === 'backoffice' && in_array($currentAction, ['objectifs', 'objectifShow', 'objectifDelete'], true); ?>
-<?php $isRecipesAdmin = $currentAction === 'admin-recipes'; ?>
-<?php $isRecommendationsAdmin = $currentAction === 'admin-recommendations'; ?>
+<?php $isRecipesAction = $currentAction === 'recipes-management'; ?>
+<?php $isFoodsAction = $currentAction === 'foods-management'; ?>
+<?php $isRecommendationsAction = in_array($currentAction, ['recommendations-management', 'admin-community', 'admin-community-reports'], true); ?>
+<?php $isTrackingAction = $currentAction === 'tracking-management'; ?>
+<?php $isPlannerAction = $currentAction === 'planner-management'; ?>
+<?php
+$moduleDescriptions = [
+    'recipes-management' => [
+        'title' => 'Recette alimentation',
+        'description' => 'Module en cours de developpement pour creer, modifier et supprimer des recettes alimentaires.',
+    ],
+    'foods-management' => [
+        'title' => 'Ecommerce',
+        'description' => 'Module ecommerce pour gerer les produits, le panier, les commandes et le suivi de vente.',
+    ],
+    'recommendations-management' => [
+        'title' => 'Communaute',
+        'description' => 'Module communaute pour publier des recommandations, echanger et moderer les contenus.',
+    ],
+    'tracking-management' => [
+        'title' => 'Activite sportif',
+        'description' => 'Module activite sportif pour suivre les seances, les indicateurs et la progression.',
+    ],
+    'planner-management' => [
+        'title' => 'Planning',
+        'description' => 'Module planning pour organiser les objectifs, les rappels et les taches hebdomadaires.',
+    ],
+];
+$currentModule = $moduleDescriptions[$currentAction] ?? null;
+$defaultModuleTitle = $currentModule['title'] ?? 'Description module';
+$defaultModuleDescription = $currentModule['description'] ?? 'Cliquez sur un bouton de gestion pour afficher sa description ici.';
+?>
 <?php
 $adminName = trim((string) ($_SESSION['user_name'] ?? ''));
 if ($adminName === '') {
@@ -30,9 +57,9 @@ if ($adminInitials === '') {
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-brand-link">
+            <a href="/Web/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/projet-web-25-26/view/assets/images/logo.png"
+                    src="/Web/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -43,11 +70,11 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section">
             <p class="admin-menu-title">Navigation</p>
-            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $currentAction === 'admin-dashboard' ? ' active' : '' ?>">
+            <a href="/Web/index.php?action=admin-dashboard" class="admin-side-link<?= $currentAction === 'admin-dashboard' ? ' active' : '' ?>">
                 <i class="fa-solid fa-gauge-high"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+            <a href="/Web/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
                 <i class="fa-solid fa-users"></i>
                 <span>Utilisateurs</span>
             </a>
@@ -55,30 +82,83 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section admin-modules-section">
             <p class="admin-menu-title">Modules</p>
-            <a href="/projet-web-25-26/index.php?controller=backoffice&action=suivi" class="admin-side-link<?= $isSuiviAdmin ? ' active' : '' ?>">
-                <i class="fa-solid fa-apple-whole"></i>
-                <span>Aliments</span>
-            </a>
-            <a href="/projet-web-25-26/index.php?controller=backoffice&action=objectifs" class="admin-side-link<?= $isObjectifsAdmin ? ' active' : '' ?>">
-                <i class="fa-solid fa-bullseye"></i>
-                <span>Objectifs</span>
-            </a>
-            <a href="/projet-web-25-26/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAdmin ? ' active' : '' ?>">
+            <button
+                type="button"
+                class="admin-side-link admin-module-btn<?= $isRecipesAction ? ' active' : '' ?>"
+                data-module-title="Recette alimentation"
+                data-module-description="Module en cours de developpement pour creer, modifier et supprimer des recettes alimentaires."
+            >
                 <i class="fa-solid fa-book-open"></i>
-                <span>Recettes</span>
-            </a>
-            <a href="/projet-web-25-26/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAdmin ? ' active' : '' ?>">
+                <span>Recette alimentation</span>
+            </button>
+            <button
+                type="button"
+                class="admin-side-link admin-module-btn<?= $isFoodsAction ? ' active' : '' ?>"
+                data-module-title="Ecommerce"
+                data-module-description="Module ecommerce pour gerer les produits, le panier, les commandes et le suivi de vente."
+            >
+                <i class="fa-solid fa-apple-whole"></i>
+                <span>Ecommerce</span>
+            </button>
+            <a
+                href="/Web/index.php?action=admin-community"
+                class="admin-side-link admin-module-btn<?= $isRecommendationsAction ? ' active' : '' ?>"
+                data-module-title="Communaute"
+                data-module-description="Module communaute pour publier des recommandations, echanger et moderer les contenus."
+            >
                 <i class="fa-solid fa-users"></i>
-                <span>Recommandations</span>
+                <span>Communaute</span>
             </a>
+            <?php if ($isRecommendationsAction): ?>
+                <a href="/Web/index.php?action=admin-community-reports" class="admin-side-link admin-sub-link<?= $currentAction === 'admin-community-reports' ? ' active' : '' ?>">
+                    <i class="fa-solid fa-flag"></i>
+                    <span>Signalements</span>
+                </a>
+            <?php endif; ?>
+            <button
+                type="button"
+                class="admin-side-link admin-module-btn<?= $isTrackingAction ? ' active' : '' ?>"
+                data-module-title="Activite sportif"
+                data-module-description="Module activite sportif pour suivre les seances, les indicateurs et la progression."
+            >
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Activite sportif</span>
+            </button>
+            <button
+                type="button"
+                class="admin-side-link admin-module-btn<?= $isPlannerAction ? ' active' : '' ?>"
+                data-module-title="Planning"
+                data-module-description="Module planning pour organiser les objectifs, les rappels et les taches hebdomadaires."
+            >
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Planning</span>
+            </button>
+
+            <div id="adminModuleDescription" class="admin-module-description" tabindex="-1">
+                <strong id="adminModuleDescriptionTitle"><?= htmlspecialchars($defaultModuleTitle) ?></strong>
+                <p id="adminModuleDescriptionText"><?= htmlspecialchars($defaultModuleDescription) ?></p>
+            </div>
         </div>
     </aside>
 
     <header class="admin-topbar">
         <div class="admin-top-actions">
-            <button type="button" class="admin-icon-btn" aria-label="Notifications">
-                <i class="fa-solid fa-bell"></i>
-            </button>
+            <div class="notification-center admin-notification-center" data-notification-endpoint="/Web/controller/notificationController.php">
+                <button type="button" id="notificationToggle" class="admin-icon-btn notification-toggle" aria-label="Notifications" aria-expanded="false">
+                    <i class="fa-solid fa-bell"></i>
+                    <span id="notificationBadge" class="notification-badge" hidden>0</span>
+                </button>
+                <div id="notificationDropdown" class="notification-dropdown" hidden>
+                    <div class="notification-header">
+                        <strong>Notifications</strong>
+                        <button type="button" id="notificationMarkAll" class="notification-mark-all">Tout marquer comme lu</button>
+                    </div>
+                    <div id="notificationList" class="notification-list">
+                        <p class="notification-empty">Aucune notification pour le moment.</p>
+                    </div>
+                    <button type="button" id="notificationShowOlder" class="notification-show-older" hidden>Voir les anciennes notifications</button>
+                </div>
+            </div>
 
             <button type="button" id="themeToggle" class="admin-icon-btn theme-toggle admin-theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
                 <i class="fa-solid fa-moon"></i>
@@ -92,7 +172,7 @@ if ($adminInitials === '') {
                 </div>
             </div>
 
-            <a href="/projet-web-25-26/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
+            <a href="/Web/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>

@@ -413,7 +413,7 @@
             customNomInput.addEventListener('input', clearLookupMessage);
         }
     </script>
-<script src="/projet-web-25-26/view/front/assets/js/theme.js"></script>
+<script src="/Web/view/front/assets/js/theme.js"></script>
 </body>
 
 </html>

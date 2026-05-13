@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     runInitSafely(initHomeTopicButtons, 'home-topics');
     runInitSafely(initHomeWeatherCard, 'home-weather');
     runInitSafely(initVoiceControl, 'voice-control');
+    runInitSafely(initNotifications, 'notifications');
     runInitSafely(initAdminModuleButtons, 'admin-modules');
     runInitSafely(initAdminUsersList, 'admin-users');
     runInitSafely(initBackgroundParallax, 'background-parallax');
@@ -364,7 +365,7 @@ function setupFaceAuthCard(card) {
         }
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            setStatus('Camera indisponible ou permission refusee.', 'error');
+            setStatus('Votre navigateur ne supporte pas la camera web.', 'error');
             return;
         }
 
@@ -392,7 +393,7 @@ function setupFaceAuthCard(card) {
         } catch (error) {
             console.error('Face auth camera error:', error);
             stopCamera();
-            setStatus('Camera indisponible ou permission refusee.', 'error');
+            setStatus('Impossible d\'activer la camera ou les modeles faciaux.', 'error');
         } finally {
             state.isBusy = false;
             syncButtons();
@@ -959,7 +960,7 @@ function initVoiceControl() {
     }
 
     function buildActionUrl(action) {
-        return '/projet-web-25-26/index.php?action=' + encodeURIComponent(action);
+        return '/Web/index.php?action=' + encodeURIComponent(action);
     }
 
     function setTheme(theme) {
@@ -1521,6 +1522,174 @@ function initVoiceControl() {
     updateVoiceScrollUI();
 }
 
+function initNotifications() {
+    var center = document.querySelector('.notification-center');
+    if (!center || center.dataset.notificationReady === 'true') {
+        return;
+    }
+
+    center.dataset.notificationReady = 'true';
+
+    var endpoint = center.getAttribute('data-notification-endpoint') || '';
+    var toggle = document.getElementById('notificationToggle');
+    var dropdown = document.getElementById('notificationDropdown');
+    var badge = document.getElementById('notificationBadge');
+    var list = document.getElementById('notificationList');
+    var markAll = document.getElementById('notificationMarkAll');
+    var showOlder = document.getElementById('notificationShowOlder');
+    var initialVisibleCount = 5;
+    var olderVisible = false;
+    var latestItems = [];
+
+    if (!endpoint || !toggle || !dropdown || !badge || !list) {
+        return;
+    }
+
+    function escapeHtml(value) {
+        var div = document.createElement('div');
+        div.textContent = value || '';
+        return div.innerHTML;
+    }
+
+    function renderNotifications(items) {
+        latestItems = Array.isArray(items) ? items : [];
+        var visibleItems = olderVisible ? latestItems : latestItems.slice(0, initialVisibleCount);
+
+        if (!visibleItems.length) {
+            list.innerHTML = '<p class="notification-empty">Aucune notification pour le moment.</p>';
+            if (showOlder) showOlder.hidden = true;
+            return;
+        }
+
+        list.innerHTML = visibleItems.map(function (item) {
+            var unreadClass = Number(item.is_read) ? '' : ' is-unread';
+            var time = item.created_at ? new Date(String(item.created_at).replace(' ', 'T')).toLocaleString() : '';
+            return '' +
+                '<button type="button" class="notification-item' + unreadClass + '" data-id="' + escapeHtml(item.id) + '" data-link="' + escapeHtml(item.link_url || '') + '">' +
+                    '<span class="notification-item-title">' + escapeHtml(item.title) + '</span>' +
+                    '<span class="notification-item-message">' + escapeHtml(item.message) + '</span>' +
+                    '<span class="notification-item-time">' + escapeHtml(time) + '</span>' +
+                '</button>';
+        }).join('');
+
+        if (showOlder) {
+            showOlder.hidden = latestItems.length <= initialVisibleCount;
+            showOlder.textContent = olderVisible ? 'Anciennes notifications affichees' : 'Voir les anciennes notifications';
+            showOlder.disabled = olderVisible;
+        }
+    }
+
+    function updateBadge(count) {
+        var unreadCount = Number(count || 0);
+        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        badge.hidden = unreadCount === 0;
+    }
+
+    function positionDropdown() {
+        var rect = toggle.getBoundingClientRect();
+        var dropdownWidth = Math.min(360, window.innerWidth - 28);
+        dropdown.style.width = dropdownWidth + 'px';
+        dropdown.style.right = Math.max(14, window.innerWidth - rect.right) + 'px';
+        dropdown.style.top = Math.max(12, Math.min(rect.bottom + 10, window.innerHeight - 120)) + 'px';
+    }
+
+    function fetchNotifications() {
+        fetch(endpoint + '?action=list', {
+            cache: 'no-store',
+            credentials: 'same-origin'
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (!data || data.success !== true) return;
+                updateBadge(data.unreadCount);
+                renderNotifications(data.notifications || []);
+            })
+            .catch(function () {});
+    }
+
+    function markRead(id, callback) {
+        fetch(endpoint + '?action=mark_read', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'id=' + encodeURIComponent(id)
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data && data.success) {
+                    updateBadge(data.unreadCount);
+                    fetchNotifications();
+                }
+                if (callback) callback();
+            })
+            .catch(function () {
+                if (callback) callback();
+            });
+    }
+
+    toggle.addEventListener('click', function () {
+        var isOpen = !dropdown.hidden;
+        dropdown.hidden = isOpen;
+        toggle.setAttribute('aria-expanded', String(!isOpen));
+        if (!isOpen) {
+            positionDropdown();
+            fetchNotifications();
+        }
+    });
+
+    list.addEventListener('click', function (event) {
+        var item = event.target.closest('.notification-item');
+        if (!item) return;
+
+        markRead(item.dataset.id, function () {
+            if (item.dataset.link) {
+                window.location.href = item.dataset.link;
+            }
+        });
+    });
+
+    if (markAll) {
+        markAll.addEventListener('click', function () {
+            fetch(endpoint + '?action=mark_all_read', {
+                method: 'POST',
+                credentials: 'same-origin'
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.success) {
+                        updateBadge(data.unreadCount);
+                        fetchNotifications();
+                    }
+                })
+                .catch(function () {});
+        });
+    }
+
+    if (showOlder) {
+        showOlder.addEventListener('click', function () {
+            olderVisible = true;
+            dropdown.classList.add('is-expanded');
+            renderNotifications(latestItems);
+        });
+    }
+
+    document.addEventListener('click', function (event) {
+        if (!center.contains(event.target)) {
+            dropdown.hidden = true;
+            olderVisible = false;
+            dropdown.classList.remove('is-expanded');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    window.addEventListener('resize', function () {
+        if (!dropdown.hidden) positionDropdown();
+    });
+
+    fetchNotifications();
+    window.setInterval(fetchNotifications, 10000);
+}
+
 function initAdminModuleButtons() {
     var moduleButtons = document.querySelectorAll('.admin-module-btn');
     if (!moduleButtons.length) {
@@ -1536,20 +1705,32 @@ function initAdminModuleButtons() {
     }
 
     moduleButtons.forEach(function (button) {
-        button.addEventListener('click', function () {
+        var wasActive = button.classList.contains('active');
+
+        function updateModuleDescription() {
             var moduleTitle = button.getAttribute('data-module-title') || 'Module';
             var moduleDescription = button.getAttribute('data-module-description') || '';
 
             moduleButtons.forEach(function (item) {
-                item.classList.remove('active');
+                item.classList.remove('is-previewed');
             });
 
-            button.classList.add('active');
+            button.classList.add('is-previewed');
             titleEl.textContent = moduleTitle;
             textEl.textContent = moduleDescription;
+        }
 
-            descriptionBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        });
+        function clearModulePreview() {
+            button.classList.remove('is-previewed');
+            if (wasActive) {
+                button.classList.add('active');
+            }
+        }
+
+        button.addEventListener('mouseenter', updateModuleDescription);
+        button.addEventListener('focus', updateModuleDescription);
+        button.addEventListener('mouseleave', clearModulePreview);
+        button.addEventListener('blur', clearModulePreview);
     });
 }
 
@@ -1717,13 +1898,13 @@ function initAdminUsersList() {
         cell.className = 'users-actions';
 
         var editLink = document.createElement('a');
-        editLink.href = '/projet-web-25-26/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
+        editLink.href = '/Web/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
         editLink.className = 'btn-edit';
         editLink.innerHTML = '<i class="fa-solid fa-pen"></i> Modifier';
 
         var form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/projet-web-25-26/index.php?action=delete-user';
+        form.action = '/Web/index.php?action=delete-user';
         form.className = 'inline-form';
         form.setAttribute('novalidate', 'novalidate');
         form.onsubmit = function () {
@@ -1876,7 +2057,7 @@ function initAdminUsersList() {
 
     if (exportButton) {
         exportButton.addEventListener('click', function () {
-        var url = '/projet-web-25-26/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
+            var url = '/Web/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
             window.open(url, '_blank', 'noopener');
         });
     }
