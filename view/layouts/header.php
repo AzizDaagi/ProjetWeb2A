@@ -6,7 +6,12 @@
     <title><?= $pageTitle ?? 'Smart Nutrition' ?></title>
     <?php $assetVersion = time(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/smart_nutrition/view/assets/style.css?v=<?= $assetVersion ?>">
+    <link rel="stylesheet" href="/Web/view/assets/style.css?v=<?= $assetVersion ?>">
+    <?php if (!empty($additionalStylesheets) && is_array($additionalStylesheets)): ?>
+        <?php foreach ($additionalStylesheets as $stylesheet): ?>
+            <link rel="stylesheet" href="<?= htmlspecialchars($stylesheet, ENT_QUOTES, 'UTF-8') ?>">
+        <?php endforeach; ?>
+    <?php endif; ?>
 </head>
 <?php $showNav = $showNav ?? isset($_SESSION['user_id']); ?>
 <?php $isAdminTemplate = isset($isAdminTemplate) && $isAdminTemplate === true; ?>

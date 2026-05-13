@@ -1,9 +1,23 @@
 <?php
-require_once '../../model/connection.php';
-require_once '../../model/Post.php';
-require_once '../../model/Comment.php';
-require_once '../../model/AiModeration.php';
-require_once '../../model/ImageModeration.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
+    header('Location: /Web/index.php?action=login');
+    exit;
+}
+
+if (!defined('SMART_ADMIN_VIEW')) {
+    header('Location: /Web/index.php?action=admin-community');
+    exit;
+}
+
+require_once __DIR__ . '/../../model/connection.php';
+require_once __DIR__ . '/../../model/Post.php';
+require_once __DIR__ . '/../../model/Comment.php';
+require_once __DIR__ . '/../../model/AiModeration.php';
+require_once __DIR__ . '/../../model/ImageModeration.php';
 
 $adminName = $_SESSION['user_name'] ?? 'Admin';
 $myId = 1;
@@ -103,39 +117,6 @@ function getPostCategoryMeta($category)
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Back Office - Communaute</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="style/community.css?v=<?= filemtime(__DIR__ . '/style/community.css') ?>">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
-
-<body class="backoffice-page">
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="community.php" class="brand-link">
-                <img src="style/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
-                <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
-            </a>
-        </div>
-        <ul class="navbar-menu">
-            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
-            <li><a href="community.php" class="nav-link active"><i class="fa-solid fa-users"></i> Communaute</a></li>
-            <li><a href="reports.php" class="nav-link"><i class="fa-solid fa-flag"></i> Signalements</a></li>
-        </ul>
-        <div class="navbar-footer">
-            <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Sombre
-            </button>
-            <p class="user-info">Admin: <strong><?= htmlspecialchars($adminName) ?></strong></p>
-        </div>
-    </nav>
-
-    <div class="main-content">
         <div class="container">
             <h1 class="mb-4"><i class="fas fa-user-shield"></i> Moderation de la communaute</h1>
 
@@ -402,10 +383,7 @@ function getPostCategoryMeta($category)
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="style/community.js?v=<?= filemtime(__DIR__ . '/style/community.js') ?>"></script>
     <script>
         let imageToRemove = {};
         const adminPostMaps = {};
@@ -562,7 +540,7 @@ function getPostCategoryMeta($category)
                 formData.append('image', imageInput.files[0]);
             }
 
-            fetch('../../controller/postController.php?action=update', {
+            fetch('/Web/controller/postController.php?action=update', {
                     method: 'POST',
                     body: formData
                 })
@@ -579,7 +557,7 @@ function getPostCategoryMeta($category)
         function deletePost(id) {
             if (!confirm("Supprimer cette publication ?")) return;
 
-            fetch('../../controller/postController.php?action=delete', {
+            fetch('/Web/controller/postController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -608,7 +586,7 @@ function getPostCategoryMeta($category)
             const content = document.getElementById(`edit-comment-text-${id}`).value;
             if (!content.trim()) return alert("Le commentaire ne peut pas etre vide");
 
-            fetch('../../controller/commentController.php?action=admin_update', {
+            fetch('/Web/controller/commentController.php?action=admin_update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -628,7 +606,7 @@ function getPostCategoryMeta($category)
         function deleteComment(id) {
             if (!confirm("Supprimer ce commentaire ?")) return;
 
-            fetch('../../controller/commentController.php?action=admin_delete', {
+            fetch('/Web/controller/commentController.php?action=admin_delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -645,6 +623,3 @@ function getPostCategoryMeta($category)
                 });
         }
     </script>
-</body>
-
-</html>

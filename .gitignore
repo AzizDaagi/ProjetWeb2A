@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-.env.local
-=======
 .env
+.env.local
 *.log
 .edge-profile/
->>>>>>> community

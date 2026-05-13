@@ -41,7 +41,7 @@ $generatedAtLabel = isset($generatedAt) && $generatedAt instanceof DateTimeInter
             <button type="button" class="btn-admin-secondary" onclick="window.print();">
                 <i class="fa-solid fa-print"></i> Imprimer / Sauver en PDF
             </button>
-            <a href="/smart_nutrition/index.php?action=users-list" class="btn-admin">
+            <a href="/Web/index.php?action=users-list" class="btn-admin">
                 <i class="fa-solid fa-arrow-left"></i> Retour
             </a>
         </div>

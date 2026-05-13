@@ -492,12 +492,27 @@ h1.mb-4 {
 .form-control {
     width: 100%;
     padding: 14px 16px;
+    min-height: 52px;
     border: 1px solid rgba(87, 101, 116, 0.74);
     border-radius: 16px;
     background: rgba(13, 20, 30, 0.74);
     color: var(--text-main);
     font: inherit;
+    line-height: 1.35;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+select.form-control {
+    height: auto;
+    min-height: 52px;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 52px;
+}
+
+select.form-control.form-control-sm {
+    min-height: 44px;
+    line-height: 44px;
 }
 
 body.theme-light .form-control {
@@ -673,6 +688,7 @@ input[type="file"].form-control {
 .post-reactions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 10px;
     margin-top: 18px;
     padding-top: 16px;
@@ -680,8 +696,16 @@ input[type="file"].form-control {
 }
 
 .reaction-btn {
+    width: auto !important;
+    max-width: none;
+    min-width: max-content;
+    margin-top: 0 !important;
+    overflow: visible;
+    white-space: nowrap;
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     padding: 9px 14px;
     border-radius: 999px;
@@ -690,8 +714,14 @@ input[type="file"].form-control {
     color: var(--text-main);
     cursor: pointer;
     font: inherit;
+    font-size: 0.92rem;
+    line-height: 1.15;
     font-weight: 600;
     transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.reaction-btn::after {
+    display: none !important;
 }
 
 .reaction-btn:hover {
@@ -2259,6 +2289,31 @@ body.backoffice-page .admin-map-link:hover {
     margin-top: 10px;
 }
 
+.comment-item .btn-group,
+.comment-edit-form .mt-1 {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.comment-item .btn-group .btn,
+.comment-edit-form .mt-1 .btn,
+.comment-like-btn {
+    width: auto !important;
+    min-width: max-content;
+    margin-top: 0 !important;
+    white-space: nowrap;
+    overflow: visible;
+    flex: 0 0 auto;
+}
+
+.comment-item .btn-group .btn::after,
+.comment-edit-form .mt-1 .btn::after,
+.comment-like-btn::after {
+    display: none !important;
+}
+
 .comment-like-btn.is-active {
     color: #2f80ed;
     border-color: rgba(47, 128, 237, 0.34);
@@ -2910,5 +2965,39 @@ body.theme-light .news-modal-dialog {
 
     .modal-body {
         padding: 1.5rem;
+    }
+}
+
+body.backoffice-page.admin-template .navbar,
+body.backoffice-page.admin-template .navbar::after {
+    display: none;
+}
+
+body.backoffice-page.admin-template .main-content {
+    margin-left: 220px;
+    padding: 84px 22px 22px;
+    min-height: 100vh;
+}
+
+body.backoffice-page.admin-template .container {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+@media (max-width: 992px) {
+    body.backoffice-page.admin-template .main-content {
+        margin-left: 0;
+        padding-top: 138px;
+    }
+}
+
+@media (max-width: 768px) {
+    body.backoffice-page.admin-template .main-content {
+        padding: 190px 14px 18px;
     }
 }

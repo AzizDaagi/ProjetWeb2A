@@ -1,7 +1,26 @@
 <?php
-require_once '../../model/connection.php';
-require_once '../../model/Post.php';
-require_once '../../model/Comment.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
+    header('Location: /Web/index.php?action=login');
+    exit;
+}
+if (!defined('SMART_ADMIN_VIEW')) {
+    $target = '/Web/index.php?action=admin-community-review-post';
+    if (isset($_GET['report_id'])) {
+        $target .= '&report_id=' . urlencode((string) $_GET['report_id']);
+    }
+    if (isset($_GET['post_id'])) {
+        $target .= '&post_id=' . urlencode((string) $_GET['post_id']);
+    }
+    header('Location: ' . $target);
+    exit;
+}
+require_once __DIR__ . '/../../model/connection.php';
+require_once __DIR__ . '/../../model/Post.php';
+require_once __DIR__ . '/../../model/Comment.php';
 
 $adminName = $_SESSION['user_name'] ?? 'Admin';
 $myId = 1;
@@ -48,42 +67,12 @@ function organizeReviewComments($comments)
 [$topLevelComments, $repliesByParent] = organizeReviewComments($comments);
 $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : null;
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Back Office - Revision de publication</title>
-    <link rel="stylesheet" href="style/community.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
-<body class="backoffice-page">
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="community.php" class="brand-link">
-                <img src="style/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
-                <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
-            </a>
-        </div>
-        <ul class="navbar-menu">
-            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
-            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Communaute</a></li>
-            <li><a href="reports.php" class="nav-link active"><i class="fa-solid fa-flag"></i> Signalements</a></li>
-        </ul>
-        <div class="navbar-footer">
-            <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Sombre
-            </button>
-            <p class="user-info">Admin: <strong><?= htmlspecialchars($adminName) ?></strong></p>
-        </div>
-    </nav>
-
-    <div class="main-content">
         <div class="container">
             <h1 class="mb-4"><i class="fa-solid fa-magnifying-glass"></i> Examiner la publication signalee</h1>
 
             <?php if ($report): ?>
                 <div class="review-topbar">
-                    <a href="report_details.php?id=<?= (int) $report['id'] ?>" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour au signalement</a>
+                    <a href="/Web/index.php?action=admin-community-report-details&id=<?= (int) $report['id'] ?>" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour au signalement</a>
                     <span class="status-pill status-<?= htmlspecialchars($report['status'] ?: 'pending') ?>">
                         Signalement <?= htmlspecialchars(($report['status'] ?? 'pending') === 'resolved' ? 'resolu' : 'en attente') ?>
                     </span>
@@ -221,9 +210,8 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 </div>
             <?php endif; ?>
         </div>
-    </div>
 
-    <script src="style/community.js"></script>
+    <script src="/Web/view/backOffice/style/community.js"></script>
     <script>
         let reviewImageToRemove = false;
 
@@ -263,7 +251,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 return;
             }
 
-            fetch('../../controller/commentController.php?action=admin_update', {
+            fetch('/Web/controller/commentController.php?action=admin_update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -285,7 +273,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
         function deleteReviewComment(commentId) {
             if (!confirm('Supprimer definitivement ce commentaire ?')) return;
 
-            fetch('../../controller/commentController.php?action=admin_delete', {
+            fetch('/Web/controller/commentController.php?action=admin_delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -322,7 +310,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 formData.append('image', imageInput.files[0]);
             }
 
-            fetch('../../controller/postController.php?action=update', {
+            fetch('/Web/controller/postController.php?action=update', {
                     method: 'POST',
                     body: formData
                 })
@@ -340,7 +328,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
         function deleteReviewedPost(postId) {
             if (!confirm("Supprimer definitivement cette publication ?")) return;
 
-            fetch('../../controller/postController.php?action=delete', {
+            fetch('/Web/controller/postController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -362,7 +350,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             const noteField = document.getElementById('review-resolution-note');
             const reviewNote = noteField ? noteField.value.trim() : '';
 
-            fetch('report_resolve.php', {
+            fetch('/Web/view/backOffice/report_resolve.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -380,5 +368,3 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 });
         }
     </script>
-</body>
-</html>

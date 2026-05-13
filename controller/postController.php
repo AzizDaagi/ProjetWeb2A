@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/../model/Post.php';
 require_once __DIR__ . '/../model/connection.php';
 require_once __DIR__ . '/../model/AiModeration.php';
@@ -43,16 +47,46 @@ class PostController {
         $commentModel = new Comment($this->postModel->database);
 
         $posts = $this->postModel->getAllPosts();
-        require_once 'view/frontOffice/community.php';
+        require_once __DIR__ . '/../view/frontoffice/community.php';
+    }
+
+    private function currentUserId(): int {
+        return (int) ($_SESSION['user_id'] ?? 0);
+    }
+
+    private function currentRole(): string {
+        return (($_SESSION['user_role'] ?? 'user') === 'admin') ? 'admin' : 'user';
+    }
+
+    private function requireClientSession(): int {
+        $userId = $this->currentUserId();
+        if ($userId <= 0 || $this->currentRole() === 'admin') {
+            $this->jsonError('Acces front office refuse.');
+            http_response_code($userId <= 0 ? 401 : 403);
+            exit;
+        }
+
+        return $userId;
+    }
+
+    private function requireAuthenticatedSession(): int {
+        $userId = $this->currentUserId();
+        if ($userId <= 0) {
+            $this->jsonError('Session invalide.');
+            http_response_code(401);
+            exit;
+        }
+
+        return $userId;
     }
 
     public function create() {
+        $userId = $this->requireClientSession();
         $title = InputValidator::cleanText($_POST['title'] ?? '');
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
         $category = $this->sanitizePostCategory($_POST['post_category'] ?? 'advice');
         $productAnalysisJson = $this->sanitizeProductAnalysisJson($_POST['product_analysis_json'] ?? '');
         $location = $this->sanitizePostLocation($_POST['latitude'] ?? null, $_POST['longitude'] ?? null, $_POST['location_accuracy'] ?? null);
-        $userId = 1;
 
         $validationError = InputValidator::firstError([
             InputValidator::validatePostTitle($title),
@@ -106,6 +140,7 @@ class PostController {
     }
 
     public function update() {
+        $userId = $this->requireAuthenticatedSession();
         $id = $_POST['id'] ?? null;
         $title = InputValidator::cleanText($_POST['title'] ?? '');
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
@@ -147,9 +182,10 @@ class PostController {
             }
         }
 
-        $userId = 1;
         try {
-            $success = $this->postModel->updatePost($id, $title, $content, $image, $userId, $productAnalysisJson, $category);
+            $success = $this->currentRole() === 'admin'
+                ? $this->postModel->updatePostAsAdmin($id, $title, $content, $image, $productAnalysisJson, $category)
+                : $this->postModel->updatePost($id, $title, $content, $image, $userId, $productAnalysisJson, $category);
         } catch (PDOException $e) {
             $this->respondToDatabaseImageError($e);
         }
@@ -169,6 +205,7 @@ class PostController {
     }
 
     public function delete() {
+        $userId = $this->requireAuthenticatedSession();
         $id = $_POST['id'] ?? null;
 
         $validationError = InputValidator::validateId($id, 'Publication');
@@ -178,10 +215,12 @@ class PostController {
         }
 
         $currentPost = $this->postModel->getPostById($id);
-        $this->postModel->deleteReactionsForPost($id);
-        $success = $this->postModel->deletePost($id);
+        $success = $this->currentRole() === 'admin'
+            ? $this->postModel->deletePost($id)
+            : $this->postModel->deletePostForUser($id, $userId);
 
         if ($success && $currentPost) {
+            $this->postModel->deleteReactionsForPost($id);
             $this->deleteStoredImage($currentPost['image'] ?? null);
         }
 
@@ -193,9 +232,9 @@ class PostController {
     }
 
     public function react() {
+        $userId = $this->requireClientSession();
         $postId = $_POST['post_id'] ?? null;
         $reactionType = $_POST['reaction_type'] ?? '';
-        $userId = 1;
 
         $validationError = InputValidator::validateId($postId, 'Publication');
         if ($validationError || !in_array($reactionType, self::ALLOWED_REACTIONS, true)) {
@@ -219,10 +258,10 @@ class PostController {
     }
 
     public function report() {
+        $userId = $this->requireClientSession();
         $postId = $_POST['post_id'] ?? null;
         $reason = $_POST['reason'] ?? '';
         $details = InputValidator::cleanMultiline($_POST['details'] ?? '');
-        $userId = 1;
 
         $validationError = InputValidator::firstError([
             InputValidator::validateId($postId, 'Publication'),
@@ -433,7 +472,7 @@ class PostController {
             'post_reaction',
             'Nouvelle reaction sur votre publication',
             $actorName . ' a reagi "' . $reactionLabel . '" a votre publication "' . $postTitle . '".',
-            '/Web/view/frontoffice/community.php#post-' . $postId,
+            '/Web/index.php?action=community#post-' . $postId,
             $postId
         );
     }

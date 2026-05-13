@@ -1,8 +1,24 @@
 <?php
-require_once '../../model/connection.php';
-require_once '../../model/Post.php';
-require_once '../../model/Notification.php';
-require_once '../../model/InputValidator.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
+    header('Location: /Web/index.php?action=login');
+    exit;
+}
+if (!defined('SMART_ADMIN_VIEW')) {
+    $target = '/Web/index.php?action=admin-community-report-details';
+    if (isset($_GET['id'])) {
+        $target .= '&id=' . urlencode((string) $_GET['id']);
+    }
+    header('Location: ' . $target);
+    exit;
+}
+require_once __DIR__ . '/../../model/connection.php';
+require_once __DIR__ . '/../../model/Post.php';
+require_once __DIR__ . '/../../model/Notification.php';
+require_once __DIR__ . '/../../model/InputValidator.php';
 
 $adminName = $_SESSION['user_name'] ?? 'Admin';
 $db = config::getConnexion();
@@ -33,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resolve_report_id']))
             }
             if ($recipientUserId > 0) {
                 $linkUrl = !empty($reportBeforeResolve['post_user_id'])
-                    ? '/Web/view/frontoffice/community.php#post-' . (int) $reportBeforeResolve['post_id']
-                    : '/Web/view/frontoffice/community.php';
+                    ? '/Web/index.php?action=community#post-' . (int) $reportBeforeResolve['post_id']
+                    : '/Web/index.php?action=community';
 
                 $notificationModel->create(
                     $recipientUserId,
@@ -69,36 +85,6 @@ function resolvePostImageSrcForReport($image)
     return null;
 }
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Back Office - Details du signalement</title>
-    <link rel="stylesheet" href="style/community.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
-<body class="backoffice-page">
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="community.php" class="brand-link">
-                <img src="style/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
-                <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
-            </a>
-        </div>
-        <ul class="navbar-menu">
-            <li><a href="dashboard.php" class="nav-link"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
-            <li><a href="community.php" class="nav-link"><i class="fa-solid fa-users"></i> Communaute</a></li>
-            <li><a href="reports.php" class="nav-link active"><i class="fa-solid fa-flag"></i> Signalements</a></li>
-        </ul>
-        <div class="navbar-footer">
-            <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Sombre
-            </button>
-            <p class="user-info">Admin: <strong><?= htmlspecialchars($adminName) ?></strong></p>
-        </div>
-    </nav>
-
-    <div class="main-content">
         <div class="container">
             <h1 class="mb-4"><i class="fa-solid fa-triangle-exclamation"></i> Details du signalement</h1>
 
@@ -120,8 +106,8 @@ function resolvePostImageSrcForReport($image)
                             </p>
                         </div>
                         <div class="report-action-row">
-                            <a href="reports.php" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour aux signalements</a>
-                            <a href="review_post.php?report_id=<?= (int) $report['id'] ?>&post_id=<?= (int) $report['post_id'] ?>" class="btn btn-sm">
+                            <a href="/Web/index.php?action=admin-community-reports" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour aux signalements</a>
+                            <a href="/Web/index.php?action=admin-community-review-post&report_id=<?= (int) $report['id'] ?>&post_id=<?= (int) $report['post_id'] ?>" class="btn btn-sm">
                                 <i class="fa-solid fa-eye"></i> Examiner la publication
                             </a>
                         </div>
@@ -165,13 +151,8 @@ function resolvePostImageSrcForReport($image)
                 <div class="card card-primary shadow-sm">
                     <div class="card-body">
                         <p class="text-muted">Signalement introuvable.</p>
-                        <a href="reports.php" class="btn btn-outline-secondary btn-sm">Retour aux signalements</a>
+                        <a href="/Web/index.php?action=admin-community-reports" class="btn btn-outline-secondary btn-sm">Retour aux signalements</a>
                     </div>
                 </div>
             <?php endif; ?>
         </div>
-    </div>
-
-    <script src="style/community.js"></script>
-</body>
-</html>

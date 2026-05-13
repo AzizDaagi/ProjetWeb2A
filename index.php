@@ -48,16 +48,60 @@ $action = $_GET['action'] ?? $defaultAction;
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
-    header('Location: /smart_nutrition/index.php?action=login');
+    header('Location: /Web/index.php?action=login');
     exit;
 }
 
 $isAdminSession = isset($_SESSION['user_id']) && (($_SESSION['user_role'] ?? 'user') === 'admin');
 
+$adminOnlyActions = [
+    'admin-dashboard',
+    'users-list',
+    'users-search',
+    'users-report',
+    'edit-user',
+    'create-user',
+    'store-user',
+    'update-user',
+    'delete-user',
+    'auth-management',
+    'recommendations-management',
+    'admin-community',
+    'admin-community-reports',
+    'admin-community-report-details',
+    'admin-community-review-post'
+];
+
+$clientOnlyActions = [
+    'home',
+    'profile',
+    'update-profile',
+    'save-face-descriptor',
+    'clear-face-descriptor',
+    'weather-sport',
+    'community',
+    'recipes-management',
+    'foods-management',
+    'tracking-management',
+    'planner-management'
+];
+
+if (isset($_SESSION['user_id'])) {
+    if ($isAdminSession && in_array($action, $clientOnlyActions, true)) {
+        header('Location: /Web/index.php?action=admin-dashboard');
+        exit;
+    }
+
+    if (!$isAdminSession && in_array($action, $adminOnlyActions, true)) {
+        header('Location: /Web/index.php?action=home');
+        exit;
+    }
+}
+
 if ($action === 'home') {
     $pageTitle = 'Smart Nutrition - Accueil';
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/home.php';
+    include __DIR__ . '/view/frontoffice/home.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'login') {
@@ -136,6 +180,10 @@ if ($action === 'home') {
     $user = new UserController();
     $user->usersList();
 
+} elseif ($action === 'users-search') {
+    $user = new UserController();
+    $user->usersSearch();
+
 } elseif ($action === 'users-report') {
     $user = new UserController();
     $user->usersReport();
@@ -170,7 +218,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/auth-management.php';
+    include __DIR__ . '/view/frontoffice/modules/auth-management.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'recipes-management') {
@@ -181,7 +229,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'foods-management') {
@@ -192,18 +240,116 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'community') {
+    if ($isAdminSession) {
+        header('Location: /Web/index.php?action=admin-community');
+        exit;
+    }
+
+    $pageTitle = 'Smart Nutrition - Communauté';
+    $showNav = true;
+    $isAdminTemplate = false;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' front-community-page'));
+    $additionalStylesheets = [
+        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css'),
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+    ];
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/frontoffice/community.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'recommendations-management') {
-    $pageTitle = 'Communaute';
-    $moduleTitle = 'Communaute';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez gerer les interactions et les contenus de la communaute.';
     if ($isAdminSession) {
-        $isAdminTemplate = true;
+        header('Location: /Web/index.php?action=admin-community');
+        exit;
     }
+
+    header('Location: /Web/index.php?action=community');
+    exit;
+
+} elseif ($action === 'admin-community') {
+    if (!$isAdminSession) {
+        header('Location: /Web/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Communaute';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+    ];
+    $additionalScripts = [
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/backOffice/community.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'admin-community-reports') {
+    if (!$isAdminSession) {
+        header('Location: /Web/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Signalements';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+    ];
+    $additionalScripts = [
+        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/backOffice/reports.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'admin-community-report-details') {
+    if (!$isAdminSession) {
+        header('Location: /Web/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Details du signalement';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+    ];
+    $additionalScripts = [
+        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/backOffice/report_details.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'admin-community-review-post') {
+    if (!$isAdminSession) {
+        header('Location: /Web/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Revision publication';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+    ];
+    $additionalScripts = [
+        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/backOffice/review_post.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'tracking-management') {
@@ -214,7 +360,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'planner-management') {
@@ -225,7 +371,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } else {
@@ -234,6 +380,6 @@ if ($action === 'home') {
     } else {
         $fallbackAction = 'login';
     }
-    header('Location: /smart_nutrition/index.php?action=' . $fallbackAction);
+    header('Location: /Web/index.php?action=' . $fallbackAction);
     exit;
 }

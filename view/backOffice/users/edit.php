@@ -16,7 +16,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/smart_nutrition/index.php?action=update-user" novalidate>
+    <form method="POST" action="/Web/index.php?action=update-user" novalidate>
         <input type="hidden" name="id" value="<?= (int) ($editableUser['id'] ?? 0) ?>">
 
         <div class="field">
@@ -74,6 +74,6 @@
     </form>
 
     <div class="actions">
-        <a href="/smart_nutrition/index.php?action=users-list" class="btn secondary">Retour a la liste</a>
+        <a href="/Web/index.php?action=users-list" class="btn secondary">Retour a la liste</a>
     </div>
 </div>

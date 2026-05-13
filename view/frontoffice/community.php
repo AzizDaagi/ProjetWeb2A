@@ -1,12 +1,21 @@
 <?php
-require_once '../../model/connection.php';
-require_once '../../model/Post.php';
-require_once '../../model/Comment.php';
-require_once '../../model/News.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-$myId = 1;
+if (!isset($_SESSION['user_id'])) {
+    header('Location: /Web/index.php?action=login');
+    exit;
+}
+
+require_once __DIR__ . '/../../model/connection.php';
+require_once __DIR__ . '/../../model/Post.php';
+require_once __DIR__ . '/../../model/Comment.php';
+require_once __DIR__ . '/../../model/News.php';
+
+$myId = (int) ($_SESSION['user_id'] ?? 0);
 $sessionUserName = $_SESSION['user_name'] ?? 'Utilisateur';
-$isLoggedIn = isset($_SESSION['user_id']) || $myId === 1;
+$isLoggedIn = $myId > 0;
 
 $postModel = new Post(config::getConnexion());
 $posts = $postModel->getAllPosts();
@@ -196,62 +205,15 @@ function hasPostLocation($post)
 }
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Communauté</title>
-    <link rel="stylesheet" href="/Web/view/backoffice/style/community.css?v=<?= filemtime(__DIR__ . '/../backoffice/style/community.css') ?>">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-</head>
-
-<body>
-    <nav class="navbar">
-        <div class="navbar-brand">
-            <a href="community.php" class="brand-link">
-                <img
-                    src="/Web/view/backoffice/style/logo.png"
-                    alt="Smart Nutrition"
-                    class="brand-logo navbar-preview-logo"
-                    onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
-                <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
-            </a>
-        </div>
-        <ul class="navbar-menu">
-            <li><a href="community.php" class="nav-link active"><i class="fa-solid fa-users"></i> Communaute</a></li>
-        </ul>
-        <div class="navbar-footer">
-            <?php if ($isLoggedIn): ?>
-                <div class="notification-center" data-notification-endpoint="/Web/controller/notificationController.php">
-                    <button type="button" id="notificationToggle" class="notification-toggle" aria-label="Notifications" aria-expanded="false">
-                        <i class="fa-solid fa-bell"></i>
-                        <span id="notificationBadge" class="notification-badge" hidden>0</span>
-                    </button>
-                    <div id="notificationDropdown" class="notification-dropdown" hidden>
-                        <div class="notification-header">
-                            <strong>Notifications</strong>
-                            <button type="button" id="notificationMarkAll" class="notification-mark-all">Tout marquer comme lu</button>
-                        </div>
-                        <div id="notificationList" class="notification-list">
-                            <p class="notification-empty">Aucune notification pour le moment.</p>
-                        </div>
-                        <button type="button" id="notificationShowOlder" class="notification-show-older" hidden>Voir les anciennes notifications</button>
-                    </div>
+<div class="container">
+            <?php $showAdminReturn = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'; ?>
+            <?php if ($showAdminReturn): ?>
+                <div class="admin-return-bar mb-4">
+                    <a href="/Web/index.php?action=admin-dashboard" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord admin
+                    </a>
                 </div>
             <?php endif; ?>
-            <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i> Sombre
-            </button>
-            <?php if ($isLoggedIn): ?>
-                <p class="user-info">Connecte : <strong><?= htmlspecialchars($sessionUserName) ?></strong></p>
-            <?php endif; ?>
-        </div>
-    </nav>
-    <div class="main-content">
-        <div class="container">
-            <h1 class="mb-4"><i class="fas fa-users"></i> Communauté</h1>
 
             <div id="new-post-panel" class="section-anchor"></div>
             <div class="card card-primary shadow-sm mb-5">
@@ -430,9 +392,6 @@ function hasPostLocation($post)
                                             <small>AI<?php echo $postCategoryScore !== null ? ' ' . (int) $postCategoryScore . '%' : ''; ?></small>
                                         <?php endif; ?>
                                     </span>
-                                    <button type="button" class="post-share-btn" onclick="copyPostLink(<?php echo (int) $post['id']; ?>, this)">
-                                        <i class="fa-solid fa-link"></i> Copy link
-                                    </button>
                                 </div>
                                 <h5 id="display-title-<?php echo $post['id']; ?>"><?php echo htmlspecialchars($post['title']); ?></h5>
                                 <p id="display-content-<?php echo $post['id']; ?>"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
@@ -726,7 +685,7 @@ function hasPostLocation($post)
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/Web/view/backoffice/style/community.js?v=<?= filemtime(__DIR__ . '/../backoffice/style/community.js') ?>"></script>
+    <script src="/Web/view/backOffice/style/community.js?v=<?= filemtime(__DIR__ . '/../backOffice/style/community.js') ?>"></script>
     <script>
         let currentProductAnalysis = null;
         const frontPostMaps = {};
@@ -887,7 +846,7 @@ function hasPostLocation($post)
             resultBox.className = 'product-analysis-result is-loading';
             resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyse du produit en cours...';
 
-            fetch('../../controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
+            fetch('/Web/controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
                     cache: 'no-store'
                 })
                 .then(res => res.json())
@@ -928,7 +887,7 @@ function hasPostLocation($post)
             resultBox.className = 'product-analysis-result is-loading';
             resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyse du produit en cours...';
 
-            fetch('../../controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
+            fetch('/Web/controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
                     cache: 'no-store'
                 })
                 .then(res => res.json())
@@ -1116,7 +1075,7 @@ function hasPostLocation($post)
                     formData.append('image', imageInput.files[0]);
                 }
 
-                fetch('../../controller/postController.php?action=create', {
+                fetch('/Web/controller/postController.php?action=create', {
                         method: 'POST',
                         body: formData
                     })
@@ -1171,7 +1130,7 @@ function hasPostLocation($post)
                 formData.append('image', imageInput.files[0]);
             }
 
-            fetch('../../controller/postController.php?action=update', {
+            fetch('/Web/controller/postController.php?action=update', {
                     method: 'POST',
                     body: formData
                 })
@@ -1191,7 +1150,7 @@ function hasPostLocation($post)
         function deletePost(id) {
             if (!confirm("Voulez-vous vraiment supprimer cette publication ?")) return;
 
-            fetch('../../controller/postController.php?action=delete', {
+            fetch('/Web/controller/postController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1208,7 +1167,7 @@ function hasPostLocation($post)
         }
 
         function reactToPost(postId, reactionType) {
-            fetch('../../controller/postController.php?action=react', {
+            fetch('/Web/controller/postController.php?action=react', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1263,7 +1222,7 @@ function hasPostLocation($post)
         }
 
         function likeComment(commentId) {
-            fetch('../../controller/commentController.php?action=like', {
+            fetch('/Web/controller/commentController.php?action=like', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1304,7 +1263,7 @@ function hasPostLocation($post)
             const reason = reasonField.value;
             const details = detailsField.value.trim();
 
-            fetch('../../controller/postController.php?action=report', {
+            fetch('/Web/controller/postController.php?action=report', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1353,7 +1312,7 @@ function hasPostLocation($post)
             const content = document.getElementById(`comment-content-${postId}`).value.trim();
             if (!content) return alert("Le commentaire ne peut pas être vide");
 
-            fetch('../../controller/commentController.php?action=add', {
+            fetch('/Web/controller/commentController.php?action=add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1392,7 +1351,7 @@ function hasPostLocation($post)
             const content = contentField.value.trim();
             if (!content) return alert("La reponse ne peut pas etre vide");
 
-            fetch('../../controller/commentController.php?action=add', {
+            fetch('/Web/controller/commentController.php?action=add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1417,7 +1376,7 @@ function hasPostLocation($post)
             const content = document.getElementById(`edit-comment-text-${id}`).value;
             if (!content.trim()) return alert("Le commentaire ne peut pas être vide");
 
-            fetch('../../controller/commentController.php?action=update', {
+            fetch('/Web/controller/commentController.php?action=update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1444,7 +1403,7 @@ function hasPostLocation($post)
         function deleteComment(id) {
             if (!confirm("Supprimer ce commentaire ?")) return;
 
-            fetch('../../controller/commentController.php?action=delete', {
+            fetch('/Web/controller/commentController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1471,7 +1430,7 @@ function hasPostLocation($post)
                 return;
             }
 
-            fetch(`../../controller/newsController.php?action=getById&id=${newsId}`)
+            fetch(`/Web/controller/newsController.php?action=getById&id=${newsId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
@@ -1548,6 +1507,3 @@ function hasPostLocation($post)
 
         initAllFrontPostMaps();
     </script>
-</body>
-
-</html>

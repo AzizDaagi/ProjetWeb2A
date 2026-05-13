@@ -1,13 +1,26 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/../model/connection.php';
 require_once __DIR__ . '/../model/Notification.php';
 
 header('Content-Type: application/json');
 
+if (!isset($_SESSION['user_id'])) {
+    http_response_code(401);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Session invalide'
+    ]);
+    exit;
+}
+
 $db = config::getConnexion();
 $notificationModel = new Notification($db);
 $action = $_GET['action'] ?? $_POST['action'] ?? 'list';
-$userId = $_SESSION['user_id'] ?? 1;
+$userId = (int) $_SESSION['user_id'];
 
 if ($action === 'list') {
     $notifications = $notificationModel->getRecentForUser($userId);

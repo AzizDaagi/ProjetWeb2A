@@ -99,6 +99,15 @@ class Comment {
         return $deleteCommentStmt->execute([$id]);
     }
 
+    public function deleteCommentForUser($id, $userId) {
+        $comment = $this->getCommentById($id);
+        if (!$comment || (int) ($comment['user_id'] ?? 0) !== (int) $userId) {
+            return false;
+        }
+
+        return $this->deleteComment($id);
+    }
+
     public function toggleLike($commentId, $userId) {
         $comment = $this->getCommentById($commentId);
         if (!$comment) {

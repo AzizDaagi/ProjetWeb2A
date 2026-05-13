@@ -9,7 +9,7 @@
     </p>
 
     <div class="actions">
-        <a class="btn" href="/smart_nutrition/index.php?action=<?= htmlspecialchars($backAction) ?>">
+        <a class="btn" href="/Web/index.php?action=<?= htmlspecialchars($backAction) ?>">
             <i class="fa-solid <?= $isAdminSession ? 'fa-gauge-high' : 'fa-home' ?>"></i>
             <?= $isAdminSession ? 'Retour au dashboard admin' : 'Retour a l\'accueil' ?>
         </a>

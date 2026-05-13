@@ -24,13 +24,13 @@ class AuthController
 
     private function redirect($action)
     {
-        header('Location: /smart_nutrition/index.php?action=' . $action);
+        header('Location: /Web/index.php?action=' . $action);
         exit;
     }
 
     private function buildActionUrl($action)
     {
-        return '/smart_nutrition/index.php?action=' . $action;
+        return '/Web/index.php?action=' . $action;
     }
 
     private function respondJson($payload, $statusCode = 200)
@@ -808,7 +808,7 @@ class AuthController
         }
 
         $_SESSION['success'] = 'Un code a ete envoye par e-mail.';
-        header('Location: /smart_nutrition/index.php?action=reset-password&email=' . urlencode($email));
+        header('Location: /Web/index.php?action=reset-password&email=' . urlencode($email));
         exit;
     }
 
@@ -892,7 +892,7 @@ class AuthController
     $pageTitle = 'Connexion';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/front/auth/login.php';
+    include __DIR__ . '/../view/frontoffice/auth/login.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
 public function showRegister($errors = [], $old = [])
@@ -904,7 +904,7 @@ public function showRegister($errors = [], $old = [])
     $pageTitle = 'Inscription';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/front/auth/register.php';
+    include __DIR__ . '/../view/frontoffice/auth/register.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
  
@@ -913,7 +913,7 @@ public function showForgotPassword($errors = [])
     $pageTitle = 'Mot de passe oublié';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/front/auth/forgot.php';
+    include __DIR__ . '/../view/frontoffice/auth/forgot.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
 public function showResetForm()
@@ -921,7 +921,7 @@ public function showResetForm()
     $pageTitle = 'Réinitialiser mot de passe';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/front/auth/reset.php';
+    include __DIR__ . '/../view/frontoffice/auth/reset.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
   

@@ -75,6 +75,8 @@ function initFormSubmitLock() {
 function initNotifications() {
     const center = document.querySelector('.notification-center');
     if (!center) return;
+    if (center.dataset.notificationReady === 'true') return;
+    center.dataset.notificationReady = 'true';
 
     const endpoint = center.dataset.notificationEndpoint;
     const toggle = document.getElementById('notificationToggle');

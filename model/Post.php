@@ -84,6 +84,13 @@ class Post {
         return $stmt->execute([$title, $content, $image ?: null, $productAnalysisJson ?: null, $category, $id, $userId]);
     }
 
+    public function updatePostAsAdmin($id, $title, $content, $image, $productAnalysisJson = null, $category = 'advice') {
+        $category = in_array($category, self::ALLOWED_CATEGORIES, true) ? $category : 'advice';
+        $sql = "UPDATE posts SET title = ?, content = ?, image = ?, product_analysis_json = ?, post_category = ?, post_category_source = 'manual', post_category_score = NULL WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$title, $content, $image ?: null, $productAnalysisJson ?: null, $category, $id]);
+    }
+
     public function updatePostCategoryFromAi($id, string $category, float $score): bool {
         if (!in_array($category, self::ALLOWED_CATEGORIES, true)) {
             return false;
@@ -100,6 +107,12 @@ class Post {
         $sql = "DELETE FROM posts WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$id]);
+    }
+
+    public function deletePostForUser($id, $userId) {
+        $sql = "DELETE FROM posts WHERE id = ? AND user_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id, $userId]);
     }
 
     public function getReactionSummary($postId, $userId) {

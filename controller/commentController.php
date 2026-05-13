@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/../model/Comment.php';
 require_once __DIR__ . '/../model/connection.php';
 require_once __DIR__ . '/../model/AiModeration.php';
@@ -23,12 +27,39 @@ class CommentController {
         $this->moderationJobModel = new ModerationJob($db);
     }
 
+    private function currentUserId(): int {
+        return (int) ($_SESSION['user_id'] ?? 0);
+    }
+
+    private function currentRole(): string {
+        return (($_SESSION['user_role'] ?? 'user') === 'admin') ? 'admin' : 'user';
+    }
+
+    private function requireClientSession(): int {
+        $userId = $this->currentUserId();
+        if ($userId <= 0 || $this->currentRole() === 'admin') {
+            $this->jsonError('Acces front office refuse.');
+            http_response_code($userId <= 0 ? 401 : 403);
+            exit;
+        }
+
+        return $userId;
+    }
+
+    private function requireAdminSession(): void {
+        if ($this->currentUserId() <= 0 || $this->currentRole() !== 'admin') {
+            $this->jsonError('Acces back office refuse.');
+            http_response_code($this->currentUserId() <= 0 ? 401 : 403);
+            exit;
+        }
+    }
+
     // CREATE
     public function add() {
+        $userId = $this->requireClientSession();
         $postId = $_POST['post_id'] ?? null;
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
         $parentCommentId = $_POST['parent_comment_id'] ?? null;
-        $userId = 1; // temporary (replace with session later)
 
         if ($parentCommentId === '') {
             $parentCommentId = null;
@@ -67,9 +98,9 @@ class CommentController {
 
     // UPDATE
     public function update() {
+        $userId = $this->requireClientSession();
         $id = $_POST['id'] ?? null;
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
-        $userId = 1; // temporary
 
         $validationError = InputValidator::firstError([
             InputValidator::validateId($id, 'Commentaire'),
@@ -98,6 +129,7 @@ class CommentController {
 
     // DELETE
     public function delete() {
+        $userId = $this->requireClientSession();
         $id = $_POST['id'] ?? null;
 
         $validationError = InputValidator::validateId($id, 'Commentaire');
@@ -106,7 +138,7 @@ class CommentController {
             exit;
         }
 
-        $success = $this->commentModel->deleteComment($id);
+        $success = $this->commentModel->deleteCommentForUser($id, $userId);
 
         header('Content-Type: application/json');
         echo json_encode([
@@ -117,8 +149,8 @@ class CommentController {
     }
 
     public function like() {
+        $userId = $this->requireClientSession();
         $id = $_POST['id'] ?? null;
-        $userId = 1;
 
         $validationError = InputValidator::validateId($id, 'Commentaire');
         if ($validationError) {
@@ -139,6 +171,7 @@ class CommentController {
     }
 
     public function adminUpdate() {
+        $this->requireAdminSession();
         $id = $_POST['id'] ?? null;
         $content = InputValidator::cleanMultiline($_POST['content'] ?? '');
 
@@ -168,6 +201,7 @@ class CommentController {
     }
 
     public function adminDelete() {
+        $this->requireAdminSession();
         $id = $_POST['id'] ?? null;
 
         $validationError = InputValidator::validateId($id, 'Commentaire');
@@ -209,7 +243,7 @@ class CommentController {
         $actorName = $_SESSION['user_name'] ?? 'Quelqu un';
         $postTitle = $post['title'] ?? 'votre publication';
         $messagePreview = $this->shorten($content);
-        $link = '/Web/view/frontoffice/community.php#post-' . $postId;
+        $link = '/Web/index.php?action=community#post-' . $postId;
 
         if ($parentCommentId !== null) {
             $parentComment = $this->commentModel->getCommentById((int) $parentCommentId);

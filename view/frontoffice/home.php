@@ -70,7 +70,7 @@
         id="homeWeatherCard"
         class="home-weather-card is-loading"
         data-weather-card="true"
-        data-weather-endpoint="/smart_nutrition/index.php?action=weather-sport"
+        data-weather-endpoint="/Web/index.php?action=weather-sport"
         aria-live="polite"
     >
         <div class="home-weather-head">
