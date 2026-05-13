@@ -13,7 +13,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/smart_nutrition/index.php?action=store-user" novalidate>
+<form method="POST" action="/projet-web-25-26/index.php?action=store-user" novalidate>
         <div class="field">
             <label><i class="fa-solid fa-tag icon"></i>Nom</label>
             <input type="text" name="nom" value="<?= htmlspecialchars((string) ($newUser['nom'] ?? '')) ?>" required>
@@ -72,6 +72,6 @@
     </form>
 
     <div class="actions">
-        <a href="/smart_nutrition/index.php?action=users-list" class="btn-admin-secondary">Retour a la liste</a>
+<a href="/projet-web-25-26/index.php?action=users-list" class="btn-admin-secondary">Retour a la liste</a>
     </div>
 </div>

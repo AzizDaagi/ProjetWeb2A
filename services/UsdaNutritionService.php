@@ -34,9 +34,9 @@ class UsdaNutritionService
         }
 
         $this->loadEnv();
-        $apiKey = trim((string) ($_ENV['USDA_API_KEY'] ?? ''));
+        $apiKey = trim((string) ($_ENV['USDA_API_KEY'] ?? getenv('USDA_API_KEY') ?? ''));
 
-        if ($apiKey === '' || $apiKey === 'YOUR_USDA_API_KEY_HERE') {
+        if ($apiKey === '' || $apiKey === 'YOUR_USDA_API_KEY_HERE' || $apiKey === 'YOUR_USDA_API_KEY') {
             return $this->error("La cle USDA est absente.");
         }
 

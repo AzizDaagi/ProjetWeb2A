@@ -20,8 +20,8 @@ class HuggingFaceChatService
         }
 
         $this->loadEnv();
-        $token = trim((string) ($_ENV['HF_API_TOKEN'] ?? ''));
-        $debug['token_present'] = ($token !== '' && $token !== 'YOUR_HF_API_TOKEN_HERE');
+        $token = trim((string) ($_ENV['HF_API_TOKEN'] ?? getenv('HF_API_TOKEN') ?? ''));
+        $debug['token_present'] = ($token !== '' && $token !== 'YOUR_HF_API_TOKEN_HERE' && $token !== 'YOUR_HUGGINGFACE_TOKEN');
 
         if (!$debug['token_present'] || !function_exists('curl_init')) {
             $debug['skip_reason'] = !$debug['token_present'] ? 'token_missing_or_placeholder' : 'curl_unavailable';

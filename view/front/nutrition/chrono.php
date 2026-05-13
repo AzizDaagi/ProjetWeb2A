@@ -8,6 +8,7 @@
     <script src="view/front/assets/js/chrono-nutrition.js" defer></script>
 </head>
 <body>
+    <?php require __DIR__ . '/../partials/navbar.php'; ?>
     <main class="chrono-page">
         <div class="chrono-shell">
             <section class="chrono-hero">

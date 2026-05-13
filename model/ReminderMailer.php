@@ -3,12 +3,20 @@
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+}
 
 class  ReminderMailer  {
 
     public function sendReminder($user)
 {
+    if (!class_exists(PHPMailer::class)) {
+        error_log("ReminderMailer: PHPMailer indisponible, vendor/autoload.php introuvable ou incomplet.");
+        return false;
+    }
+
     $mail = new PHPMailer(true);
 
     try {
@@ -24,7 +32,7 @@ class  ReminderMailer  {
 
         $mail->setFrom($config['from_email'], $config['from_name']);
         $mail->addAddress($user['email'], $user['nom']);
-        $baseUrl = getenv('APP_BASE_URL') ?: 'http://localhost/smart_nutrition';
+        $baseUrl = getenv('APP_BASE_URL') ?: 'http://localhost/projet-web-25-26';
         $trackingUrl = $baseUrl . '/index.php?controller=suivi&action=index';
 
         $mail->isHTML(true);
@@ -73,7 +81,7 @@ class  ReminderMailer  {
         return true;
 
     } catch (Exception $e) {
-        echo "Erreur mail : " . $mail->ErrorInfo;
+        error_log("ReminderMailer error: " . ($mail->ErrorInfo ?: $e->getMessage()));
         return false;
     }
 }

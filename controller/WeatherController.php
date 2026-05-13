@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../env.php';
+
 class WeatherController
 {
     private $config;
@@ -19,7 +21,7 @@ class WeatherController
             ], 401);
         }
 
-        $apiKey = trim((string) getenv('OPENWEATHER_API_KEY'));
+        $apiKey = trim((string) ($_ENV['OPENWEATHER_API_KEY'] ?? getenv('OPENWEATHER_API_KEY') ?? ''));
         if ($apiKey === '') {
             $this->respondJson([
                 'success' => false,

@@ -34,6 +34,97 @@ body.theme-light {
     background: radial-gradient(circle at 50% 50%, rgba(243, 247, 251, 1) 0%, rgba(222, 232, 244, 1) 100%);
 }
 
+.nutrition-subnav {
+    width: min(960px, calc(100% - 28px));
+    margin: 14px auto 0;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-radius: 16px;
+    background: rgba(11, 20, 30, 0.78);
+    border: 1px solid rgba(52, 152, 219, 0.18);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.nutrition-subnav__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(236, 240, 241, 0.9);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.nutrition-subnav__link:visited {
+    color: rgba(236, 240, 241, 0.9);
+}
+
+.nutrition-subnav__link:hover {
+    color: #ffffff;
+    background: rgba(52, 152, 219, 0.16);
+    border-color: rgba(52, 152, 219, 0.32);
+    transform: translateY(-1px);
+}
+
+.nutrition-subnav__link.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.22), rgba(52, 152, 219, 0.2));
+    border-color: rgba(46, 204, 113, 0.34);
+    box-shadow: 0 8px 18px rgba(46, 204, 113, 0.16);
+}
+
+body.theme-light .nutrition-subnav {
+    background: rgba(255, 255, 255, 0.84);
+    border-color: rgba(148, 163, 184, 0.24);
+}
+
+body.theme-light .nutrition-subnav__link,
+body.theme-light .nutrition-subnav__link:visited {
+    color: #334155;
+    background: rgba(248, 250, 252, 0.92);
+}
+
+body.theme-light .nutrition-subnav__link:hover {
+    color: #0f172a;
+    background: rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.24);
+}
+
+body.theme-light .nutrition-subnav__link.active {
+    color: #0f172a;
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.16), rgba(59, 130, 246, 0.14));
+    border-color: rgba(46, 204, 113, 0.28);
+}
+
+@media (max-width: 640px) {
+    .nutrition-subnav {
+        width: calc(100% - 20px);
+        gap: 8px;
+        padding: 8px;
+        border-radius: 14px;
+    }
+
+    .nutrition-subnav__link {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 140px;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+}
+
 .label-with-tooltip {
     position: relative;
     display: inline-block;

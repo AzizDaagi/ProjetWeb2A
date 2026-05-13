@@ -3,12 +3,22 @@
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+$autoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+}
 
 class ReportMailer
 {
     public function sendWeeklyReport(array $stats, ?string $to = null): array
     {
+        if (!class_exists(PHPMailer::class)) {
+            return [
+                'success' => false,
+                'error' => "PHPMailer n'est pas disponible. Verifiez vendor/autoload.php."
+            ];
+        }
+
         $config = $this->getMailConfig();
         $to = $to ?: $config['to_email'];
         $smtpPassword = preg_replace('/\s+/', '', (string) ($config['password'] ?? ''));

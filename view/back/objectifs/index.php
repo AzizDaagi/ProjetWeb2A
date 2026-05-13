@@ -6,6 +6,7 @@ $successMessage = $_SESSION['admin_objectif_success'] ?? null;
 $errorMessage = $_SESSION['admin_objectif_error'] ?? null;
 unset($_SESSION['admin_objectif_success'], $_SESSION['admin_objectif_error']);
 ?>
+<!-- BACKOFFICE_OBJECTIFS_OK -->
 <div class="admin-page">
     <div class="admin-page-head">
         <h1><i class="fa-solid fa-bullseye icon"></i> Objectifs nutritionnels</h1>
@@ -20,8 +21,9 @@ unset($_SESSION['admin_objectif_success'], $_SESSION['admin_objectif_error']);
         <div class="admin-alert admin-alert-error"><?= htmlspecialchars((string) $errorMessage) ?></div>
     <?php endif; ?>
 
-    <section class="admin-widget">
-        <table class="admin-table">
+    <section class="admin-widget admin-data-panel">
+        <div class="admin-table-wrap">
+        <table class="admin-table admin-table-enhanced admin-table-objectifs">
             <thead>
                 <tr>
                     <th>#</th>
@@ -38,10 +40,10 @@ unset($_SESSION['admin_objectif_success'], $_SESSION['admin_objectif_error']);
                 <?php if (!empty($objectifs)): ?>
                     <?php foreach ($objectifs as $objectif): ?>
                         <tr>
-                            <td><?= htmlspecialchars((string) $objectif['id']) ?></td>
-                            <td><?= htmlspecialchars((string) ($objectif['date_creation'] ?? '-')) ?></td>
-                            <td><?= number_format((float) ($objectif['calories_cible'] ?? 0), 0, '.', ' ') ?> kcal</td>
-                            <td>
+                            <td class="admin-cell-id"><?= htmlspecialchars((string) $objectif['id']) ?></td>
+                            <td class="admin-cell-date"><?= htmlspecialchars((string) ($objectif['date_creation'] ?? '-')) ?></td>
+                            <td class="admin-cell-kcal"><?= number_format((float) ($objectif['calories_cible'] ?? 0), 0, '.', ' ') ?> kcal</td>
+                            <td class="admin-cell-profile">
                                 <?= number_format((float) ($objectif['poids'] ?? 0), 1, '.', ' ') ?> kg
                                 /
                                 <?= number_format((float) ($objectif['taille'] ?? 0), 0, '.', ' ') ?> cm
@@ -50,10 +52,10 @@ unset($_SESSION['admin_objectif_success'], $_SESSION['admin_objectif_error']);
                                 <br>
                                 <span class="admin-badge"><?= htmlspecialchars((string) ($sexeOptions[$objectif['sexe'] ?? ''] ?? '-')) ?></span>
                             </td>
-                            <td><?= htmlspecialchars((string) ($objectif['activite_label'] ?? '-')) ?></td>
-                            <td><?= htmlspecialchars((string) ($objectifTypeOptions[$objectif['objectif_type'] ?? ''] ?? '-')) ?></td>
-                            <td><?= number_format((int) ($objectif['repas_count'] ?? 0), 0, '.', ' ') ?></td>
-                            <td>
+                            <td class="admin-cell-activity"><?= htmlspecialchars((string) ($objectif['activite_label'] ?? '-')) ?></td>
+                            <td><span class="admin-badge admin-badge-type"><?= htmlspecialchars((string) ($objectifTypeOptions[$objectif['objectif_type'] ?? ''] ?? '-')) ?></span></td>
+                            <td class="admin-cell-count"><?= number_format((int) ($objectif['repas_count'] ?? 0), 0, '.', ' ') ?></td>
+                            <td class="admin-cell-actions">
                                 <div class="admin-action-group">
                                     <a href="index.php?controller=backoffice&action=objectifShow&id=<?= urlencode((string) $objectif['id']) ?>" class="admin-btn admin-btn-secondary admin-btn-sm">
                                         <i class="fa-solid fa-eye"></i>
@@ -66,7 +68,7 @@ unset($_SESSION['admin_objectif_success'], $_SESSION['admin_objectif_error']);
                                             Supprimer
                                         </a>
                                     <?php else: ?>
-                                        <span class="admin-badge">Suppression bloquee</span>
+                                        <span class="admin-badge admin-badge-muted">Suppression bloquee</span>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -79,5 +81,6 @@ unset($_SESSION['admin_objectif_success'], $_SESSION['admin_objectif_error']);
                 <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
 </div>

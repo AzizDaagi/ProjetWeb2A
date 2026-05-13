@@ -197,8 +197,17 @@ class BackofficeCtrl
     {
         extract($data, EXTR_SKIP);
 
-        $view = __DIR__ . '/../view/back/' . ltrim($relativeView, '/');
-        require __DIR__ . '/../view/back/layout.php';
+        $viewFile = __DIR__ . '/../view/back/' . ltrim($relativeView, '/');
+        $pageTitle = $pageTitle ?? 'Backoffice';
+        $isAdminTemplate = true;
+
+        ob_start();
+        require $viewFile;
+        $pageContent = ob_get_clean();
+
+        include __DIR__ . '/../view/layouts/header.php';
+        echo $pageContent;
+        include __DIR__ . '/../view/layouts/footer.php';
     }
 
     private function hasPhysicalProfile($objectif)

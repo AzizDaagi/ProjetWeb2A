@@ -4,11 +4,12 @@ $successMessage = $_SESSION['admin_aliment_success'] ?? null;
 $errorMessage = $_SESSION['admin_aliment_error'] ?? null;
 unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
 ?>
+<!-- BACKOFFICE_ALIMENTS_OK -->
 <div class="admin-page">
     <div class="admin-page-head admin-page-head-inline">
         <div>
-            <h1><i class="fa-solid fa-apple-whole icon"></i> Suivi nutritionnel</h1>
-            <p class="subtitle">Gestion du catalogue des aliments utilises dans le suivi nutritionnel.</p>
+            <h1><i class="fa-solid fa-apple-whole icon"></i> Aliments</h1>
+            <p class="subtitle">Gestion du catalogue alimentaire utilise par le suivi nutritionnel et les recettes.</p>
         </div>
 
         <a href="index.php?controller=backoffice&action=suiviCreate" class="admin-btn admin-btn-primary">
@@ -25,8 +26,9 @@ unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
         <div class="admin-alert admin-alert-error"><?= htmlspecialchars((string) $errorMessage) ?></div>
     <?php endif; ?>
 
-    <section class="admin-widget">
-        <table class="admin-table">
+    <section class="admin-widget admin-data-panel">
+        <div class="admin-table-wrap">
+        <table class="admin-table admin-table-enhanced admin-table-aliments">
             <thead>
                 <tr>
                     <th>Nom</th>
@@ -72,5 +74,6 @@ unset($_SESSION['admin_aliment_success'], $_SESSION['admin_aliment_error']);
                 <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </section>
 </div>

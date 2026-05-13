@@ -57,8 +57,9 @@ $hasComputedSummary = !empty($objectifSummary);
         </div>
     </section>
 
-    <section class="admin-widget">
-        <table class="admin-table">
+    <section class="admin-widget admin-data-panel">
+        <div class="admin-table-wrap">
+        <table class="admin-table admin-table-enhanced admin-table-detail">
             <tbody>
                 <tr>
                     <th>ID</th>
@@ -126,6 +127,7 @@ $hasComputedSummary = !empty($objectifSummary);
                 </tr>
             </tbody>
         </table>
+        </div>
     </section>
 
     <?php if ($repasCount > 0): ?>

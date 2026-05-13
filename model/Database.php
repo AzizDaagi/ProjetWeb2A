@@ -1,5 +1,7 @@
 <?php
 
+require_once dirname(__DIR__) . '/env.php';
+
 class Database
 {
     private static $connection = null;
@@ -8,13 +10,13 @@ class Database
     public static function getConnection()
     {
         if (self::$connection === null) {
-            $host = getenv('DB_HOST') ?: '127.0.0.1';
-            $port = (int) (getenv('DB_PORT') ?: 3306);
-            $dbName = getenv('DB_NAME') ?: 'smart_nutrition_db';
-            $username = getenv('DB_USER') ?: 'root';
-            $password = getenv('DB_PASSWORD') ?: '';
+            $host = trim((string) ($_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '127.0.0.1'));
+            $port = (int) ($_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: 3306);
+            $dbName = trim((string) ($_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: 'smart_nutrition'));
+            $username = trim((string) ($_ENV['DB_USER'] ?? getenv('DB_USER') ?: 'root'));
+            $password = (string) ($_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: '');
             $charset = 'utf8mb4';
-            $timeout = (int) (getenv('DB_CONNECT_TIMEOUT') ?: 5);
+            $timeout = (int) ($_ENV['DB_CONNECT_TIMEOUT'] ?? getenv('DB_CONNECT_TIMEOUT') ?: 5);
             if ($timeout < 1) {
                 $timeout = 5;
             }
@@ -27,8 +29,9 @@ class Database
                     PDO::ATTR_TIMEOUT => $timeout,
                 ]);
             } catch (PDOException $e) {
+                error_log('Database connection error: ' . $e->getMessage());
                 http_response_code(503);
-                die('Database connection error: ' . $e->getMessage());
+                die('Service de base de donnees indisponible.');
             }
         }
 

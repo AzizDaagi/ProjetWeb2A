@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/../model/Database.php';
 require_once __DIR__ . '/../model/NutritionDashboardService.php';
 require_once __DIR__ . '/../model/ReminderMailer.php';
 require_once __DIR__ . '/../model/UserModel.php';
@@ -7,8 +8,7 @@ require_once __DIR__ . '/../model/UserModel.php';
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$pdo = new PDO("mysql:host=localhost;dbname=smart_nutrition", "root", "");
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$pdo = Database::getConnection();
 
 $nutritionService = new NutritionDashboardService($pdo);
 $userModel = new UserModel($pdo);
