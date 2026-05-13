@@ -3,25 +3,7 @@
 session_start();
 
 $projectRoot = dirname(__DIR__);
-$envFile = $projectRoot . '/.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
-            continue;
-        }
-
-        list($key, $value) = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
-
-        if ($key !== '' && getenv($key) === false) {
-            putenv($key . '=' . $value);
-            $_ENV[$key] = $value;
-        }
-    }
-}
+require_once $projectRoot . '/env.php';
 
 require_once $projectRoot . '/model/Database.php';
 require_once $projectRoot . '/controller/AuthController.php';
@@ -49,7 +31,7 @@ $action = $_GET['action'] ?? $defaultAction;
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
-    header('Location: /smart_nutrition/index.php?action=login');
+        header('Location: /projet-web-25-26/index.php?action=login');
     exit;
 }
 
@@ -223,22 +205,100 @@ if ($action === 'home') {
     include $projectRoot . '/view/layouts/footer.php';
 
 } elseif ($action === 'planner-management') {
-    $pageTitle = 'Planning';
-    $moduleTitle = 'Planning';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez planifier les activites et les objectifs.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
-    }
-    include $projectRoot . '/view/layouts/header.php';
-    include $projectRoot . '/view/front/modules/coming-soon.php';
-    include $projectRoot . '/view/layouts/footer.php';
+    header('Location: /projet-web-25-26/index.php?action=nutrition_dashboard');
+    exit;
 
 } else {
-    if (isset($_SESSION['user_id'])) {
-        $fallbackAction = (($_SESSION['user_role'] ?? 'user') === 'admin') ? 'admin-dashboard' : 'home';
-    } else {
-        $fallbackAction = 'login';
+    $controllerName = $_GET['controller'] ?? '';
+
+    if ($controllerName === '' && in_array($action, ['suivi', 'objectif', 'stats'], true)) {
+        $controllerName = $action;
     }
-    header('Location: /smart_nutrition/index.php?action=' . $fallbackAction);
-    exit;
+
+    if ($controllerName === '' && in_array($action, ['chatbot', 'clear_chat', 'clearChat'], true)) {
+        $controllerName = 'chatbot';
+    }
+
+    if ($controllerName === '' && in_array($action, [
+        'nutrition_dashboard',
+        'nutrition_dashboard_summary',
+        'nutrition_health_score',
+        'nutrition_daily_recommendations',
+        'nutrition_weekly_analysis',
+        'nutrition_smart_reminder',
+    ], true)) {
+        $controllerName = 'nutritiondashboard';
+    }
+
+    if ($controllerName === '' && in_array($action, [
+        'nutrition_water_today',
+        'nutrition_water_add',
+    ], true)) {
+        $controllerName = 'suivi';
+    }
+
+    if ($controllerName === '' && in_array($action, [
+        'nutrition_external_lookup',
+        'nutrition_usda_lookup',
+    ], true)) {
+        $controllerName = 'aliment';
+    }
+
+    if ($controllerName === '' && in_array($action, [
+        'chrono_nutrition',
+        'chrono_profile_save',
+        'chrono_profile_get',
+        'chrono_optimal_timing',
+        'chrono_fasting_window',
+        'chrono_nutrient_timing',
+        'chrono_sleep_sync',
+    ], true)) {
+        $controllerName = 'chronoNutrition';
+    }
+
+    if ($controllerName === '' && in_array($action, [
+        'prediction_dashboard',
+        'prediction_weekly_trend',
+        'prediction_scenarios',
+        'prediction_goal_date',
+        'prediction_what_if',
+        'prediction_confidence',
+    ], true)) {
+        $controllerName = 'prediction';
+    }
+
+    $routes = [
+        'suivi' => 'suivictrl',
+        'aliment' => 'alimentctrl',
+        'objectif' => 'objectifctrl',
+        'backoffice' => 'BackofficeCtrl',
+        'stats' => 'statsCtrl',
+        'chatbot' => 'chatbotctrl',
+        'reminder' => 'ReminderController',
+        'nutritiondashboard' => 'NutritionDashboardController',
+        'chronoNutrition' => 'ChronoNutritionController',
+        'prediction' => 'PredictionController',
+    ];
+
+    if (!array_key_exists($controllerName, $routes)) {
+        if (isset($_SESSION['user_id'])) {
+            $fallbackAction = (($_SESSION['user_role'] ?? 'user') === 'admin') ? 'admin-dashboard' : 'home';
+        } else {
+            $fallbackAction = 'login';
+        }
+        header('Location: /projet-web-25-26/index.php?action=' . $fallbackAction);
+        exit;
+    }
+
+    $controllerClass = $routes[$controllerName];
+    require_once $projectRoot . '/controller/' . $controllerClass . '.php';
+
+    $pdo = Database::getConnection();
+    $controller = new $controllerClass($pdo);
+
+    if (!method_exists($controller, $action)) {
+        $action = 'index';
+    }
+
+    $controller->$action();
 }
