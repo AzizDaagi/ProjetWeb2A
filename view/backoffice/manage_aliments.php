@@ -97,14 +97,18 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
 
             <!-- Type -->
             <div class="form-group">
-                <label for="type-input">Type d'aliment</label>
+                <label for="type-input">Type d'aliment (macro dominante)</label>
                 <select name="type" id="type-input">
                     <option value="">Sélectionnez un type</option>
                     <?php 
-                    $types = ['Fruit', 'Légume', 'Viande', 'Poisson', 'Produit Laitier', 'Céréale', 'Autre'];
-                    foreach($types as $t) {
-                        $selected = ($alimentToEdit && $alimentToEdit['type'] === $t) ? 'selected' : '';
-                        echo "<option value=\"$t\" $selected>$t</option>";
+                    $types = [
+                        'proteine' => '🥩 Protéine',
+                        'glucide'  => '🌾 Glucide',
+                        'lipide'   => '🥑 Lipide',
+                    ];
+                    foreach($types as $val => $label) {
+                        $selected = ($alimentToEdit && $alimentToEdit['type'] === $val) ? 'selected' : '';
+                        echo "<option value=\"$val\" $selected>$label</option>";
                     }
                     ?>
                 </select>

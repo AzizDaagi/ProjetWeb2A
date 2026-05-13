@@ -23,14 +23,14 @@
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
 
-<form method="post" action="/projet-web-25-26/index.php?action=forgot">
+<form method="post" action="/projetwebmalek/index.php?action=forgot">
         <div class="form-group">
             <label for="email">Adresse e-mail</label>
             <input id="email" name="email" type="email" class="form-control" required />
         </div>
         <div class="form-group">
             <button type="submit" class="btn btn-primary">Envoyer le code de vérification</button>
-<a href="/projet-web-25-26/index.php?action=login" class="btn btn-link">Retour</a>
+<a href="/projetwebmalek/index.php?action=login" class="btn btn-link">Retour</a>
         </div>
     </form>
 </div>

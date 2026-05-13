@@ -22,15 +22,20 @@ class AuthController
         $this->mailConfig = file_exists($mailConfigFile) ? include $mailConfigFile : [];
     }
 
+    private function baseUrl(): string
+    {
+        return rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+    }
+
     private function redirect($action)
     {
-        header('Location: /projet-web-25-26/index.php?action=' . $action);
+        header('Location: ' . $this->baseUrl() . '/index.php?action=' . $action);
         exit;
     }
 
     private function buildActionUrl($action)
     {
-        return '/projet-web-25-26/index.php?action=' . $action;
+        return $this->baseUrl() . '/index.php?action=' . $action;
     }
 
     private function respondJson($payload, $statusCode = 200)

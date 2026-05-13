@@ -959,7 +959,7 @@ function initVoiceControl() {
     }
 
     function buildActionUrl(action) {
-        return '/projet-web-25-26/index.php?action=' + encodeURIComponent(action);
+        return '/projetwebmalek/index.php?action=' + encodeURIComponent(action);
     }
 
     function setTheme(theme) {
@@ -1717,13 +1717,13 @@ function initAdminUsersList() {
         cell.className = 'users-actions';
 
         var editLink = document.createElement('a');
-        editLink.href = '/projet-web-25-26/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
+        editLink.href = '/projetwebmalek/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
         editLink.className = 'btn-edit';
         editLink.innerHTML = '<i class="fa-solid fa-pen"></i> Modifier';
 
         var form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/projet-web-25-26/index.php?action=delete-user';
+        form.action = '/projetwebmalek/index.php?action=delete-user';
         form.className = 'inline-form';
         form.setAttribute('novalidate', 'novalidate');
         form.onsubmit = function () {
@@ -1876,7 +1876,7 @@ function initAdminUsersList() {
 
     if (exportButton) {
         exportButton.addEventListener('click', function () {
-        var url = '/projet-web-25-26/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
+        var url = '/projetwebmalek/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
             window.open(url, '_blank', 'noopener');
         });
     }

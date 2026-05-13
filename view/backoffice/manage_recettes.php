@@ -205,7 +205,7 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
                         <?php 
                         $diffs = ['Très Facile', 'Facile', 'Moyen', 'Difficile', 'Expert'];
                         foreach($diffs as $d) {
-                            $selected = ($recetteToEdit && $recetteToEdit['difficulte'] === $d) ? 'selected' : '';
+                            $selected = ($recetteToEdit && $recetteToEdit['niveau_difficulte'] === $d) ? 'selected' : '';
                             echo "<option value=\"$d\" $selected>$d</option>";
                         }
                         ?>
@@ -241,6 +241,95 @@ require_once __DIR__ . '/../template_only/layouts/admin_header.php';
     </div>
 </div>
 
+<!-- ================= LIST SECTION ================= -->
+<div class="submit-page-wrapper" style="margin-top: 40px;">
+    <h2 style="margin: 0 0 24px; font-size: 20px; font-weight: 800;">
+        <i class="fa-solid fa-list" style="color:#2ecc71; margin-right:8px;"></i>
+        Recettes existantes
+        <span style="font-size:14px; font-weight:400; color:rgba(255,255,255,0.5); margin-left:10px;">(<?= count($recettes) ?> recette<?= count($recettes) > 1 ? 's' : '' ?>)</span>
+    </h2>
+
+    <?php if (empty($recettes)): ?>
+        <div style="text-align:center; padding:40px; color:rgba(255,255,255,0.4);">
+            <i class="fa-solid fa-plate-wheat" style="font-size:40px; margin-bottom:12px; display:block;"></i>
+            Aucune recette pour le moment. Créez-en une ci-dessus.
+        </div>
+    <?php else: ?>
+        <div style="display: grid; gap: 16px;">
+        <?php foreach ($recettes as $r): ?>
+            <?php
+                $recetteAliments  = $recettes_aliments_map[$r['id']] ?? [];
+                $recetteQuantites = $recettes_aliments_quantites_map[$r['id']] ?? [];
+                // build ingredient list from tous_aliments
+                $ingredientNames = [];
+                foreach ($tous_aliments as $al) {
+                    if (in_array($al['id'], $recetteAliments)) {
+                        $qte = $recetteQuantites[$al['id']] ?? 0;
+                        $ingredientNames[] = htmlspecialchars($al['nom']) . ' (' . (int)$qte . 'g)';
+                    }
+                }
+                $nutrition = $controller->calculerNutritionTotale($r['id']);
+            ?>
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; display: flex; gap: 20px; align-items: flex-start;">
+
+                <!-- Image -->
+                <?php if (!empty($r['image_url'])): ?>
+                    <img src="<?= htmlspecialchars($r['image_url']) ?>" alt="" style="width:90px; height:70px; object-fit:cover; border-radius:8px; flex-shrink:0; border:1px solid rgba(255,255,255,0.1);">
+                <?php else: ?>
+                    <div style="width:90px; height:70px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <i class="fa-solid fa-utensils" style="color:rgba(255,255,255,0.2); font-size:24px;"></i>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Info -->
+                <div style="flex:1; min-width:0;">
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px; flex-wrap:wrap;">
+                        <span style="font-weight:700; font-size:16px;"><?= htmlspecialchars($r['nom']) ?></span>
+                        <span style="background:rgba(46,204,113,0.15); color:#2ecc71; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600;"><?= htmlspecialchars($r['niveau_difficulte'] ?? '-') ?></span>
+                        <span style="color:rgba(255,255,255,0.4); font-size:12px;"><i class="fa-regular fa-clock"></i> <?= htmlspecialchars($r['temps_preparation'] ?? '-') ?></span>
+                    </div>
+
+                    <!-- Ingredients -->
+                    <?php if (!empty($ingredientNames)): ?>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:8px;">
+                            <i class="fa-solid fa-leaf" style="color:#2ecc71;"></i>
+                            <?= implode(' &bull; ', $ingredientNames) ?>
+                        </div>
+                    <?php else: ?>
+                        <div style="font-size:12px; color:rgba(255,255,255,0.3); margin-bottom:8px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="color:#f39c12;"></i> Aucun ingrédient associé
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Nutrition summary -->
+                    <?php if ($nutrition['calories'] > 0): ?>
+                        <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:12px;">
+                            <span style="color:#e67e22;"><b><?= round($nutrition['calories']) ?></b> kcal</span>
+                            <span style="color:#3498db;"><b><?= round($nutrition['proteines'], 1) ?>g</b> prot</span>
+                            <span style="color:#f1c40f;"><b><?= round($nutrition['glucides'], 1) ?>g</b> gluc</span>
+                            <span style="color:#9b59b6;"><b><?= round($nutrition['lipides'], 1) ?>g</b> lip</span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Actions -->
+                <div style="display:flex; flex-direction:column; gap:8px; flex-shrink:0;">
+                    <a href="<?= $baseUrl ?>/index.php?action=admin-recipes&edit_id=<?= $r['id'] ?>" 
+                       style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:rgba(243,156,18,0.15); color:#f39c12; border:1px solid rgba(243,156,18,0.3); border-radius:6px; text-decoration:none; font-size:13px; font-weight:600;">
+                        <i class="fa-solid fa-pen-to-square"></i> Modifier
+                    </a>
+                    <form method="POST" action="<?= $baseUrl ?>/index.php?action=admin-recipes" onsubmit="return confirm('Supprimer cette recette ?')" style="margin:0;">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                        <button type="submit" style="display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:rgba(231,76,60,0.15); color:#e74c3c; border:1px solid rgba(231,76,60,0.3); border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; width:100%; justify-content:center;">
+                            <i class="fa-solid fa-trash"></i> Supprimer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>
@@ -361,5 +450,7 @@ document.getElementById('recette-form').addEventListener('submit', function(e) {
     }
 });
 </script>
+
+</div><!-- /admin-page -->
 
 <?php require_once __DIR__ . '/../template_only/layouts/admin_footer.php'; ?>

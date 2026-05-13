@@ -9,7 +9,7 @@
     </p>
 
     <div class="actions">
-    <a class="btn" href="/projet-web-25-26/index.php?action=<?= htmlspecialchars($backAction) ?>">
+    <a class="btn" href="/projetwebmalek/index.php?action=<?= htmlspecialchars($backAction) ?>">
             <i class="fa-solid <?= $isAdminSession ? 'fa-gauge-high' : 'fa-home' ?>"></i>
             <?= $isAdminSession ? 'Retour au dashboard admin' : 'Retour a l\'accueil' ?>
         </a>

@@ -304,7 +304,7 @@
     </div>
 
     <?php require __DIR__ . '/../partials/chatbot_widget.php'; ?>
-<script src="/projet-web-25-26/view/front/assets/js/theme.js"></script>
+<script src="/projetwebmalek/view/front/assets/js/theme.js"></script>
 </body>
 
 </html>

@@ -34,60 +34,60 @@ class RecetteController {
     public function getAlimentsByRecette($recette_id) {
         $query = $this->db->prepare("
             SELECT a.*, ra.quantite FROM aliments a
-            JOIN recette_aliment ra ON a.id = ra.aliment_id
-            WHERE ra.recette_id = :recette_id
+            JOIN recette_aliment ra ON a.id = ra.id_aliment
+            WHERE ra.id_recette = :id_recette
         ");
-        $query->execute(['recette_id' => $recette_id]);
+        $query->execute(['id_recette' => $recette_id]);
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function addRecette($nom, $description, $temps_preparation, $difficulte, $image_url = null, $aliments_quantites = []) {
-        $query = $this->db->prepare("INSERT INTO recettes (nom, description, temps_preparation, difficulte, image_url) VALUES (:nom, :description, :temps_preparation, :difficulte, :image_url)");
+        $query = $this->db->prepare("INSERT INTO recettes (nom, description, temps_preparation, niveau_difficulte, image_url) VALUES (:nom, :description, :temps_preparation, :niveau_difficulte, :image_url)");
         $query->execute([
-            'nom' => $nom,
-            'description' => $description,
-            'temps_preparation' => $temps_preparation,
-            'difficulte' => $difficulte,
-            'image_url' => $image_url
+            'nom'              => $nom,
+            'description'      => $description,
+            'temps_preparation'=> $temps_preparation,
+            'niveau_difficulte'=> $difficulte,
+            'image_url'        => $image_url
         ]);
-        
+
         $recetteId = $this->db->lastInsertId();
 
         // Insérer les aliments associés avec leur quantité
         if (!empty($aliments_quantites)) {
-            $stmt = $this->db->prepare("INSERT INTO recette_aliment (recette_id, aliment_id, quantite) VALUES (:recette_id, :aliment_id, :quantite)");
+            $stmt = $this->db->prepare("INSERT INTO recette_aliment (id_recette, id_aliment, quantite) VALUES (:id_recette, :id_aliment, :quantite)");
             foreach ($aliments_quantites as $aliment_id => $quantite) {
                 $stmt->execute([
-                    'recette_id' => $recetteId, 
-                    'aliment_id' => $aliment_id,
-                    'quantite' => $quantite
+                    'id_recette' => $recetteId,
+                    'id_aliment' => $aliment_id,
+                    'quantite'   => $quantite
                 ]);
             }
         }
     }
 
     public function updateRecette($id, $nom, $description, $temps_preparation, $difficulte, $image_url = null, $aliments_quantites = []) {
-        $query = $this->db->prepare("UPDATE recettes SET nom = :nom, description = :description, temps_preparation = :temps_preparation, difficulte = :difficulte, image_url = :image_url WHERE id = :id");
+        $query = $this->db->prepare("UPDATE recettes SET nom = :nom, description = :description, temps_preparation = :temps_preparation, niveau_difficulte = :niveau_difficulte, image_url = :image_url WHERE id = :id");
         $query->execute([
-            'nom' => $nom,
-            'description' => $description,
-            'temps_preparation' => $temps_preparation,
-            'difficulte' => $difficulte,
-            'image_url' => $image_url,
-            'id' => $id
+            'nom'              => $nom,
+            'description'      => $description,
+            'temps_preparation'=> $temps_preparation,
+            'niveau_difficulte'=> $difficulte,
+            'image_url'        => $image_url,
+            'id'               => $id
         ]);
 
         // Mettre à jour les aliments associés (supprimer puis recréer)
-        $del = $this->db->prepare("DELETE FROM recette_aliment WHERE recette_id = :recette_id");
-        $del->execute(['recette_id' => $id]);
+        $del = $this->db->prepare("DELETE FROM recette_aliment WHERE id_recette = :id_recette");
+        $del->execute(['id_recette' => $id]);
 
         if (!empty($aliments_quantites)) {
-            $stmt = $this->db->prepare("INSERT INTO recette_aliment (recette_id, aliment_id, quantite) VALUES (:recette_id, :aliment_id, :quantite)");
+            $stmt = $this->db->prepare("INSERT INTO recette_aliment (id_recette, id_aliment, quantite) VALUES (:id_recette, :id_aliment, :quantite)");
             foreach ($aliments_quantites as $aliment_id => $quantite) {
                 $stmt->execute([
-                    'recette_id' => $id, 
-                    'aliment_id' => $aliment_id,
-                    'quantite' => $quantite
+                    'id_recette' => $id,
+                    'id_aliment' => $aliment_id,
+                    'quantite'   => $quantite
                 ]);
             }
         }
@@ -463,12 +463,12 @@ class RecetteController {
      */
     public function appliquerOptimisation($recette_id, $nouvelles_quantites) {
         $recette_id = (int)$recette_id;
-        $stmt = $this->db->prepare("UPDATE recette_aliment SET quantite = :qte WHERE recette_id = :recette_id AND aliment_id = :aliment_id");
+        $stmt = $this->db->prepare("UPDATE recette_aliment SET quantite = :qte WHERE id_recette = :id_recette AND id_aliment = :id_aliment");
         foreach ($nouvelles_quantites as $aliment_id => $qte) {
             $stmt->execute([
                 'qte'        => (float)$qte,
-                'recette_id' => $recette_id,
-                'aliment_id' => (int)$aliment_id
+                'id_recette' => $recette_id,
+                'id_aliment' => (int)$aliment_id
             ]);
         }
     }
