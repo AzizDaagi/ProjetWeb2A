@@ -419,7 +419,7 @@ class UserController
 
         $pageTitle = 'Mon profil';
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/frontoffice/profile.php';
+        include __DIR__ . '/../view/front/profile.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 
@@ -616,7 +616,7 @@ class UserController
         $pageTitle = 'Utilisateurs';
         $isAdminTemplate = true;
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/backOffice/users/list.php';
+        include __DIR__ . '/../view/back/users/list.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 
@@ -690,7 +690,7 @@ class UserController
         $bodyClass = 'report-page';
 
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/backOffice/users/report.php';
+        include __DIR__ . '/../view/back/users/report.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 
@@ -711,7 +711,7 @@ class UserController
         $pageTitle = 'Ajouter un utilisateur';
         $isAdminTemplate = true;
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/backOffice/users/create.php';
+        include __DIR__ . '/../view/back/users/create.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 
@@ -820,7 +820,7 @@ class UserController
         $showNav = true;
     $isAdminTemplate = true;
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/backOffice/users/edit.php';
+        include __DIR__ . '/../view/back/users/edit.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 
@@ -1095,7 +1095,7 @@ class UserController
         $pageTitle = 'Tableau de bord Admin';
         $isAdminTemplate = true;
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/backOffice/user_dashboard.php';
+        include __DIR__ . '/../view/back/user_dashboard.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 

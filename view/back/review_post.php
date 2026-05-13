@@ -211,7 +211,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             <?php endif; ?>
         </div>
 
-    <script src="/Web/view/backOffice/style/community.js"></script>
+    <script src="/Web/view/back/style/community.js"></script>
     <script>
         let reviewImageToRemove = false;
 
@@ -350,7 +350,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             const noteField = document.getElementById('review-resolution-note');
             const reviewNote = noteField ? noteField.value.trim() : '';
 
-            fetch('/Web/view/backOffice/report_resolve.php', {
+            fetch('/Web/view/back/report_resolve.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

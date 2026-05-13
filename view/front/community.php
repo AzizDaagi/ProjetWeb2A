@@ -685,7 +685,7 @@ function hasPostLocation($post)
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/Web/view/backOffice/style/community.js?v=<?= filemtime(__DIR__ . '/../backOffice/style/community.js') ?>"></script>
+    <script src="/Web/view/back/style/community.js?v=<?= filemtime(__DIR__ . '/../back/style/community.js') ?>"></script>
     <script>
         let currentProductAnalysis = null;
         const frontPostMaps = {};

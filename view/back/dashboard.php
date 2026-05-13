@@ -68,21 +68,21 @@ function buildSparkline(array $values, string $colorClass = ''): string {
 <head>
     <meta charset="UTF-8">
     <title>Back Office - Tableau de bord</title>
-    <link rel="stylesheet" href="/Web/view/backOffice/style/community.css">
+    <link rel="stylesheet" href="/Web/view/back/style/community.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="backoffice-page">
     <nav class="navbar">
         <div class="navbar-brand">
-            <a href="/Web/view/backOffice/community.php" class="brand-link">
-                <img src="/Web/view/backOffice/style/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+            <a href="/Web/view/back/community.php" class="brand-link">
+                <img src="/Web/view/back/style/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
                 <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
             </a>
         </div>
         <ul class="navbar-menu">
-            <li><a href="/Web/view/backOffice/dashboard.php" class="nav-link active"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
-            <li><a href="/Web/view/backOffice/community.php" class="nav-link"><i class="fa-solid fa-users"></i> Communaute</a></li>
-            <li><a href="/Web/view/backOffice/reports.php" class="nav-link"><i class="fa-solid fa-flag"></i> Signalements</a></li>
+            <li><a href="/Web/view/back/dashboard.php" class="nav-link active"><i class="fa-solid fa-chart-line"></i> Tableau de bord</a></li>
+            <li><a href="/Web/view/back/community.php" class="nav-link"><i class="fa-solid fa-users"></i> Communaute</a></li>
+            <li><a href="/Web/view/back/reports.php" class="nav-link"><i class="fa-solid fa-flag"></i> Signalements</a></li>
         </ul>
         <div class="navbar-footer">
             <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
@@ -156,6 +156,6 @@ function buildSparkline(array $values, string $colorClass = ''): string {
         </div>
     </div>
 
-    <script src="/Web/view/backOffice/style/community.js"></script>
+    <script src="/Web/view/back/style/community.js"></script>
 </body>
 </html>

@@ -47,7 +47,7 @@ class PostController {
         $commentModel = new Comment($this->postModel->database);
 
         $posts = $this->postModel->getAllPosts();
-        require_once __DIR__ . '/../view/frontoffice/community.php';
+        require_once __DIR__ . '/../view/front/community.php';
     }
 
     private function currentUserId(): int {

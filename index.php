@@ -101,7 +101,7 @@ if (isset($_SESSION['user_id'])) {
 if ($action === 'home') {
     $pageTitle = 'Smart Nutrition - Accueil';
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/home.php';
+    include __DIR__ . '/view/front/home.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'login') {
@@ -218,7 +218,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/modules/auth-management.php';
+    include __DIR__ . '/view/front/modules/auth-management.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'recipes-management') {
@@ -229,7 +229,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
+    include __DIR__ . '/view/front/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'foods-management') {
@@ -240,7 +240,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
+    include __DIR__ . '/view/front/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'community') {
@@ -254,11 +254,11 @@ if ($action === 'home') {
     $isAdminTemplate = false;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' front-community-page'));
     $additionalStylesheets = [
-        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css'),
+        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css'),
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
     ];
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/community.php';
+    include __DIR__ . '/view/front/community.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'recommendations-management') {
@@ -281,15 +281,15 @@ if ($action === 'home') {
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/backOffice/community.php';
+    include __DIR__ . '/view/back/community.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'admin-community-reports') {
@@ -302,14 +302,14 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/backOffice/reports.php';
+    include __DIR__ . '/view/back/reports.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'admin-community-report-details') {
@@ -322,14 +322,14 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/backOffice/report_details.php';
+    include __DIR__ . '/view/back/report_details.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'admin-community-review-post') {
@@ -342,14 +342,14 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/backOffice/style/community.css?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.css')
+        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/backOffice/style/community.js?v=' . filemtime(__DIR__ . '/view/backOffice/style/community.js')
+        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/backOffice/review_post.php';
+    include __DIR__ . '/view/back/review_post.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'tracking-management') {
@@ -360,7 +360,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
+    include __DIR__ . '/view/front/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'planner-management') {
@@ -371,7 +371,7 @@ if ($action === 'home') {
         $isAdminTemplate = true;
     }
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/modules/coming-soon.php';
+    include __DIR__ . '/view/front/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } else {

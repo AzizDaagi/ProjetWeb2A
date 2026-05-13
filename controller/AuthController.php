@@ -892,7 +892,7 @@ class AuthController
     $pageTitle = 'Connexion';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/frontoffice/auth/login.php';
+    include __DIR__ . '/../view/front/auth/login.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
 public function showRegister($errors = [], $old = [])
@@ -904,7 +904,7 @@ public function showRegister($errors = [], $old = [])
     $pageTitle = 'Inscription';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/frontoffice/auth/register.php';
+    include __DIR__ . '/../view/front/auth/register.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
  
@@ -913,7 +913,7 @@ public function showForgotPassword($errors = [])
     $pageTitle = 'Mot de passe oublié';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/frontoffice/auth/forgot.php';
+    include __DIR__ . '/../view/front/auth/forgot.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
 public function showResetForm()
@@ -921,7 +921,7 @@ public function showResetForm()
     $pageTitle = 'Réinitialiser mot de passe';
 
     include __DIR__ . '/../view/layouts/header.php';
-    include __DIR__ . '/../view/frontoffice/auth/reset.php';
+    include __DIR__ . '/../view/front/auth/reset.php';
     include __DIR__ . '/../view/layouts/footer.php';
 }
   
