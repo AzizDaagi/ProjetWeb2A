@@ -26,6 +26,10 @@ require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/WeatherController.php';
+require_once __DIR__ . '/controller/FrontController.php';
+require_once __DIR__ . '/controller/ActiviteController.php';
+require_once __DIR__ . '/controller/AdminController.php';
+require_once __DIR__ . '/controller/NutritionRequestController.php';
 
 if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
     $pdo = Database::getConnection();
@@ -227,6 +231,110 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/header.php';
     include __DIR__ . '/view/front/modules/coming-soon.php';
     include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'activites') {
+    $front = new FrontController();
+    $front->activites();
+
+} elseif ($action === 'showExercices') {
+    $front = new FrontController();
+    $front->showExercices();
+
+} elseif ($action === 'export_activite_pdf') {
+    $front = new FrontController();
+    $front->exportActivitePDF();
+
+} elseif ($action === 'nutrition_request') {
+    $front = new FrontController();
+    $front->nutritionRequest();
+
+} elseif ($action === 'process_nutrition_request') {
+    $front = new FrontController();
+    $front->processNutritionRequest();
+
+} elseif ($action === 'nutrition_success') {
+    $front = new FrontController();
+    $front->nutritionSuccess();
+
+} elseif ($action === 'my_nutrition_requests') {
+    $front = new FrontController();
+    $front->myRequests();
+
+} elseif ($action === 'edit_nutrition_request') {
+    $front = new FrontController();
+    $front->editRequest();
+
+} elseif ($action === 'update_nutrition_request') {
+    $front = new FrontController();
+    $front->updateRequest();
+
+} elseif ($action === 'delete_nutrition_request') {
+    $front = new FrontController();
+    $front->deleteRequest();
+
+} elseif ($action === 'export_nutrition_pdf') {
+    $front = new FrontController();
+    $front->exportNutritionPDF();
+
+} elseif ($action === 'admin_dashboard') {
+    $admin = new AdminController();
+    $admin->dashboard();
+
+} elseif ($action === 'admin_index') {
+    $back = new ActiviteController();
+    $back->index();
+
+} elseif ($action === 'admin_show') {
+    $back = new ActiviteController();
+    $back->show();
+
+} elseif ($action === 'createActivite') {
+    $back = new ActiviteController();
+    $back->createActivite();
+
+} elseif ($action === 'addExercice') {
+    $back = new ActiviteController();
+    $back->addExercice();
+
+} elseif ($action === 'editExercice') {
+    $back = new ActiviteController();
+    $back->editExercice();
+
+} elseif ($action === 'updateExercice') {
+    $back = new ActiviteController();
+    $back->updateExercice();
+
+} elseif ($action === 'deleteExercice') {
+    $back = new ActiviteController();
+    $back->deleteExercice();
+
+} elseif ($action === 'editActivite') {
+    $back = new ActiviteController();
+    $back->editActivite();
+
+} elseif ($action === 'updateActivite') {
+    $back = new ActiviteController();
+    $back->updateActivite();
+
+} elseif ($action === 'deleteActivite') {
+    $back = new ActiviteController();
+    $back->deleteActivite();
+
+} elseif ($action === 'admin_requests') {
+    $nutrition = new NutritionRequestController();
+    $nutrition->index();
+
+} elseif ($action === 'admin_edit_request') {
+    $nutrition = new NutritionRequestController();
+    $nutrition->edit();
+
+} elseif ($action === 'admin_update_request') {
+    $nutrition = new NutritionRequestController();
+    $nutrition->update();
+
+} elseif ($action === 'admin_delete_request') {
+    $nutrition = new NutritionRequestController();
+    $nutrition->delete();
 
 } else {
     if (isset($_SESSION['user_id'])) {

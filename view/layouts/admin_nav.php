@@ -6,6 +6,27 @@
 <?php $isTrackingAction = $currentAction === 'tracking-management'; ?>
 <?php $isPlannerAction = $currentAction === 'planner-management'; ?>
 <?php
+$isSportsAdminAction = in_array($currentAction, [
+    'admin_dashboard',
+    'admin_index',
+    'admin_show',
+    'createActivite',
+    'addExercice',
+    'editExercice',
+    'updateExercice',
+    'deleteExercice',
+    'editActivite',
+    'updateActivite',
+    'deleteActivite',
+], true);
+$isNutritionRequestsAction = in_array($currentAction, [
+    'admin_requests',
+    'admin_edit_request',
+    'admin_update_request',
+    'admin_delete_request',
+], true);
+?>
+<?php
 $moduleDescriptions = [
     'recipes-management' => [
         'title' => 'Recette alimentation',
@@ -77,6 +98,14 @@ if ($adminInitials === '') {
             <a href="/smart_nutrition/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
                 <i class="fa-solid fa-users"></i>
                 <span>Utilisateurs</span>
+            </a>
+            <a href="/smart_nutrition/index.php?action=admin_dashboard" class="admin-side-link<?= $isSportsAdminAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-dumbbell"></i>
+                <span>Activites sportives</span>
+            </a>
+            <a href="/smart_nutrition/index.php?action=admin_requests" class="admin-side-link<?= $isNutritionRequestsAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-file-waveform"></i>
+                <span>Demandes nutrition</span>
             </a>
         </div>
 
