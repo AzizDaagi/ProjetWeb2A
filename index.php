@@ -1,5 +1,4 @@
 <?php
-<<<<<<< HEAD
 
 session_start();
 
@@ -140,15 +139,23 @@ if ($action === 'home') {
     include __DIR__ . '/view/front/modules/auth-management.php';
     include __DIR__ . '/view/layouts/footer.php';
 } elseif ($action === 'recipes-management') {
-    $pageTitle = 'Recette alimentation';
-    $moduleTitle = 'Recette alimentation';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez creer, modifier et supprimer des recettes alimentaires.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
-    }
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    include __DIR__ . '/view/frontoffice/liste_recettes.php';
+} elseif ($action === 'recipe-details') {
+    include __DIR__ . '/view/frontoffice/details_recette.php';
+} elseif ($action === 'recipe-generate') {
+    include __DIR__ . '/view/frontoffice/generate_recette.php';
+} elseif ($action === 'recipe-optimize') {
+    include __DIR__ . '/view/frontoffice/optimiser_recette.php';
+} elseif ($action === 'recipe-save-optimization') {
+    include __DIR__ . '/view/frontoffice/save_optimisation.php';
+} elseif ($action === 'recipe-stats') {
+    include __DIR__ . '/view/frontoffice/stats_nutrition.php';
+} elseif ($action === 'recipe-export') {
+    include __DIR__ . '/view/frontoffice/export_pdf.php';
+} elseif ($action === 'admin-recipes') {
+    include __DIR__ . '/view/backoffice/manage_recettes.php';
+} elseif ($action === 'admin-recommendations') {
+    include __DIR__ . '/view/backoffice/manage_recommandations.php';
 } elseif ($action === 'foods-management') {
     $pageTitle = 'Ecommerce';
     $moduleTitle = 'Ecommerce';
@@ -281,9 +288,4 @@ if ($action === 'home') {
 
     $controller->$action();
 }
-=======
-// Redirect to the main front-office page (or back-office if you prefer)
-header("Location: view/frontoffice/liste_recettes.php");
-exit;
 ?>
->>>>>>> origin/GestionRecettes
