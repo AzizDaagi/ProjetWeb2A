@@ -30,6 +30,7 @@ require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/WeatherController.php';
+require_once __DIR__ . '/controller/ProduitController.php';
 
 if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
     $pdo = Database::getConnection();
@@ -73,7 +74,13 @@ $adminOnlyActions = [
     'admin-community',
     'admin-community-reports',
     'admin-community-report-details',
-    'admin-community-review-post'
+    'admin-community-review-post',
+    'products-admin',
+    'product-create',
+    'product-edit',
+    'product-delete',
+    'products-pending',
+    'product-approve'
 ];
 
 $clientOnlyActions = [
@@ -86,6 +93,7 @@ $clientOnlyActions = [
     'community',
     'recipes-management',
     'foods-management',
+    'product-submit',
     'tracking-management',
     'planner-management'
 ];
@@ -237,15 +245,36 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'foods-management') {
-    $pageTitle = 'Ecommerce';
-    $moduleTitle = 'Ecommerce';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez gerer les produits, commandes et ventes.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
-    }
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    $products = new ProduitController();
+    $products->frontList();
+
+} elseif ($action === 'product-submit') {
+    $products = new ProduitController();
+    $products->frontCreate();
+
+} elseif ($action === 'products-admin') {
+    $products = new ProduitController();
+    $products->backList();
+
+} elseif ($action === 'product-create') {
+    $products = new ProduitController();
+    $products->create();
+
+} elseif ($action === 'product-edit') {
+    $products = new ProduitController();
+    $products->edit();
+
+} elseif ($action === 'product-delete') {
+    $products = new ProduitController();
+    $products->delete();
+
+} elseif ($action === 'products-pending') {
+    $products = new ProduitController();
+    $products->pending();
+
+} elseif ($action === 'product-approve') {
+    $products = new ProduitController();
+    $products->approve();
 
 } elseif ($action === 'community') {
     if ($isAdminSession) {

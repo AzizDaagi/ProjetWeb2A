@@ -1,7 +1,7 @@
 <?php $currentAction = $_GET['action'] ?? ''; ?>
 <?php $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'store-user', 'edit-user', 'update-user', 'delete-user'], true); ?>
 <?php $isRecipesAction = $currentAction === 'recipes-management'; ?>
-<?php $isFoodsAction = $currentAction === 'foods-management'; ?>
+<?php $isFoodsAction = in_array($currentAction, ['foods-management', 'products-admin', 'product-create', 'product-edit', 'product-delete', 'products-pending', 'product-approve'], true); ?>
 <?php $isRecommendationsAction = in_array($currentAction, ['recommendations-management', 'admin-community', 'admin-community-reports'], true); ?>
 <?php $isTrackingAction = $currentAction === 'tracking-management'; ?>
 <?php $isPlannerAction = $currentAction === 'planner-management'; ?>
@@ -91,15 +91,15 @@ if ($adminInitials === '') {
                 <i class="fa-solid fa-book-open"></i>
                 <span>Recette alimentation</span>
             </button>
-            <button
-                type="button"
+            <a
+                href="/Web/index.php?action=products-admin"
                 class="admin-side-link admin-module-btn<?= $isFoodsAction ? ' active' : '' ?>"
                 data-module-title="Ecommerce"
                 data-module-description="Module ecommerce pour gerer les produits, le panier, les commandes et le suivi de vente."
             >
                 <i class="fa-solid fa-apple-whole"></i>
                 <span>Ecommerce</span>
-            </button>
+            </a>
             <a
                 href="/Web/index.php?action=admin-community"
                 class="admin-side-link admin-module-btn<?= $isRecommendationsAction ? ' active' : '' ?>"
