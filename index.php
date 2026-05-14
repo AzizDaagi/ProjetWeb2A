@@ -2,29 +2,7 @@
 
 session_start();
 
-if (file_exists(__DIR__ . '/env.php')) {
-    require_once __DIR__ . '/env.php';
-}
-
-$envFile = __DIR__ . '/.env';
-if (file_exists($envFile)) {
-    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if ($line === '' || strpos($line, '#') === 0 || strpos($line, '=') === false) {
-            continue;
-        }
-
-        list($key, $value) = explode('=', $line, 2);
-        $key = trim($key);
-        $value = trim($value);
-
-        if ($key !== '' && getenv($key) === false) {
-            putenv($key . '=' . $value);
-            $_ENV[$key] = $value;
-        }
-    }
-}
+require_once __DIR__ . '/env.php';
 
 require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
@@ -61,7 +39,6 @@ $action = $_GET['action'] ?? $defaultAction;
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
-    // Note: The path might need adjustment based on the environment, but keeping the master path
     header('Location: /projet-web-25-26/index.php?action=login');
     exit;
 }
@@ -84,6 +61,8 @@ $adminOnlyActions = [
     'admin-community-reports',
     'admin-community-report-details',
     'admin-community-review-post',
+    'admin-recipes',
+    'admin-recommendations',
     'products-admin',
     'product-create',
     'product-edit',
@@ -124,6 +103,13 @@ $clientOnlyActions = [
     'weather-sport',
     'community',
     'recipes-management',
+    'recipe-details',
+    'recipe-details-aliment',
+    'recipe-generate',
+    'recipe-optimize',
+    'recipe-save-optimization',
+    'recipe-stats',
+    'recipe-export',
     'foods-management',
     'product-submit',
     'cart-add',
@@ -278,6 +264,21 @@ if ($action === 'home') {
     $user = new UserController();
     $user->adminDashboard();
 
+} elseif ($action === 'admin-recipes') {
+    $pageTitle = 'Back Office - Recettes';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page recipes-admin-page'));
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/backoffice/manage_recettes.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'admin-recommendations') {
+    $pageTitle = 'Back Office - Recommandations';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page recommendations-admin-page'));
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/backoffice/manage_recommandations.php';
+    include __DIR__ . '/view/layouts/footer.php';
 } elseif ($action === 'auth-management') {
     $pageTitle = 'Authentification';
     if ($isAdminSession) {
@@ -288,16 +289,46 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'recipes-management') {
-    $pageTitle = 'Recette alimentation';
-    $moduleTitle = 'Recette alimentation';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez creer, modifier et supprimer des recettes alimentaires.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
-    }
+    $pageTitle = 'Nos recettes';
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/frontoffice/liste_recettes.php';
     include __DIR__ . '/view/layouts/footer.php';
 
+} elseif ($action === 'recipe-details') {
+    $pageTitle = 'Detail recette';
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/frontoffice/details_recette.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'recipe-details-aliment') {
+    $pageTitle = 'Detail aliment';
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/frontoffice/details_aliment.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'recipe-generate') {
+    $pageTitle = 'Generation recette';
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/frontoffice/generate_recette.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'recipe-optimize') {
+    $pageTitle = 'Optimisation recette';
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/frontoffice/optimiser_recette.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'recipe-save-optimization') {
+    include __DIR__ . '/view/frontoffice/save_optimisation.php';
+
+} elseif ($action === 'recipe-stats') {
+    $pageTitle = 'Statistiques nutritionnelles';
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/frontoffice/stats_nutrition.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'recipe-export') {
+    include __DIR__ . '/view/frontoffice/export_pdf.php';
 } elseif ($action === 'foods-management') {
     $products = new ProduitController();
     $products->frontList();

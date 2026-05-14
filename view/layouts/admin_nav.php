@@ -1,11 +1,10 @@
-﻿<?php
+<?php
 $currentAction = $_GET['action'] ?? 'admin-dashboard';
 
 $isDashboardAction = $currentAction === 'admin-dashboard';
 $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'edit-user', 'users-report'], true);
 $isTrackingAction = in_array($currentAction, ['nutrition_dashboard', 'suivi', 'objectif', 'admin-aliments', 'admin-objectifs'], true);
 $isRecipesAction = in_array($currentAction, ['admin-recipes', 'recipes-management', 'recipe-details', 'recipe-generate', 'recipe-optimize', 'recipe-save-optimization', 'recipe-stats', 'recipe-export'], true);
-$isFoodsAction = in_array($currentAction, ['products-admin', 'product-create', 'product-edit', 'product-delete', 'products-pending', 'product-approve', 'products-prediction', 'products-predict', 'product-predict', 'admin-orders', 'admin-order-edit', 'admin-order-delete', 'admin-order-pdf'], true);
 $isRecommendationsAction = $currentAction === 'admin-recommendations';
 $isObjectivesAction = in_array($currentAction, ['admin-objectifs', 'objectif'], true);
 $isCommunityAction = $currentAction === 'admin-community';
@@ -15,9 +14,9 @@ $isNewsAction = in_array($currentAction, ['admin-news', 'admin-news-create', 'ad
 $adminObjectifsRouteExists = false;
 $adminNewsRouteExists = false;
 $objectifsHref = $adminObjectifsRouteExists
-    ? '/Web/index.php?action=admin-objectifs'
-    : '/Web/index.php?action=objectif';
-$newsHref = '/Web/index.php?action=admin-news';
+    ? '/projet-web-25-26/index.php?action=admin-objectifs'
+    : '/projet-web-25-26/index.php?action=objectif';
+$newsHref = '/projet-web-25-26/index.php?action=admin-news';
 
 $moduleInfo = [
     'dashboard' => [
@@ -35,10 +34,6 @@ $moduleInfo = [
     'recipes' => [
         'title' => 'Recettes',
         'text' => 'Module actif pour gerer les recettes et leurs ingredients.',
-    ],
-    'foods' => [
-        'title' => 'Ecommerce',
-        'text' => 'Module actif pour gerer les produits, le panier, les commandes et les predictions de vente.',
     ],
     'recommendations' => [
         'title' => 'Recommandations',
@@ -75,8 +70,6 @@ if ($isUsersAction) {
     $activeModuleKey = 'recommendations';
 } elseif ($isRecipesAction) {
     $activeModuleKey = 'recipes';
-} elseif ($isFoodsAction) {
-    $activeModuleKey = 'foods';
 } elseif ($isObjectivesAction) {
     $activeModuleKey = 'objectives';
 } elseif ($isTrackingAction) {
@@ -109,9 +102,9 @@ if ($adminInitials === '') {
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="/Web/index.php?action=admin-dashboard" class="admin-brand-link">
+            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/Web/view/assets/images/logo.png"
+                    src="/projet-web-25-26/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -122,12 +115,12 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section">
             <p class="admin-menu-title admin-side-section-title">Navigation</p>
-            <a href="/Web/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-chart-line"></i>
+            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
+                <span>🧭</span>
                 <span>Dashboard</span>
             </a>
-            <a href="/Web/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-users"></i>
+            <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+                <span>👥</span>
                 <span>Utilisateurs</span>
             </a>
         </div>
@@ -135,43 +128,38 @@ if ($adminInitials === '') {
         <div class="admin-menu-section admin-modules-section">
             <p class="admin-menu-title admin-side-section-title">Modules</p>
 
-            <a href="/Web/index.php?action=nutrition_dashboard" class="admin-side-link<?= $isTrackingAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-bowl-food"></i>
+            <a href="/projet-web-25-26/index.php?action=nutrition_dashboard" class="admin-side-link<?= $isTrackingAction ? ' active' : '' ?>">
+                <span>🍎</span>
                 <span>Suivi</span>
             </a>
 
-            <a href="/Web/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-book-open"></i>
+            <a href="/projet-web-25-26/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
+                <span>📖</span>
                 <span>Recettes</span>
             </a>
 
-            <a href="/Web/index.php?action=products-admin" class="admin-side-link<?= $isFoodsAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-basket-shopping"></i>
-                <span>Ecommerce</span>
-            </a>
-
-            <a href="/Web/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-star"></i>
+            <a href="/projet-web-25-26/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
+                <span>💙</span>
                 <span>Recommandations</span>
             </a>
 
             <a href="<?= htmlspecialchars($objectifsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isObjectivesAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-bullseye"></i>
+                <span>🎯</span>
                 <span>Objectifs</span>
             </a>
 
-            <a href="/Web/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-comments"></i>
+            <a href="/projet-web-25-26/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
+                <span>💬</span>
                 <span>Community</span>
             </a>
 
-            <a href="/Web/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-flag"></i>
+            <a href="/projet-web-25-26/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
+                <span>🚩</span>
                 <span>Reports Community</span>
             </a>
 
             <a href="<?= htmlspecialchars($newsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isNewsAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-newspaper"></i> 
+                <span>📰</span>
                 <span>News / Articles</span>
             </a>
             <?php if (!$adminNewsRouteExists): ?>
@@ -187,7 +175,7 @@ if ($adminInitials === '') {
 
     <header class="admin-topbar">
         <div class="admin-top-actions">
-            <div class="notification-center admin-notification-center" data-notification-endpoint="/Web/controller/notificationController.php">
+            <div class="notification-center admin-notification-center" data-notification-endpoint="/projet-web-25-26/controller/notificationController.php">
                 <button type="button" id="notificationToggle" class="admin-icon-btn notification-toggle" aria-label="Notifications" aria-expanded="false">
                     <i class="fa-solid fa-bell"></i>
                     <span id="notificationBadge" class="notification-badge" hidden>0</span>
@@ -216,10 +204,9 @@ if ($adminInitials === '') {
                 </div>
             </div>
 
-            <a href="/Web/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
+            <a href="/projet-web-25-26/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
     </header>
 </div>
-
