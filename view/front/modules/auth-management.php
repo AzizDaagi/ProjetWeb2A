@@ -1,4 +1,4 @@
-﻿<div class="container">
+<div class="container">
     <h1><i class="fa-solid fa-shield-halved"></i> Authentification</h1>
     <p class="subtitle">Acces rapide aux actions d'authentification.</p>
 
@@ -14,4 +14,3 @@
         </a>
     </div>
 </div>
-

@@ -1,4 +1,4 @@
-﻿    </main>
+    </main>
 
     <?php if (isset($showFooter) && $showFooter === true): ?>
     <footer class="footer">
@@ -41,4 +41,3 @@
     <?php endif; ?>
 </body>
 </html>
-

@@ -1,4 +1,4 @@
-﻿<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
+<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
 
 <div class="container">
     <h1>Connexion</h1>
@@ -124,4 +124,3 @@ if (config && loginButton && statusEl) {
 }
 </script>
 <?php endif; ?>
-

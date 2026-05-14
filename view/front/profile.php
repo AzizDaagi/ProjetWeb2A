@@ -1,4 +1,4 @@
-﻿<div class="container">
+<div class="container">
     <?php $profileUser = is_array($user ?? null) ? $user : []; ?>
     <?php $profileRoleSlug = trim((string) ($profileUser['role'] ?? ($_SESSION['user_role'] ?? 'user'))); ?>
     <?php $isAdminProfile = $profileRoleSlug === 'admin'; ?>
@@ -142,4 +142,3 @@
         <p><strong><i class="fa-solid fa-envelope icon"></i>E-mail:</strong> <?= htmlspecialchars((string) ($profileUser['email'] ?? '')) ?></p>
     </div>
 </div>
-

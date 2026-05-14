@@ -1,4 +1,4 @@
-﻿<div class="admin-page">
+<div class="admin-page">
     <?php
     $pieSegments = (isset($pieSegments) && is_array($pieSegments)) ? $pieSegments : [
         ['label' => 'Hommes', 'count' => 0, 'dotClass' => 'legend-blue'],
@@ -87,4 +87,3 @@
         </table>
     </section>
 </div>
-

@@ -1,4 +1,4 @@
-﻿<div class="public-brand-block">
+<div class="public-brand-block">
     <a href="/projet-web-25-26/index.php?action=login" class="public-brand-link">
         <img
             src="/projet-web-25-26/view/assets/images/logo.png"
@@ -10,4 +10,3 @@
     </a>
     <p class="public-brand-tagline">Votre plateforme de nutrition intelligente</p>
 </div>
-

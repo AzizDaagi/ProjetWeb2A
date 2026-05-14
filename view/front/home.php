@@ -1,4 +1,4 @@
-﻿<div class="hero-wrapper">
+<div class="hero-wrapper">
     <div class="cycle-diagram">
         <svg class="orbit-ring" viewBox="0 0 400 400">
             <circle cx="200" cy="200" r="140" class="ring-track" />
@@ -119,4 +119,3 @@
         </div>
     </section>
 </div>
-

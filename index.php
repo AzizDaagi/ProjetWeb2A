@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 session_start();
 
@@ -30,6 +30,9 @@ require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/WeatherController.php';
+require_once __DIR__ . '/controller/ProduitController.php';
+require_once __DIR__ . '/controller/CartController.php';
+require_once __DIR__ . '/controller/CommandeController.php';
 
 if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
     $pdo = Database::getConnection();
@@ -73,7 +76,20 @@ $adminOnlyActions = [
     'admin-community',
     'admin-community-reports',
     'admin-community-report-details',
-    'admin-community-review-post'
+    'admin-community-review-post',
+    'products-admin',
+    'product-create',
+    'product-edit',
+    'product-delete',
+    'products-pending',
+    'product-approve',
+    'products-prediction',
+    'products-predict',
+    'product-predict',
+    'admin-orders',
+    'admin-order-edit',
+    'admin-order-delete',
+    'admin-order-pdf'
 ];
 
 $clientOnlyActions = [
@@ -86,8 +102,19 @@ $clientOnlyActions = [
     'community',
     'recipes-management',
     'foods-management',
-    'tracking-management',
-    'planner-management'
+    'product-submit',
+    'cart-add',
+    'cart-view',
+    'cart-update',
+    'cart-remove',
+    'cart-checkout',
+    'cart-process',
+    'cart-clear',
+    'order-create',
+    'order-list',
+    'order-edit',
+    'order-delete',
+    'tracking-management'
 ];
 
 if (isset($_SESSION['user_id'])) {
@@ -237,15 +264,108 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'foods-management') {
-    $pageTitle = 'Ecommerce';
-    $moduleTitle = 'Ecommerce';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez gerer les produits, commandes et ventes.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
-    }
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    $products = new ProduitController();
+    $products->frontList();
+
+} elseif ($action === 'product-submit') {
+    $products = new ProduitController();
+    $products->frontCreate();
+
+} elseif ($action === 'products-admin') {
+    $products = new ProduitController();
+    $products->backList();
+
+} elseif ($action === 'product-create') {
+    $products = new ProduitController();
+    $products->create();
+
+} elseif ($action === 'product-edit') {
+    $products = new ProduitController();
+    $products->edit();
+
+} elseif ($action === 'product-delete') {
+    $products = new ProduitController();
+    $products->delete();
+
+} elseif ($action === 'products-pending') {
+    $products = new ProduitController();
+    $products->pending();
+
+} elseif ($action === 'product-approve') {
+    $products = new ProduitController();
+    $products->approve();
+
+} elseif ($action === 'products-prediction') {
+    $products = new ProduitController();
+    $products->predictionPanel();
+
+} elseif ($action === 'products-predict') {
+    $products = new ProduitController();
+    $products->formPredict();
+
+} elseif ($action === 'product-predict') {
+    $products = new ProduitController();
+    $products->predictProductStats();
+
+} elseif ($action === 'cart-add') {
+    $cart = new CartController();
+    $cart->add();
+
+} elseif ($action === 'cart-view') {
+    $cart = new CartController();
+    $cart->view();
+
+} elseif ($action === 'cart-update') {
+    $cart = new CartController();
+    $cart->update();
+
+} elseif ($action === 'cart-remove') {
+    $cart = new CartController();
+    $cart->remove();
+
+} elseif ($action === 'cart-checkout') {
+    $cart = new CartController();
+    $cart->checkoutForm();
+
+} elseif ($action === 'cart-process') {
+    $cart = new CartController();
+    $cart->checkout();
+
+} elseif ($action === 'cart-clear') {
+    $cart = new CartController();
+    $cart->clear();
+
+} elseif ($action === 'order-create') {
+    $orders = new CommandeController();
+    $orders->createFront();
+
+} elseif ($action === 'order-list') {
+    $orders = new CommandeController();
+    $orders->frontList();
+
+} elseif ($action === 'order-edit') {
+    $orders = new CommandeController();
+    $orders->editFront();
+
+} elseif ($action === 'order-delete') {
+    $orders = new CommandeController();
+    $orders->deleteFront();
+
+} elseif ($action === 'admin-orders') {
+    $orders = new CommandeController();
+    $orders->adminList();
+
+} elseif ($action === 'admin-order-edit') {
+    $orders = new CommandeController();
+    $orders->editAdmin();
+
+} elseif ($action === 'admin-order-delete') {
+    $orders = new CommandeController();
+    $orders->deleteAdmin();
+
+} elseif ($action === 'admin-order-pdf') {
+    $orders = new CommandeController();
+    $orders->downloadAdminPdf();
 
 } elseif ($action === 'community') {
     if ($isAdminSession) {
@@ -469,4 +589,3 @@ if ($action === 'home') {
 
     $controller->$action();
 }
-

@@ -1,4 +1,4 @@
-﻿function initCommunityPage() {
+function initCommunityPage() {
     [
         initBackofficeTables,
         initThemeToggle,
@@ -760,5 +760,3 @@ if (document.readyState === 'loading') {
 } else {
     initNewsCarousel();
 }
-
-

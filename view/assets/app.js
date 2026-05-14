@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     document.body.classList.add('is-ready');
 
     runInitSafely(initThemeToggle, 'theme-toggle');
@@ -2572,4 +2572,3 @@ function initFullScreenHandControl() {
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
-

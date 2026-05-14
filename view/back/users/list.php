@@ -1,4 +1,4 @@
-﻿<div class="container admin-dashboard users-list-page admin-page" data-users-search-endpoint="/projet-web-25-26/index.php?action=users-search">
+<div class="container admin-dashboard users-list-page admin-page" data-users-search-endpoint="/projet-web-25-26/index.php?action=users-search">
     <h1><i class="fa-solid fa-users icon"></i> Utilisateurs</h1>
     <p class="subtitle">Liste complete des utilisateurs inscrits</p>
 
@@ -85,4 +85,3 @@
 
     <a href="/projet-web-25-26/index.php?action=profile" class="btn-admin-secondary">Retour au profil</a>
 </div>
-

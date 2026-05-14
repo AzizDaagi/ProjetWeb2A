@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -97,4 +97,3 @@ private function getMailConfig(): array {
     ];
 }
 }
-

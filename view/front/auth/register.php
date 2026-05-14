@@ -1,4 +1,4 @@
-﻿<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
+<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
 
 <div class="container">
     <h1>Inscription</h1>
@@ -67,4 +67,3 @@
 
     <p class="link-text">Deja inscrit ? <a href="/projet-web-25-26/index.php?action=login">Se connecter</a></p>
 </div>
-

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     'app_url' => getenv('APP_URL') ?: 'http://localhost/projet-web-25-26',
@@ -16,4 +16,3 @@ return [
     // OpenWeather:
     // OPENWEATHER_API_KEY, WEATHER_DEFAULT_LAT, WEATHER_DEFAULT_LON, WEATHER_API_TIMEOUT
 ];
-

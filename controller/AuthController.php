@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once __DIR__ . '/../model/Database.php';
 require_once __DIR__ . '/../model/User.php';
@@ -927,4 +927,3 @@ public function showResetForm()
   
     
 }
-

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (!empty($GLOBALS['nutrition_nav_rendered'])) {
     return;
 }
@@ -25,4 +25,3 @@ $isDashboardActive = $currentAction === 'nutrition_dashboard';
         <span>Dashboard</span>
     </a>
 </nav>
-

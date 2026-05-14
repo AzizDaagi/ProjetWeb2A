@@ -1,4 +1,4 @@
-﻿<?php $isAdminNavbar = (($_SESSION['user_role'] ?? 'user') === 'admin'); ?>
+<?php $isAdminNavbar = (($_SESSION['user_role'] ?? 'user') === 'admin'); ?>
 
 <nav class="navbar<?= $isAdminNavbar ? ' navbar-compact' : '' ?>">
     <div class="navbar-brand">
@@ -73,4 +73,3 @@
         <?php endif; ?>
     </div>
 </nav>
-

@@ -229,7 +229,7 @@ function hasPostLocation($post)
                             <?php endforeach; ?>
                         </select>
                         <input type="text" id="new-title" class="form-control mb-2" placeholder="Titre de votre publication">
-                        <textarea id="new-content" class="form-control" rows="3" placeholder="Écrivez votre message ici..."></textarea>
+                        <textarea id="new-content" class="form-control" rows="3" placeholder="Ã‰crivez votre message ici..."></textarea>
                         <div class="product-analysis-box mt-3">
                             <label class="form-label" for="product-query">Analyse nutritionnelle (optionnel)</label>
                             <div class="product-analysis-controls">
@@ -1101,10 +1101,10 @@ function hasPostLocation($post)
         let imageToRemove = {};
 
         function removeImage(id) {
-            if (confirm("Supprimer définitivement l'image ?")) {
+            if (confirm("Supprimer dÃ©finitivement l'image ?")) {
                 imageToRemove[id] = true;
                 const container = document.getElementById(`post-image-container-${id}`);
-                container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image supprimée (sera effacée à l\'enregistrement)</small>';
+                container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image supprimÃ©e (sera effacÃ©e Ã  l\'enregistrement)</small>';
             }
         }
 
@@ -1310,7 +1310,7 @@ function hasPostLocation($post)
 
         function addComment(postId) {
             const content = document.getElementById(`comment-content-${postId}`).value.trim();
-            if (!content) return alert("Le commentaire ne peut pas être vide");
+            if (!content) return alert("Le commentaire ne peut pas Ãªtre vide");
 
             fetch('/projet-web-25-26/controller/commentController.php?action=add', {
                     method: 'POST',
@@ -1374,7 +1374,7 @@ function hasPostLocation($post)
 
         function saveCommentEdit(id) {
             const content = document.getElementById(`edit-comment-text-${id}`).value;
-            if (!content.trim()) return alert("Le commentaire ne peut pas être vide");
+            if (!content.trim()) return alert("Le commentaire ne peut pas Ãªtre vide");
 
             fetch('/projet-web-25-26/controller/commentController.php?action=update', {
                     method: 'POST',
@@ -1396,7 +1396,7 @@ function hasPostLocation($post)
                     }
                 })
                 .catch(() => {
-                    alert("Erreur réseau ou serveur");
+                    alert("Erreur rÃ©seau ou serveur");
                 });
         }
 

@@ -5,6 +5,7 @@ $isDashboardAction = $currentAction === 'admin-dashboard';
 $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'edit-user', 'users-report'], true);
 $isTrackingAction = in_array($currentAction, ['nutrition_dashboard', 'suivi', 'objectif', 'admin-aliments', 'admin-objectifs'], true);
 $isRecipesAction = in_array($currentAction, ['admin-recipes', 'recipes-management', 'recipe-details', 'recipe-generate', 'recipe-optimize', 'recipe-save-optimization', 'recipe-stats', 'recipe-export'], true);
+$isFoodsAction = in_array($currentAction, ['products-admin', 'product-create', 'product-edit', 'product-delete', 'products-pending', 'product-approve', 'products-prediction', 'products-predict', 'product-predict', 'admin-orders', 'admin-order-edit', 'admin-order-delete', 'admin-order-pdf'], true);
 $isRecommendationsAction = $currentAction === 'admin-recommendations';
 $isObjectivesAction = in_array($currentAction, ['admin-objectifs', 'objectif'], true);
 $isCommunityAction = $currentAction === 'admin-community';
@@ -34,6 +35,10 @@ $moduleInfo = [
     'recipes' => [
         'title' => 'Recettes',
         'text' => 'Module actif pour gerer les recettes et leurs ingredients.',
+    ],
+    'foods' => [
+        'title' => 'Ecommerce',
+        'text' => 'Module actif pour gerer les produits, le panier, les commandes et les predictions de vente.',
     ],
     'recommendations' => [
         'title' => 'Recommandations',
@@ -70,6 +75,8 @@ if ($isUsersAction) {
     $activeModuleKey = 'recommendations';
 } elseif ($isRecipesAction) {
     $activeModuleKey = 'recipes';
+} elseif ($isFoodsAction) {
+    $activeModuleKey = 'foods';
 } elseif ($isObjectivesAction) {
     $activeModuleKey = 'objectives';
 } elseif ($isTrackingAction) {
@@ -116,11 +123,11 @@ if ($adminInitials === '') {
         <div class="admin-menu-section">
             <p class="admin-menu-title admin-side-section-title">Navigation</p>
             <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
-                <span>🧭</span>
+                <span>ðŸ§­</span>
                 <span>Dashboard</span>
             </a>
             <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
-                <span>👥</span>
+                <span>ðŸ‘¥</span>
                 <span>Utilisateurs</span>
             </a>
         </div>
@@ -129,37 +136,42 @@ if ($adminInitials === '') {
             <p class="admin-menu-title admin-side-section-title">Modules</p>
 
             <a href="/projet-web-25-26/index.php?action=nutrition_dashboard" class="admin-side-link<?= $isTrackingAction ? ' active' : '' ?>">
-                <span>🍎</span>
+                <span>ðŸŽ</span>
                 <span>Suivi</span>
             </a>
 
             <a href="/projet-web-25-26/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
-                <span>📖</span>
+                <span>ðŸ“–</span>
                 <span>Recettes</span>
             </a>
 
+            <a href="/projet-web-25-26/index.php?action=products-admin" class="admin-side-link<?= $isFoodsAction ? ' active' : '' ?>">
+                <span>ðŸ</span>
+                <span>Ecommerce</span>
+            </a>
+
             <a href="/projet-web-25-26/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
-                <span>💙</span>
+                <span>ðŸ’™</span>
                 <span>Recommandations</span>
             </a>
 
             <a href="<?= htmlspecialchars($objectifsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isObjectivesAction ? ' active' : '' ?>">
-                <span>🎯</span>
+                <span>ðŸŽ¯</span>
                 <span>Objectifs</span>
             </a>
 
             <a href="/projet-web-25-26/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
-                <span>💬</span>
+                <span>ðŸ’¬</span>
                 <span>Community</span>
             </a>
 
             <a href="/projet-web-25-26/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
-                <span>🚩</span>
+                <span>ðŸš©</span>
                 <span>Reports Community</span>
             </a>
 
             <a href="<?= htmlspecialchars($newsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isNewsAction ? ' active' : '' ?>">
-                <span>📰</span>
+                <span>ðŸ“°</span>
                 <span>News / Articles</span>
             </a>
             <?php if (!$adminNewsRouteExists): ?>

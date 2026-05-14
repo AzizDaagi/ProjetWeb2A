@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $baseUrl = '/projet-web-25-26';
 $currentAction = (string) ($_GET['action'] ?? '');
 $currentController = (string) ($_GET['controller'] ?? '');
@@ -104,4 +104,3 @@ $showNutritionSubnav = in_array($currentAction, [
 <?php endif; ?>
 
 <?php require __DIR__ . '/chatbot_widget.php'; ?>
-

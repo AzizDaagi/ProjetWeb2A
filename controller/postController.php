@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -39,7 +39,7 @@ class PostController {
         $this->notificationModel = new Notification($db);
         $this->moderationJobModel = new ModerationJob($db);
         $this->projectRoot = realpath(__DIR__ . '/..');
-        $this->postImageDirectory = $this->projectRoot . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR . 'post_uploads' . DIRECTORY_SEPARATOR . 'posts';
+        $this->postImageDirectory = $this->projectRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'posts';
     }
 
     public function getAll() {
@@ -496,4 +496,3 @@ if ($action == 'create') {
     $controller->report();
 }
 ?>
-

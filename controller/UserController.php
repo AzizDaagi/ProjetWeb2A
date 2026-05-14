@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 require_once __DIR__ . '/../model/Database.php';
 require_once __DIR__ . '/../model/User.php';
@@ -1108,4 +1108,3 @@ class UserController
         exit;
     }
 }
-

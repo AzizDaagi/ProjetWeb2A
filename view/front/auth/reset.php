@@ -1,4 +1,4 @@
-﻿<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
+<?php include __DIR__ . '/../../layouts/public_brand.php'; ?>
 
 <div class="container">
     <h1>Reinitialiser le mot de passe</h1>
@@ -35,4 +35,3 @@
         </div>
     </form>
 </div>
-

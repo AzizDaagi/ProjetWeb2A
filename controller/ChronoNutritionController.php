@@ -17,7 +17,8 @@ class ChronoNutritionController {
 
     public function chrono_nutrition() {
         $pageTitle = 'Chrono-Nutrition';
-        $bodyClass = 'chrono-nutrition-page';
+        $showFooter = true;
+        $bodyClass = 'chrono-nutrition-page chrono-page-shell';
         $chronoStylesheet = __DIR__ . '/../view/front/assets/css/chrono-nutrition.css';
         $chronoScript = __DIR__ . '/../view/front/assets/js/chrono-nutrition.js';
         $additionalStylesheets = ['/projet-web-25-26/view/front/assets/css/chrono-nutrition.css?v=' . filemtime($chronoStylesheet)];

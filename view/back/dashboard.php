@@ -148,7 +148,7 @@ function buildSparkline(array $values, string $colorClass = ''): string {
                             <span><i class="fa-solid fa-heart"></i> <?= (int) $mostInteractedPost['reactions_count'] ?> reactions</span>
                         </div>
                     <?php else: ?>
-                        <div class="metric-card-value">—</div>
+                        <div class="metric-card-value">â€”</div>
                         <div class="metric-card-subtitle">Aucune interaction cette semaine</div>
                     <?php endif; ?>
                 </div>

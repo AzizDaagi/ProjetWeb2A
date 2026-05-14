@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 $reportTitle = 'Rapport PDF - Utilisateurs';
 $searchLabel = trim((string) ($searchTerm ?? ''));
 $searchLabelDisplay = $searchLabel !== '' ? $searchLabel : 'Tous les utilisateurs';
@@ -124,4 +124,3 @@ window.addEventListener('load', function () {
     }, 450);
 });
 </script>
-

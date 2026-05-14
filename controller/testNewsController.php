@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Point de test pour deboguer le fil d actualites.
  * Acces : http://localhost/projet-web-25-26/controller/testNewsController.php
@@ -75,4 +75,3 @@ try {
     echo "</pre>";
 }
 ?>
-

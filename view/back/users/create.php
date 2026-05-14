@@ -1,4 +1,4 @@
-﻿<div class="container admin-page admin-form-page">
+<div class="container admin-page admin-form-page">
     <?php $newUser = is_array($user ?? null) ? $user : []; ?>
     <h1><i class="fa-solid fa-user-plus icon"></i> Ajouter un utilisateur</h1>
     <p class="subtitle">Creation d'un nouveau compte utilisateur</p>
@@ -75,4 +75,3 @@
         <a href="/projet-web-25-26/index.php?action=users-list" class="btn-admin-secondary">Retour a la liste</a>
     </div>
 </div>
-

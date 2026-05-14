@@ -1,4 +1,4 @@
-﻿<div class="container admin-page admin-form-page">
+<div class="container admin-page admin-form-page">
     <?php $editableUser = is_array($user ?? null) ? $user : []; ?>
     <?php $editableRoleSlug = (string) ($editableUser['role'] ?? 'user'); ?>
     <?php $isEditingAdmin = $editableRoleSlug === 'admin'; ?>
@@ -77,4 +77,3 @@
         <a href="/projet-web-25-26/index.php?action=users-list" class="btn secondary">Retour a la liste</a>
     </div>
 </div>
-

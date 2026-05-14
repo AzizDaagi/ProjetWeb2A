@@ -1,4 +1,4 @@
-﻿<div class="container">
+<div class="container">
     <?php $isAdminSession = isset($_SESSION['user_id']) && (($_SESSION['user_role'] ?? 'user') === 'admin'); ?>
     <?php $backAction = $isAdminSession ? 'admin-dashboard' : 'home'; ?>
     <h1><i class="fa-solid fa-gears"></i> <?= htmlspecialchars($moduleTitle ?? 'Module') ?></h1>
@@ -15,4 +15,3 @@
         </a>
     </div>
 </div>
-
