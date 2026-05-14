@@ -1,7 +1,8 @@
+<?php $baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>
 <div class="public-brand-block">
-    <a href="/projet-web-25-26/index.php?action=login" class="public-brand-link">
+    <a href="<?= $baseUrl ?>/index.php?action=login" class="public-brand-link">
         <img
-            src="/projet-web-25-26/view/assets/images/logo.png"
+            src="<?= $baseUrl ?>/view/assets/images/logo.png"
             alt="Smart Nutrition"
             class="public-brand-logo"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"

@@ -17,8 +17,30 @@ class UserController
 
     private function redirect($action)
     {
-        header('Location: /projet-web-25-26/index.php?action=' . $action);
+        header('Location: /projetwebmalek/index.php?action=' . $action);
         exit;
+    }
+
+    public function listUsers()
+    {
+        return $this->userModel->getAllWithRole();
+    }
+
+    public function toggleRole($id)
+    {
+        $user = $this->userModel->findById($id);
+        if ($user) {
+            $newRole = ($user['role'] === 'admin') ? 'user' : 'admin';
+            $sql = 'UPDATE users SET role = :role WHERE id = :id';
+            $stmt = Database::getConnection()->prepare($sql);
+            $stmt->execute(['role' => $newRole, 'id' => (int)$id]);
+        }
+    }
+
+    public function countUsers()
+    {
+        $sql = 'SELECT COUNT(*) FROM users WHERE COALESCE(NULLIF(role, ""), "user") <> "admin"';
+        return (int) Database::getConnection()->query($sql)->fetchColumn();
     }
 
     private function isLoggedIn()
@@ -1104,7 +1126,7 @@ class UserController
         session_unset();
         session_destroy();
 
-        header('Location: /projet-web-25-26/index.php?action=login');
+        header('Location: /projetwebmalek/index.php?action=login');
         exit;
     }
 }
