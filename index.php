@@ -52,7 +52,7 @@ $action = $_GET['action'] ?? $defaultAction;
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
-    header('Location: /smart_nutrition/index.php?action=login');
+    header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=login');
     exit;
 }
 
@@ -211,9 +211,13 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'tracking-management') {
-    $pageTitle = 'Activite sportif';
-    $moduleTitle = 'Activite sportif';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez suivre les activites sportives et la progression des utilisateurs.';
+    $front = new FrontController();
+    $front->activites();
+
+} elseif ($action === 'suivi-nutritionnel') {
+    $pageTitle = 'Suivi Nutritionnel';
+    $moduleTitle = 'Suivi Nutritionnel';
+    $moduleDescription = 'Cette section est désormais fusionnée avec Activité Sportif. Ce module est vide.';
     if ($isAdminSession) {
         $isAdminTemplate = true;
     }
@@ -342,6 +346,6 @@ if ($action === 'home') {
     } else {
         $fallbackAction = 'login';
     }
-    header('Location: /smart_nutrition/index.php?action=' . $fallbackAction);
+    header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=' . $fallbackAction);
     exit;
 }

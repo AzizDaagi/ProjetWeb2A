@@ -1,6 +1,58 @@
 <?php ob_start(); ?>
 
+<style>
+    #history-container {
+        display: none;
+        margin-top: 2rem;
+        animation: slideDown 0.4s ease-out;
+    }
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .btn-demandes {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.6rem;
+        border-radius: 50px;
+        border: 1.5px solid rgba(56, 189, 248, 0.6);
+        background: rgba(56, 189, 248, 0.08);
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    .btn-demandes:hover {
+        background: rgba(56, 189, 248, 0.2);
+        border-color: var(--primary);
+        box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+    }
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.4rem;
+        border-radius: 50px;
+        border: 1.5px solid rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.05);
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    .btn-back:hover {
+        background: rgba(255,255,255,0.12);
+        color: #fff;
+    }
+</style>
+
 <div class="animate-fade-in" style="max-width: 1200px; margin: 0 auto; padding: 2rem;">
+
+    <!-- ===== SECTION 1: Catalogue des Activités ===== -->
     <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <h2 style="color: var(--primary); margin: 0;"><i class="fa-solid fa-person-running"></i> Catalogue des Activités</h2>
@@ -30,7 +82,7 @@
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 4rem;">
         <?php if(empty($activites)): ?>
             <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
                 <p style="color: var(--text-muted);">Aucune activité trouvée pour votre recherche.</p>
@@ -51,7 +103,90 @@
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+
+    <!-- ===== SECTION 2: Demande de Programme Nutritionnel (Always visible) ===== -->
+    <div id="nutrition-section">
+        <iframe 
+            id="nutrition-iframe"
+            src="index.php?action=nutrition_request&embed=true" 
+            style="width: 100%; min-height: 950px; border: none; background: transparent; display: block;" 
+            allowtransparency="true"
+            title="Demande de Programme Nutritionnel">
+        </iframe>
+    </div>
+
+    <!-- ===== SECTION 3: Mes Demandes (Hidden by default, toggled via JS) ===== -->
+    <div id="history-container">
+        <iframe 
+            id="history-iframe"
+            src=""
+            data-src="index.php?action=my_nutrition_requests&embed=true"
+            style="width: 100%; min-height: 900px; border: none; background: transparent; display: block;" 
+            allowtransparency="true"
+            title="Mes Demandes de Programme">
+        </iframe>
+    </div>
+
 </div>
+
+<script>
+var _historyScrolled = false; // flag: only scroll once per open
+
+function showHistory() {
+    var historyEl  = document.getElementById('history-container');
+    var iframe     = document.getElementById('history-iframe');
+
+    // Lazy-load the iframe only on first click
+    if (!iframe.src || iframe.src === window.location.href) {
+        iframe.src = iframe.dataset.src;
+    }
+
+    historyEl.style.display = 'block';
+
+    // Scroll only once when the user first opens the section
+    if (!_historyScrolled) {
+        _historyScrolled = true;
+        setTimeout(function() {
+            historyEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+    }
+}
+
+function toggleHistory() {
+    var historyEl   = document.getElementById('history-container');
+    var nutritionEl = document.getElementById('nutrition-section');
+
+    if (historyEl.style.display === 'block') {
+        // Hide and reset scroll flag so next open scrolls again
+        historyEl.style.display = 'none';
+        _historyScrolled = false;
+        nutritionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        showHistory();
+    }
+}
+
+// Listen for postMessage from the nutrition iframes
+window.addEventListener('message', function(event) {
+    if (event.data === 'show_history') {
+        showHistory();
+    }
+    // Auto-resize the nutrition iframe — NO scrolling side-effect
+    if (event.data && event.data.type === 'resize_nutrition') {
+        var nIframe = document.getElementById('nutrition-iframe');
+        if (nIframe && event.data.height) {
+            nIframe.style.height = (event.data.height + 60) + 'px';
+        }
+    }
+    // Auto-resize the history iframe — NO scrolling side-effect
+    if (event.data && event.data.type === 'resize_history') {
+        var hIframe = document.getElementById('history-iframe');
+        if (hIframe && event.data.height) {
+            hIframe.style.height = (event.data.height + 40) + 'px';
+        }
+    }
+});
+</script>
 
 <?php 
 $content = ob_get_clean(); 

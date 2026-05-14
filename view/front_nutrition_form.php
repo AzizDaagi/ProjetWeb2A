@@ -1,12 +1,13 @@
 <?php ob_start(); ?>
 
-<div class="animate-fade-in" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
-    <h2 style="color: var(--primary); margin-bottom: 0.5rem; text-align: center;">Demande de Programme Nutritionnel</h2>
-    <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Remplissez ce formulaire pour recevoir un programme personnalisé basé sur vos objectifs.</p>
+<?php $isEmbed = (isset($_GET['embed']) && $_GET['embed'] === 'true'); ?>
+<div class="animate-fade-in" style="max-width: 800px; margin: 0 auto; padding: <?= $isEmbed ? '1rem 0.5rem' : '2rem 1rem' ?>;">
+    <h2 style="color: var(--primary); margin-bottom: 0.5rem; text-align: center;"><i class="fa-solid fa-file-medical"></i> Programme Nutritionnel</h2>
+    <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">Remplissez ce formulaire pour recevoir un programme personnalise base sur vos objectifs.</p>
     
     <div style="text-align: center; margin-bottom: 2rem;">
-        <a href="index.php?action=my_nutrition_requests" style="display: inline-block; padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--secondary); color: var(--secondary); text-decoration: none; border-radius: 30px; font-weight: 600; transition: 0.3s;">
-            <i class="fa-solid fa-list-check"></i> Accéder à Mes Demandes
+        <a href="index.php?action=my_nutrition_requests<?= $isEmbed ? '&embed=true' : '' ?>" style="display: inline-block; padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.05); border: 1px solid var(--secondary); color: var(--secondary); text-decoration: none; border-radius: 30px; font-weight: 600; transition: 0.3s;">
+            <i class="fa-solid fa-list-check"></i> Mes Demandes
         </a>
     </div>
 
@@ -27,16 +28,22 @@
     <?php endif; ?>
 
     <div class="glass-card">
-        <form action="index.php?action=process_nutrition_request" method="POST" id="nutritionForm" novalidate>
+        <form action="index.php?action=process_nutrition_request<?= (isset($_GET['embed']) && $_GET['embed'] === 'true') ? '&embed=true' : '' ?>" method="POST" id="nutritionForm" novalidate>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Nom Complet *</label>
-                    <input type="text" name="user_name" id="user_name" placeholder="John Doe" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
+                    <input type="text" name="user_name" id="user_name" 
+                           value="<?= isset($user) ? htmlspecialchars($user['prenom'] . ' ' . $user['nom']) : '' ?>" 
+                           <?= isset($user) ? 'readonly style="background: rgba(15, 23, 42, 0.4); opacity: 0.7;"' : '' ?>
+                           placeholder="John Doe" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
                     <div id="error_name" style="color: var(--error); font-size: 0.85rem; margin-top: 5px; display: none;">Ce champ est requis.</div>
                 </div>
                 <div>
                     <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Email *</label>
-                    <input type="email" name="email" id="email" placeholder="john@example.com" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
+                    <input type="email" name="email" id="email" 
+                           value="<?= isset($user) ? htmlspecialchars($user['email']) : '' ?>" 
+                           <?= isset($user) ? 'readonly style="background: rgba(15, 23, 42, 0.4); opacity: 0.7;"' : '' ?>
+                           placeholder="john@example.com" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
                     <div id="error_email" style="color: var(--error); font-size: 0.85rem; margin-top: 5px; display: none;">Email invalide.</div>
                 </div>
             </div>

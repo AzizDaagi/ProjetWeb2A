@@ -9,6 +9,7 @@
     </footer>
     <?php endif; ?>
 
+    <?php if (!isset($_GET['embed']) || $_GET['embed'] !== 'true'): ?>
     <video id="gestureVideoHidden" class="gesture-video-hidden" autoplay playsinline muted></video>
     <canvas id="gestureCanvasHidden" class="gesture-canvas-hidden" aria-hidden="true"></canvas>
     <div id="gestureCursor" class="gesture-cursor" aria-hidden="true"></div>
@@ -29,10 +30,11 @@
             <p id="voiceLastAction" class="voice-last-action">Exemples: "ouvre profil", "descendre", "cliquer deconnexion".</p>
         </div>
     </div>
+    <?php endif; ?>
 
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="/smart_nutrition/view/assets/app.js?v=<?= $assetVersion ?>"></script>
-    <script src="/smart_nutrition/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
+    <script src="/smart_nutritionn/gestionActiviteesportive/view/assets/app.js?v=<?= $assetVersion ?>"></script>
+    <script src="/smart_nutritionn/gestionActiviteesportive/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
 </body>
 </html>

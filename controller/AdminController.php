@@ -11,18 +11,18 @@ class AdminController {
     private function requireAdmin() {
         $this->startSessionIfNeeded();
         if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-            header('Location: /smart_nutrition/index.php?action=home');
+            header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=home');
             exit;
         }
     }
 
     public function loginView() {
-        header('Location: /smart_nutrition/index.php?action=login');
+        header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=login');
         exit;
     }
 
     public function authenticate() {
-        header('Location: /smart_nutrition/index.php?action=login');
+        header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=login');
         exit;
     }
 

@@ -17,7 +17,7 @@ class UserController
 
     private function redirect($action)
     {
-        header('Location: /smart_nutrition/index.php?action=' . $action);
+        header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=' . $action);
         exit;
     }
 
@@ -1104,7 +1104,7 @@ class UserController
         session_unset();
         session_destroy();
 
-        header('Location: /smart_nutrition/index.php?action=login');
+        header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=login');
         exit;
     }
 }

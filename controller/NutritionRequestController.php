@@ -11,7 +11,7 @@ class NutritionRequestController {
     private function requireAdmin() {
         $this->startSessionIfNeeded();
         if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-            header('Location: /smart_nutrition/index.php?action=home');
+            header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=home');
             exit;
         }
     }
@@ -61,11 +61,10 @@ class NutritionRequestController {
             $requestModel = new NutritionRequest();
             $requestModel->id = $id;
             
-            $assigned_activities = isset($_POST['assigned_activities']) ? $_POST['assigned_activities'] : [];
-            $assigned_exercises = isset($_POST['assigned_exercises']) ? $_POST['assigned_exercises'] : [];
-            
-            $requestModel->generated_activities = implode(", ", array_map('htmlspecialchars', $assigned_activities));
-            $requestModel->selected_exercises = implode(", ", array_map('htmlspecialchars', $assigned_exercises));
+            // Store the admin's written nutrition programme in generated_activities field
+            $requestModel->generated_activities = htmlspecialchars(trim($_POST['nutrition_programme'] ?? ''));
+            // selected_exercises is no longer managed from the admin view — preserve existing or clear safely
+            $requestModel->selected_exercises = '';
             $requestModel->status = $_POST['status'] ?? 'pending';
             
             $requestModel->updateAdmin();

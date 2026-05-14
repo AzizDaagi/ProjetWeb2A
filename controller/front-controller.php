@@ -16,7 +16,7 @@ if (file_exists($envFile)) {
         $key = trim($key);
         $value = trim($value);
 
-        if ($key !== '' && getenv($key) === false) {
+        if ($key !== '') {
             putenv($key . '=' . $value);
             $_ENV[$key] = $value;
         }
@@ -49,7 +49,7 @@ $action = $_GET['action'] ?? $defaultAction;
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
-    header('Location: /smart_nutrition/index.php?action=login');
+    header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=login');
     exit;
 }
 
@@ -239,6 +239,6 @@ if ($action === 'home') {
     } else {
         $fallbackAction = 'login';
     }
-    header('Location: /smart_nutrition/index.php?action=' . $fallbackAction);
+    header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=' . $fallbackAction);
     exit;
 }

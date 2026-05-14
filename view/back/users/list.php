@@ -1,4 +1,4 @@
-<div class="container admin-dashboard users-list-page admin-page" data-users-search-endpoint="/smart_nutrition/index.php?action=users-search">
+<div class="container admin-dashboard users-list-page admin-page" data-users-search-endpoint="/smart_nutritionn/gestionActiviteesportive/index.php?action=users-search">
     <h1><i class="fa-solid fa-users icon"></i> Utilisateurs</h1>
     <p class="subtitle">Liste complete des utilisateurs inscrits</p>
 
@@ -23,7 +23,7 @@
 
         <div class="users-tools-meta">
             <span id="usersResultsCount" class="users-results-count"><?= (int) ($usersCount ?? count($users)) ?> utilisateur(s)</span>
-            <a href="/smart_nutrition/index.php?action=create-user" class="btn-admin">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=create-user" class="btn-admin">
                 <i class="fa-solid fa-user-plus"></i> Ajouter un utilisateur
             </a>
             <button type="button" class="btn-admin-secondary users-export-btn" data-users-export>
@@ -62,10 +62,10 @@
                         <td><?= htmlspecialchars((string) ($u['objectif'] ?? '')) ?></td>
                         <td><?= htmlspecialchars($u['email']) ?></td>
                         <td class="users-actions">
-                            <a href="/smart_nutrition/index.php?action=edit-user&id=<?= $u['id'] ?>" class="btn-edit">
+                            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=edit-user&id=<?= $u['id'] ?>" class="btn-edit">
                                 <i class="fa-solid fa-pen"></i> Modifier
                             </a>
-                            <form method="POST" action="/smart_nutrition/index.php?action=delete-user" class="inline-form" onsubmit="return confirm('Supprimer cet utilisateur ?');" novalidate>
+                            <form method="POST" action="/smart_nutritionn/gestionActiviteesportive/index.php?action=delete-user" class="inline-form" onsubmit="return confirm('Supprimer cet utilisateur ?');" novalidate>
                                 <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
                                 <button type="submit" class="btn-delete-user">
                                     <i class="fa-solid fa-trash"></i> Supprimer
@@ -83,5 +83,5 @@
         </table>
     </div>
 
-    <a href="/smart_nutrition/index.php?action=profile" class="btn-admin-secondary">Retour au profil</a>
+    <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=profile" class="btn-admin-secondary">Retour au profil</a>
 </div>

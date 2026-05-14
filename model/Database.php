@@ -37,10 +37,21 @@ class Database
             self::ensureUserProfileColumns();
             self::ensureUserResetColumns();
             self::ensureUserFaceColumns();
+            self::ensureNutritionRequestUserIdColumn();
             self::$schemaChecked = true;
         }
 
         return self::$connection;
+    }
+
+    private static function ensureNutritionRequestUserIdColumn()
+    {
+        $stmt = self::$connection->query("SHOW COLUMNS FROM nutrition_requests LIKE 'user_id'");
+        $column = $stmt->fetch();
+
+        if (!$column) {
+            self::$connection->exec("ALTER TABLE nutrition_requests ADD COLUMN `user_id` INT NULL AFTER `id`, ADD INDEX (`user_id`) ");
+        }
     }
 
     private static function ensureUserRoleColumn()

@@ -5,6 +5,7 @@ class NutritionRequest {
     private $conn;
 
     public $id;
+    public $user_id;
     public $user_name;
     public $email;
     public $current_weight;
@@ -23,10 +24,11 @@ class NutritionRequest {
 
     public function create() {
         $query = "INSERT INTO nutrition_requests 
-                  (user_name, email, current_weight, current_goal, height, message, generated_activities, generated_exercises, selected_exercises, status) 
-                  VALUES (:name, :email, :weight, :goal, :height, :msg, :gen_act, :gen_ex, :sel_ex, :status)";
+                  (user_id, user_name, email, current_weight, current_goal, height, message, generated_activities, generated_exercises, selected_exercises, status) 
+                  VALUES (:user_id, :name, :email, :weight, :goal, :height, :msg, :gen_act, :gen_ex, :sel_ex, :status)";
         
         $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':user_id', $this->user_id ? (int)$this->user_id : null, PDO::PARAM_INT);
         $stmt->bindParam(':name', $this->user_name);
         $stmt->bindParam(':email', $this->email);
         $stmt->bindParam(':weight', $this->current_weight);
@@ -107,9 +109,14 @@ class NutritionRequest {
         return $stmt->execute();
     }
 
-    public function searchAndSort($term = '', $sort = 'date_desc') {
+    public function searchAndSort($term = '', $sort = 'date_desc', $userId = null) {
         $query = "SELECT * FROM nutrition_requests WHERE 1=1";
         $params = [];
+
+        if ($userId !== null) {
+            $query .= " AND user_id = :user_id";
+            $params[':user_id'] = $userId;
+        }
 
         if (!empty($term)) {
             $query .= " AND (user_name LIKE :term OR email LIKE :term OR current_goal LIKE :term OR status LIKE :term)";

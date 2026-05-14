@@ -26,53 +26,27 @@
 
     <!-- Admin Form -->
     <div class="glass-card" style="margin-bottom: 3rem;">
-        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem;">Assignation & Ajustement du Programme</h3>
+        <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem;">
+            <i class="fa-solid fa-pen-to-square"></i> Assignation du Programme Nutritionnel
+        </h3>
         
         <form action="index.php?action=admin_update_request" method="POST">
             <input type="hidden" name="id" value="<?= $requestData['id'] ?>">
-            
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Assigner des Activités (Optionnel)</label>
-                <div style="max-height: 150px; overflow-y: auto; background: rgba(15, 23, 42, 0.6); padding: 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
-                    <?php 
-                    $assignedActivities = explode(", ", $requestData['generated_activities'] ?? '');
-                    foreach ($activites as $act): 
-                        $isChecked = in_array($act['nom_activite'], $assignedActivities) ? 'checked' : '';
-                    ?>
-                        <label style="display: block; color: #fff; margin-bottom: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" name="assigned_activities[]" value="<?= htmlspecialchars($act['nom_activite']) ?>" <?= $isChecked ?> style="accent-color: var(--primary);">
-                            <?= htmlspecialchars($act['nom_activite']) ?>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Assigner des Exercices (Optionnel)</label>
-                <div style="max-height: 200px; overflow-y: auto; background: rgba(15, 23, 42, 0.6); padding: 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
-                    <?php 
-                    $assignedExercises = explode(", ", $requestData['selected_exercises'] ?? '');
-                    foreach ($exercices as $ex): 
-                        $isChecked = in_array($ex['nom_exercice'], $assignedExercises) ? 'checked' : '';
-                    ?>
-                        <label style="display: block; color: #fff; margin-bottom: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" name="assigned_exercises[]" value="<?= htmlspecialchars($ex['nom_exercice']) ?>" <?= $isChecked ?> style="accent-color: var(--primary);">
-                            <?= htmlspecialchars($ex['nom_exercice']) ?> <span style="color: var(--text-muted); font-size: 0.85rem;">(<?= htmlspecialchars($ex['muscle_principal']) ?>)</span>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-            </div>
 
             <div style="margin-bottom: 2rem;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main);">Statut de la Requête</label>
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 600;">
+                    <i class="fa-solid fa-circle-half-stroke" style="color: var(--accent);"></i> Statut de la Requête
+                </label>
                 <select name="status" style="width: 100%; padding: 0.75rem; border-radius: 8px; background: rgba(15, 23, 42, 0.6); color: #fff; border: 1px solid var(--card-border);">
-                    <option value="pending" <?= $requestData['status'] == 'pending' ? 'selected' : '' ?>>En attente (Pending)</option>
-                    <option value="approved" <?= $requestData['status'] == 'approved' ? 'selected' : '' ?>>Approuvé (Approved)</option>
-                    <option value="rejected" <?= $requestData['status'] == 'rejected' ? 'selected' : '' ?>>Rejeté (Rejected)</option>
+                    <option value="pending"  <?= $requestData['status'] == 'pending'  ? 'selected' : '' ?>>En attente (Pending)</option>
+                    <option value="approved" <?= $requestData['status'] == 'approved' ? 'selected' : '' ?>>Approuve (Approved)</option>
+                    <option value="rejected" <?= $requestData['status'] == 'rejected' ? 'selected' : '' ?>>Rejete (Rejected)</option>
                 </select>
             </div>
 
-            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; padding: 1rem;"><i class="fa-solid fa-floppy-disk"></i> Enregistrer les Modifications</button>
+            <button type="submit" class="btn" style="width: 100%; font-size: 1.1rem; padding: 1rem;">
+                <i class="fa-solid fa-floppy-disk"></i> Enregistrer le Programme
+            </button>
         </form>
     </div>
 </div>

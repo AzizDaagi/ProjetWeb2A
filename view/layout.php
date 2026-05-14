@@ -3,6 +3,11 @@ $pageTitle = $pageTitle ?? 'Smart Nutrition - FitTrack';
 $showNav = $showNav ?? true;
 $showFooter = $showFooter ?? true;
 $action = $_GET['action'] ?? 'home';
+$isEmbed = ($_GET['embed'] ?? '') === 'true';
+if ($isEmbed) {
+    $showNav = false;
+    $showFooter = false;
+}
 $sidebarActions = [
     'admin_dashboard',
     'admin_index',
@@ -60,9 +65,33 @@ require_once __DIR__ . '/layouts/header.php';
 
     .animate-fade-in { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    <?php if ($isEmbed): ?>
+    /* Force hide all floating and navigation elements in embed mode */
+    nav, 
+    .footer, 
+    .theme-toggle-floating-wrap, 
+    .voice-control-dock, 
+    .gesture-video-hidden, 
+    .gesture-canvas-hidden, 
+    #gestureCursor { 
+        display: none !important; 
+    }
+    body { background: transparent !important; }
+    body.with-nav { padding-top: 0 !important; }
+    .main-content { margin-top: 0 !important; padding-top: 0 !important; }
+    
+    /* Ensure the cards look like the activity 'pull' card (glass-card style) */
+    .glass-card { 
+        background: rgba(30, 41, 59, 0.7) !important; 
+        backdrop-filter: blur(12px) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+    }
+    <?php endif; ?>
 </style>
 
-<div class="custom-backoffice-wrapper<?= $useSidebar ? ' admin-page' : '' ?>" style="max-width: <?= $useSidebar ? 'none' : '1200px' ?>; margin: 0 auto; width: 100%; padding: <?= $useSidebar ? '0' : '2rem 1rem' ?>;">
+<div class="custom-backoffice-wrapper<?= $useSidebar ? ' admin-page' : '' ?>" style="max-width: <?= $useSidebar ? 'none' : '1200px' ?>; margin: 0 auto; width: 100%; padding: <?= ($useSidebar || $isEmbed) ? '0' : '2rem 1rem' ?>;">
     <?php echo $content ?? ''; ?>
 </div>
 

@@ -53,8 +53,8 @@ class MailService
         $brevoApiKey = Env::get('BREVO_API_KEY', '');
         $smtpHost = Env::get('BREVO_SMTP_HOST', self::DEFAULT_SMTP_HOST);
         $smtpPort = (int) Env::get('BREVO_SMTP_PORT', (string) self::DEFAULT_SMTP_PORT);
-        $smtpUser = Env::get('BREVO_SMTP_USER', '');
-        $smtpPass = Env::get('BREVO_SMTP_PASS', '');
+        $smtpUser = Env::get('BREVO_SMTP_USERNAME', Env::get('BREVO_SMTP_USER', ''));
+        $smtpPass = Env::get('BREVO_SMTP_PASSWORD', Env::get('BREVO_SMTP_PASS', ''));
         $fromEmail = Env::get('BREVO_FROM_EMAIL', $smtpUser);
         $fromName = Env::get('BREVO_FROM_NAME', self::DEFAULT_FROM_NAME);
 

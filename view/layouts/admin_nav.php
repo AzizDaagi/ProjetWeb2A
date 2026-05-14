@@ -78,9 +78,9 @@ if ($adminInitials === '') {
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="/smart_nutrition/index.php?action=admin-dashboard" class="admin-brand-link">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/smart_nutrition/view/assets/images/logo.png"
+                    src="/smart_nutritionn/gestionActiviteesportive/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -91,19 +91,19 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section">
             <p class="admin-menu-title">Navigation</p>
-            <a href="/smart_nutrition/index.php?action=admin-dashboard" class="admin-side-link<?= $currentAction === 'admin-dashboard' ? ' active' : '' ?>">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=admin-dashboard" class="admin-side-link<?= $currentAction === 'admin-dashboard' ? ' active' : '' ?>">
                 <i class="fa-solid fa-gauge-high"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/smart_nutrition/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
                 <i class="fa-solid fa-users"></i>
                 <span>Utilisateurs</span>
             </a>
-            <a href="/smart_nutrition/index.php?action=admin_dashboard" class="admin-side-link<?= $isSportsAdminAction ? ' active' : '' ?>">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=admin_dashboard" class="admin-side-link<?= $isSportsAdminAction ? ' active' : '' ?>">
                 <i class="fa-solid fa-dumbbell"></i>
                 <span>Activites sportives</span>
             </a>
-            <a href="/smart_nutrition/index.php?action=admin_requests" class="admin-side-link<?= $isNutritionRequestsAction ? ' active' : '' ?>">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=admin_requests" class="admin-side-link<?= $isNutritionRequestsAction ? ' active' : '' ?>">
                 <i class="fa-solid fa-file-waveform"></i>
                 <span>Demandes nutrition</span>
             </a>
@@ -182,7 +182,7 @@ if ($adminInitials === '') {
                 </div>
             </div>
 
-            <a href="/smart_nutrition/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>

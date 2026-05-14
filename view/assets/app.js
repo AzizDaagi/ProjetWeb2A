@@ -959,7 +959,7 @@ function initVoiceControl() {
     }
 
     function buildActionUrl(action) {
-        return '/smart_nutrition/index.php?action=' + encodeURIComponent(action);
+        return '/smart_nutritionn/gestionActiviteesportive/index.php?action=' + encodeURIComponent(action);
     }
 
     function setTheme(theme) {
@@ -1717,13 +1717,13 @@ function initAdminUsersList() {
         cell.className = 'users-actions';
 
         var editLink = document.createElement('a');
-        editLink.href = '/smart_nutrition/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
+        editLink.href = '/smart_nutritionn/gestionActiviteesportive/index.php?action=edit-user&id=' + encodeURIComponent(normalizeValue(user.id));
         editLink.className = 'btn-edit';
         editLink.innerHTML = '<i class="fa-solid fa-pen"></i> Modifier';
 
         var form = document.createElement('form');
         form.method = 'POST';
-        form.action = '/smart_nutrition/index.php?action=delete-user';
+        form.action = '/smart_nutritionn/gestionActiviteesportive/index.php?action=delete-user';
         form.className = 'inline-form';
         form.setAttribute('novalidate', 'novalidate');
         form.onsubmit = function () {
@@ -1876,7 +1876,7 @@ function initAdminUsersList() {
 
     if (exportButton) {
         exportButton.addEventListener('click', function () {
-            var url = '/smart_nutrition/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
+            var url = '/smart_nutritionn/gestionActiviteesportive/index.php?action=users-report&search=' + encodeURIComponent(searchInput.value || '');
             window.open(url, '_blank', 'noopener');
         });
     }

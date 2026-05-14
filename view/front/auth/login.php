@@ -12,7 +12,7 @@
         <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <form method="POST" action="/smart_nutrition/index.php?action=login" novalidate id="passwordLoginForm">
+    <form method="POST" action="/smart_nutritionn/gestionActiviteesportive/index.php?action=login" novalidate id="passwordLoginForm">
         <div class="field">
             <label><i class="fa-solid fa-envelope icon"></i>E-mail</label>
             <input type="email" id="loginEmail" name="email" placeholder="Entrez votre e-mail" required>
@@ -25,7 +25,7 @@
 
         <div class="login-actions">
             <button type="submit"><i class="fa-solid fa-right-to-bracket icon success"></i>Se connecter</button>
-            <a class="btn btn-link forgot-link" href="/smart_nutrition/index.php?action=forgot">Mot de passe oubli&eacute; ?</a>
+            <a class="btn btn-link forgot-link" href="/smart_nutritionn/gestionActiviteesportive/index.php?action=forgot">Mot de passe oubli&eacute; ?</a>
         </div>
     </form>
 
@@ -45,7 +45,7 @@
     <section
         class="face-auth-card"
         data-face-auth-mode="login"
-        data-endpoint="/smart_nutrition/index.php?action=face-login"
+        data-endpoint="/smart_nutritionn/gestionActiviteesportive/index.php?action=face-login"
     >
         <h2 class="face-auth-title"><i class="fa-solid fa-camera icon"></i>Connexion faciale</h2>
         <p class="face-auth-text">Saisissez votre e-mail, activez la camera puis lancez la verification faciale. L'aperçu reste masque.</p>
@@ -67,7 +67,7 @@
         </div>
     </section>
 
-    <p class="link-text">Pas encore de compte ? <a href="/smart_nutrition/index.php?action=register">S'inscrire</a></p>
+    <p class="link-text">Pas encore de compte ? <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=register">S'inscrire</a></p>
 </div>
 
 <?php if (!empty($firebaseGoogleEnabled)): ?>
@@ -100,7 +100,7 @@ if (config && loginButton && statusEl) {
             const result = await signInWithPopup(auth, provider);
             const idToken = await result.user.getIdToken(true);
 
-            const response = await fetch('/smart_nutrition/index.php?action=google-login', {
+            const response = await fetch('/smart_nutritionn/gestionActiviteesportive/index.php?action=google-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ if (config && loginButton && statusEl) {
                 throw new Error(payload.message || 'Connexion Google echouee.');
             }
 
-            window.location.href = payload.redirect || '/smart_nutrition/index.php?action=home';
+            window.location.href = payload.redirect || '/smart_nutritionn/gestionActiviteesportive/index.php?action=home';
         } catch (error) {
             setStatus(error && error.message ? error.message : 'Connexion Google echouee.', true);
             loginButton.disabled = false;

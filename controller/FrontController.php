@@ -46,6 +46,13 @@ class FrontController {
     }
 
     public function nutritionRequest() {
+        $this->startSessionIfNeeded();
+        $user = null;
+        if (isset($_SESSION['user_id'])) {
+            require_once __DIR__ . '/../model/User.php';
+            $userModel = new User(Database::getConnection());
+            $user = $userModel->findById($_SESSION['user_id']);
+        }
         require_once __DIR__ . '/../view/front_nutrition_form.php';
     }
 
@@ -88,6 +95,23 @@ class FrontController {
 
             require_once __DIR__ . '/../model/NutritionRequest.php';
             $requestModel = new NutritionRequest();
+            
+            $this->startSessionIfNeeded();
+            $userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+            error_log("Nutrition Request - User ID from session: " . var_export($userId, true));
+            $requestModel->user_id = $userId;
+
+            // If logged in, we can ensure the name and email are correct from the DB
+            if ($userId) {
+                require_once __DIR__ . '/../model/User.php';
+                $userModel = new User(Database::getConnection());
+                $currentUser = $userModel->findById($userId);
+                if ($currentUser) {
+                    $name = trim($currentUser['prenom'] . ' ' . $currentUser['nom']);
+                    $email = $currentUser['email'];
+                }
+            }
+
             $requestModel->user_name = htmlspecialchars($name);
             $requestModel->email = htmlspecialchars($email);
             $requestModel->current_weight = (float)$weight;
@@ -149,10 +173,12 @@ class FrontController {
                 $_SESSION['last_mail_message_id'] = $mailResult['message_id'] ?? null;
                 $_SESSION['last_mail_error'] = $mailResult['error'] ?? null;
 
-                header("Location: index.php?action=nutrition_success");
+                $embedParam = (isset($_GET['embed']) && $_GET['embed'] === 'true') ? '&embed=true' : '';
+                header("Location: index.php?action=nutrition_success" . $embedParam);
                 exit;
             } else {
-                header('Location: index.php?action=nutrition_request&error=db_error');
+                $embedParam = (isset($_GET['embed']) && $_GET['embed'] === 'true') ? '&embed=true' : '';
+                header('Location: index.php?action=nutrition_request&error=db_error' . $embedParam);
                 exit;
             }
         }
@@ -167,9 +193,12 @@ class FrontController {
         $term = $_GET['search'] ?? '';
         $sort = $_GET['sort'] ?? 'date_desc';
 
+        $this->startSessionIfNeeded();
+        $userId = $_SESSION['user_id'] ?? null;
+
         require_once __DIR__ . '/../model/NutritionRequest.php';
         $requestModel = new NutritionRequest();
-        $requests = $requestModel->searchAndSort($term, $sort);
+        $requests = $requestModel->searchAndSort($term, $sort, $userId);
         
         require_once __DIR__ . '/../view/front_nutrition_list.php';
     }
@@ -191,11 +220,14 @@ class FrontController {
             exit;
         }
         
+        $this->startSessionIfNeeded();
+        $userId = $_SESSION['user_id'] ?? null;
+
         require_once __DIR__ . '/../model/NutritionRequest.php';
         $requestModel = new NutritionRequest();
         $request = $requestModel->getById((int)$_GET['id']);
         
-        if (!$request) {
+        if (!$request || ($userId !== null && $request['user_id'] != $userId)) {
             header('Location: index.php?action=my_nutrition_requests');
             exit;
         }
@@ -207,11 +239,14 @@ class FrontController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'])) {
             $id = (int)$_POST['id'];
             
+            $this->startSessionIfNeeded();
+            $userId = $_SESSION['user_id'] ?? null;
+            
             require_once __DIR__ . '/../model/NutritionRequest.php';
             $requestModel = new NutritionRequest();
             $existing = $requestModel->getById($id);
 
-            if (!$existing) {
+            if (!$existing || ($userId !== null && $existing['user_id'] != $userId)) {
                 header('Location: index.php?action=my_nutrition_requests');
                 exit;
             }
@@ -255,17 +290,21 @@ class FrontController {
     }
 
     public function deleteRequest() {
+        $embedParam = (isset($_GET['embed']) && $_GET['embed'] === 'true') ? '&embed=true' : '';
         if (isset($_GET['id'])) {
             $id = (int)$_GET['id'];
+            $this->startSessionIfNeeded();
+            $userId = $_SESSION['user_id'] ?? null;
+
             require_once __DIR__ . '/../model/NutritionRequest.php';
             $requestModel = new NutritionRequest();
             
             $requestData = $requestModel->getById($id);
-            if ($requestData) {
+            if ($requestData && ($userId === null || $requestData['user_id'] == $userId)) {
                 $requestModel->delete($id);
             }
         }
-        header('Location: index.php?action=my_nutrition_requests');
+        header('Location: index.php?action=my_nutrition_requests' . $embedParam);
         exit;
     }
 
@@ -273,9 +312,12 @@ class FrontController {
         $term = $_GET['search'] ?? '';
         $sort = $_GET['sort'] ?? 'date_desc';
 
+        $this->startSessionIfNeeded();
+        $userId = $_SESSION['user_id'] ?? null;
+
         require_once __DIR__ . '/../model/NutritionRequest.php';
         $requestModel = new NutritionRequest();
-        $requests = $requestModel->searchAndSort($term, $sort);
+        $requests = $requestModel->searchAndSort($term, $sort, $userId);
 
         require_once __DIR__ . '/../utils/SmartPDF.php';
         $pdf = new SmartPDF();

@@ -1,9 +1,9 @@
 <?php ob_start(); ?>
 
-<div class="animate-fade-in" style="max-width: 800px; margin: 0 auto; padding: 5rem 1rem; text-align: center;">
+<div class="animate-fade-in" style="max-width: 800px; margin: 0 auto; padding: <?= (isset($_GET['embed']) && $_GET['embed'] === 'true') ? '1rem' : '5rem 1rem' ?>; text-align: center;">
     <div class="glass-card" style="padding: 3rem;">
         <i class="fa-solid fa-circle-check" style="font-size: 4rem; color: #10b981; margin-bottom: 1.5rem;"></i>
-        <h2 style="color: var(--primary); margin-bottom: 1rem;">Demande soumise avec succes !</h2>
+        <h2 style="color: var(--primary); margin-bottom: 1rem;"><i class="fa-solid fa-check-double"></i> Demande enregistree !</h2>
 
         <?php
         $mailStatus = $_SESSION['last_mail_status'] ?? null;
@@ -79,7 +79,13 @@
             </p>
         <?php endif; ?>
 
-        <a href="index.php?action=home" class="btn" style="display: inline-block; padding: 0.75rem 2rem; font-size: 1.1rem;">Retour a l'accueil</a>
+<?php 
+$isEmbed = (isset($_GET['embed']) && $_GET['embed'] === 'true');
+$embedQuery = $isEmbed ? '&embed=true' : '';
+?>
+        <a href="index.php?action=nutrition_request<?= $embedQuery ?>" class="btn" style="display: inline-block; padding: 0.75rem 2rem; font-size: 1.1rem;">
+            <i class="fa-solid fa-plus-circle"></i> <?= $isEmbed ? 'Nouvelle Demande' : 'Retour' ?>
+        </a>
     </div>
 </div>
 
