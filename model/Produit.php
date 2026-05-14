@@ -15,6 +15,11 @@ class Produit
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getAllSorted(string $sortBy = 'id', string $sortOrder = 'DESC'): array
+    {
+        return $this->fetchSorted('SELECT * FROM produit', $sortBy, $sortOrder);
+    }
+
     public function getAllApproved(): array
     {
         $stmt = $this->conn->prepare('SELECT * FROM produit WHERE is_approved = 1 ORDER BY id DESC');
@@ -22,11 +27,21 @@ class Produit
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getApprovedSorted(string $sortBy = 'id', string $sortOrder = 'DESC'): array
+    {
+        return $this->fetchSorted('SELECT * FROM produit WHERE is_approved = 1', $sortBy, $sortOrder);
+    }
+
     public function getPending(): array
     {
         $stmt = $this->conn->prepare('SELECT * FROM produit WHERE is_approved = 0 ORDER BY id DESC');
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getPendingSorted(string $sortBy = 'id', string $sortOrder = 'DESC'): array
+    {
+        return $this->fetchSorted('SELECT * FROM produit WHERE is_approved = 0', $sortBy, $sortOrder);
     }
 
     public function getById(int $id): ?array
@@ -88,5 +103,15 @@ class Produit
     {
         $stmt = $this->conn->prepare('UPDATE produit SET is_approved = 1 WHERE id = :id');
         return $stmt->execute(['id' => $id]);
+    }
+
+    private function fetchSorted(string $baseSql, string $sortBy, string $sortOrder): array
+    {
+        $allowedSorts = ['id', 'name', 'price', 'calories', 'is_approved', 'added_by', 'created_at'];
+        $sortBy = in_array($sortBy, $allowedSorts, true) ? $sortBy : 'id';
+        $sortOrder = strtoupper($sortOrder) === 'ASC' ? 'ASC' : 'DESC';
+
+        $stmt = $this->conn->query($baseSql . " ORDER BY {$sortBy} {$sortOrder}");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

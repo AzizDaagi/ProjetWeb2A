@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Nutrition</title>
-    <link rel="stylesheet" href="view/front/assets/css/style.css">
-    <link rel="stylesheet" href="view/front/assets/css/nutrition-dashboard.css">
+    <link rel="stylesheet" href="/Web/view/assets/front/css/style.css">
+    <link rel="stylesheet" href="/Web/view/assets/front/css/nutrition-dashboard.css">
 </head>
 
 <body>
@@ -85,8 +85,8 @@
         </div>
     </div>
 
-<script src="/Web/view/front/assets/js/theme.js"></script>
-    <script src="view/front/assets/js/nutrition-dashboard.js"></script>
+<script src="/Web/view/assets/front/js/theme.js"></script>
+    <script src="/Web/view/assets/front/js/nutrition-dashboard.js"></script>
 </body>
 
 </html>

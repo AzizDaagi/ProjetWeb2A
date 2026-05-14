@@ -31,6 +31,8 @@ require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/WeatherController.php';
 require_once __DIR__ . '/controller/ProduitController.php';
+require_once __DIR__ . '/controller/CartController.php';
+require_once __DIR__ . '/controller/CommandeController.php';
 
 if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
     $pdo = Database::getConnection();
@@ -80,7 +82,14 @@ $adminOnlyActions = [
     'product-edit',
     'product-delete',
     'products-pending',
-    'product-approve'
+    'product-approve',
+    'products-prediction',
+    'products-predict',
+    'product-predict',
+    'admin-orders',
+    'admin-order-edit',
+    'admin-order-delete',
+    'admin-order-pdf'
 ];
 
 $clientOnlyActions = [
@@ -94,8 +103,18 @@ $clientOnlyActions = [
     'recipes-management',
     'foods-management',
     'product-submit',
-    'tracking-management',
-    'planner-management'
+    'cart-add',
+    'cart-view',
+    'cart-update',
+    'cart-remove',
+    'cart-checkout',
+    'cart-process',
+    'cart-clear',
+    'order-create',
+    'order-list',
+    'order-edit',
+    'order-delete',
+    'tracking-management'
 ];
 
 if (isset($_SESSION['user_id'])) {
@@ -276,6 +295,78 @@ if ($action === 'home') {
     $products = new ProduitController();
     $products->approve();
 
+} elseif ($action === 'products-prediction') {
+    $products = new ProduitController();
+    $products->predictionPanel();
+
+} elseif ($action === 'products-predict') {
+    $products = new ProduitController();
+    $products->formPredict();
+
+} elseif ($action === 'product-predict') {
+    $products = new ProduitController();
+    $products->predictProductStats();
+
+} elseif ($action === 'cart-add') {
+    $cart = new CartController();
+    $cart->add();
+
+} elseif ($action === 'cart-view') {
+    $cart = new CartController();
+    $cart->view();
+
+} elseif ($action === 'cart-update') {
+    $cart = new CartController();
+    $cart->update();
+
+} elseif ($action === 'cart-remove') {
+    $cart = new CartController();
+    $cart->remove();
+
+} elseif ($action === 'cart-checkout') {
+    $cart = new CartController();
+    $cart->checkoutForm();
+
+} elseif ($action === 'cart-process') {
+    $cart = new CartController();
+    $cart->checkout();
+
+} elseif ($action === 'cart-clear') {
+    $cart = new CartController();
+    $cart->clear();
+
+} elseif ($action === 'order-create') {
+    $orders = new CommandeController();
+    $orders->createFront();
+
+} elseif ($action === 'order-list') {
+    $orders = new CommandeController();
+    $orders->frontList();
+
+} elseif ($action === 'order-edit') {
+    $orders = new CommandeController();
+    $orders->editFront();
+
+} elseif ($action === 'order-delete') {
+    $orders = new CommandeController();
+    $orders->deleteFront();
+
+} elseif ($action === 'admin-orders') {
+    $orders = new CommandeController();
+    $orders->adminList();
+
+} elseif ($action === 'admin-order-edit') {
+    $orders = new CommandeController();
+    $orders->editAdmin();
+
+} elseif ($action === 'admin-order-delete') {
+    $orders = new CommandeController();
+    $orders->deleteAdmin();
+
+} elseif ($action === 'admin-order-pdf') {
+    $orders = new CommandeController();
+    $orders->downloadAdminPdf();
+
 } elseif ($action === 'community') {
     if ($isAdminSession) {
         header('Location: /Web/index.php?action=admin-community');
@@ -287,7 +378,7 @@ if ($action === 'home') {
     $isAdminTemplate = false;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' front-community-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css'),
+        '/Web/view/assets/back/style/community.css?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.css'),
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
     ];
     include __DIR__ . '/view/layouts/header.php';
@@ -314,11 +405,11 @@ if ($action === 'home') {
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/Web/view/assets/back/style/community.css?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.css')
     ];
     $additionalScripts = [
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/Web/view/assets/back/style/community.js?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -335,10 +426,10 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/Web/view/assets/back/style/community.css?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/Web/view/assets/back/style/community.js?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -355,10 +446,10 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/Web/view/assets/back/style/community.css?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/Web/view/assets/back/style/community.js?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -375,10 +466,10 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/Web/view/assets/back/style/community.css?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/Web/view/assets/back/style/community.js?v=' . filemtime(__DIR__ . '/view/assets/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -397,6 +488,11 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'planner-management') {
+    if ($isAdminSession) {
+        header('Location: /Web/index.php?controller=backoffice&action=suivi');
+        exit;
+    }
+
     header('Location: /Web/index.php?action=nutrition_dashboard');
     exit;
 

@@ -1,49 +1,38 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrono-Nutrition</title>
-    <link rel="stylesheet" href="view/front/assets/css/chrono-nutrition.css">
-    <script src="view/front/assets/js/chrono-nutrition.js" defer></script>
-</head>
-<body>
-    <?php require __DIR__ . '/../partials/navbar.php'; ?>
-    <main class="chrono-page">
-        <div class="chrono-shell">
-            <section class="chrono-hero">
-                <div class="chrono-hero__content">
-                    <a href="index.php?controller=objectif&action=index" class="chrono-back-link">
-                        Retour a mon objectif nutritionnel
-                    </a>
-                    <span class="chrono-hero-badge">Rythme circadien</span>
-                    <h1>Chrono-Nutrition</h1>
-                    <p class="chrono-subtitle">
-                        Optimise tes horaires de repas selon ton rythme de sommeil, ton energie et ton activite.
+<div class="chrono-page">
+    <div class="chrono-shell">
+        <section class="chrono-hero">
+            <div class="chrono-hero__content">
+                <a href="index.php?action=objectif" class="chrono-back-link">
+                    Retour a mon objectif nutritionnel
+                </a>
+                <span class="chrono-hero-badge">Rythme circadien</span>
+                <h1>Chrono-Nutrition</h1>
+                <p class="chrono-subtitle">
+                    Optimise tes horaires de repas selon ton rythme de sommeil, ton energie et ton activite.
+                </p>
+            </div>
+        </section>
+
+        <section class="chrono-card chrono-card--form">
+            <div class="chrono-section-head">
+                <div>
+                    <h2>Profil chrono</h2>
+                    <p class="chrono-muted">
+                        Le formulaire reste en haut pour ajuster facilement ton profil et actualiser les recommandations.
                     </p>
                 </div>
-            </section>
+            </div>
 
-            <section class="chrono-card chrono-card--form">
-                <div class="chrono-section-head">
-                    <div>
-                        <h2>Profil chrono</h2>
-                        <p class="chrono-muted">
-                            Le formulaire reste en haut pour ajuster facilement ton profil et actualiser les recommandations.
-                        </p>
+            <form id="chrono-form" class="chrono-form" novalidate>
+                <div class="chrono-form-grid">
+                    <div class="chrono-field">
+                        <label for="chronotype">Chronotype</label>
+                        <select id="chronotype" name="chronotype">
+                            <option value="leve_tot">Leve-tot</option>
+                            <option value="standard">Standard</option>
+                            <option value="couche_tard">Couche-tard</option>
+                        </select>
                     </div>
-                </div>
-
-                <form id="chrono-form" class="chrono-form" novalidate>
-                    <div class="chrono-form-grid">
-                        <div class="chrono-field">
-                            <label for="chronotype">Chronotype</label>
-                            <select id="chronotype" name="chronotype">
-                                <option value="leve_tot">Leve-tot</option>
-                                <option value="standard">Standard</option>
-                                <option value="couche_tard">Couche-tard</option>
-                            </select>
-                        </div>
 
                         <div class="chrono-field">
                             <label for="wake_time">Heure de reveil</label>
@@ -116,28 +105,26 @@
                         </div>
                     </div>
 
-                    <div class="chrono-form-actions">
-                        <button type="submit" id="saveProfile">Sauvegarder mon profil</button>
-                        <p class="chrono-muted chrono-form-note">
-                            Les recommandations restent informatives et s affichent juste en dessous du formulaire.
-                        </p>
-                    </div>
-                </form>
+                <div class="chrono-form-actions">
+                    <button type="submit" id="saveProfile">Sauvegarder mon profil</button>
+                    <p class="chrono-muted chrono-form-note">
+                        Les recommandations restent informatives et s affichent juste en dessous du formulaire.
+                    </p>
+                </div>
+            </form>
 
-                <div id="chrono-feedback" class="chrono-feedback" hidden></div>
-            </section>
+            <div id="chrono-feedback" class="chrono-feedback" hidden></div>
+        </section>
 
-            <section id="results" class="chrono-results">
-                <div id="block-summary" class="chrono-card result-block"></div>
-                <div id="block-timing" class="chrono-card result-block"></div>
-                <div id="block-personalization" class="chrono-card result-block"></div>
-                <div id="block-fasting" class="chrono-card result-block"></div>
-                <div id="block-nutrients" class="chrono-card result-block"></div>
-                <div id="block-sleep" class="chrono-card result-block chrono-card--wide"></div>
-            </section>
+        <section id="results" class="chrono-results">
+            <div id="block-summary" class="chrono-card result-block"></div>
+            <div id="block-timing" class="chrono-card result-block"></div>
+            <div id="block-personalization" class="chrono-card result-block"></div>
+            <div id="block-fasting" class="chrono-card result-block"></div>
+            <div id="block-nutrients" class="chrono-card result-block"></div>
+            <div id="block-sleep" class="chrono-card result-block chrono-card--wide"></div>
+        </section>
 
-            <p id="chrono-disclaimer" class="chrono-disclaimer" hidden></p>
-        </div>
-    </main>
-</body>
-</html>
+        <p id="chrono-disclaimer" class="chrono-disclaimer" hidden></p>
+    </div>
+</div>

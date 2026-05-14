@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projection Nutritionnelle</title>
-    <link rel="stylesheet" href="view/front/assets/css/style.css">
-    <link rel="stylesheet" href="view/front/assets/css/prediction.css">
+    <link rel="stylesheet" href="/Web/view/assets/front/css/style.css">
+    <link rel="stylesheet" href="/Web/view/assets/front/css/prediction.css">
 </head>
 
 <body>
@@ -201,8 +201,8 @@
         </div>
     </main>
 
-<script src="/Web/view/front/assets/js/theme.js"></script>
-    <script src="view/front/assets/js/prediction.js"></script>
+<script src="/Web/view/assets/front/js/theme.js"></script>
+    <script src="/Web/view/assets/front/js/prediction.js"></script>
 </body>
 
 </html>

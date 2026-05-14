@@ -10,6 +10,30 @@
         </a>
     </div>
 
+    <form method="GET" action="/Web/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+        <input type="hidden" name="action" value="products-pending">
+        <div class="field" style="min-width: 220px; flex: 1;">
+            <label for="q">Recherche</label>
+            <input id="q" name="q" value="<?= htmlspecialchars((string) ($query ?? '')) ?>" placeholder="Nom, vendeur, prix">
+        </div>
+        <div class="field" style="min-width: 160px;">
+            <label for="sort">Tri</label>
+            <select id="sort" name="sort">
+                <option value="id" <?= ($sortBy ?? '') === 'id' ? 'selected' : '' ?>>Plus recent</option>
+                <option value="name" <?= ($sortBy ?? '') === 'name' ? 'selected' : '' ?>>Nom</option>
+                <option value="price" <?= ($sortBy ?? '') === 'price' ? 'selected' : '' ?>>Prix</option>
+            </select>
+        </div>
+        <div class="field" style="min-width: 140px;">
+            <label for="order">Ordre</label>
+            <select id="order" name="order">
+                <option value="ASC" <?= strtoupper((string) ($sortOrder ?? '')) === 'ASC' ? 'selected' : '' ?>>Ascendant</option>
+                <option value="DESC" <?= strtoupper((string) ($sortOrder ?? '')) === 'DESC' ? 'selected' : '' ?>>Descendant</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-admin">Appliquer</button>
+    </form>
+
     <div class="table-wrap">
         <table class="users-table">
             <thead>

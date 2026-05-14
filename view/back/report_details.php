@@ -78,8 +78,8 @@ function resolvePostImageSrcForReport($image)
         return null;
     }
 
-    if (strpos($image, '/Web/view/post_uploads/posts/') === 0) {
-        return $image;
+    if (strpos($image, '/Web/uploads/posts/') === 0 || strpos($image, '/Web/view/post_uploads/posts/') === 0) {
+        return str_replace('/Web/view/post_uploads/posts/', '/Web/uploads/posts/', $image);
     }
 
     return null;

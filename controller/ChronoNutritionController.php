@@ -16,7 +16,19 @@ class ChronoNutritionController {
     }
 
     public function chrono_nutrition() {
+        $pageTitle = 'Chrono-Nutrition';
+        $showFooter = true;
+        $bodyClass = trim((string) (($bodyClass ?? '') . ' chrono-page-shell'));
+        $additionalStylesheets = [
+            '/Web/view/assets/front/css/chrono-nutrition.css'
+        ];
+        $additionalScripts = [
+            '/Web/view/assets/front/js/chrono-nutrition.js'
+        ];
+
+        require __DIR__ . '/../view/layouts/header.php';
         require __DIR__ . '/../view/front/nutrition/chrono.php';
+        require __DIR__ . '/../view/layouts/footer.php';
     }
 
     public function chrono_profile_get() {

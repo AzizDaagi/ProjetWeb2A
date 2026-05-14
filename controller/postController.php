@@ -39,7 +39,7 @@ class PostController {
         $this->notificationModel = new Notification($db);
         $this->moderationJobModel = new ModerationJob($db);
         $this->projectRoot = realpath(__DIR__ . '/..');
-        $this->postImageDirectory = $this->projectRoot . DIRECTORY_SEPARATOR . 'view' . DIRECTORY_SEPARATOR . 'post_uploads' . DIRECTORY_SEPARATOR . 'posts';
+        $this->postImageDirectory = $this->projectRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'posts';
     }
 
     public function getAll() {
@@ -318,7 +318,7 @@ class PostController {
             throw new RuntimeException('Impossible d\'enregistrer l\'image sur le serveur');
         }
 
-        return '/Web/view/post_uploads/posts/' . $filename;
+        return '/Web/uploads/posts/' . $filename;
     }
 
     private function jsonError(string $message): void {
@@ -435,7 +435,7 @@ class PostController {
             return null;
         }
 
-        $relativePath = ltrim(str_replace('/Web/', '', $image), '/');
+        $relativePath = ltrim(str_replace('/Web/', '', $this->normalizeManagedUploadPath($image)), '/');
         return $this->projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
     }
 
@@ -444,7 +444,7 @@ class PostController {
             return;
         }
 
-        $relativePath = ltrim(str_replace('/Web/', '', $image), '/');
+        $relativePath = ltrim(str_replace('/Web/', '', $this->normalizeManagedUploadPath($image)), '/');
         $absolutePath = $this->projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
 
         if (is_file($absolutePath)) {
@@ -453,7 +453,13 @@ class PostController {
     }
 
     private function isManagedUploadPath($image) {
-        return is_string($image) && strpos($image, '/Web/view/post_uploads/posts/') === 0;
+        return is_string($image)
+            && (strpos($image, '/Web/uploads/posts/') === 0
+                || strpos($image, '/Web/view/post_uploads/posts/') === 0);
+    }
+
+    private function normalizeManagedUploadPath(string $image): string {
+        return str_replace('/Web/view/post_uploads/posts/', '/Web/uploads/posts/', $image);
     }
 
     private function notifyReaction(int $postId, int $actorUserId, string $reactionType): void {

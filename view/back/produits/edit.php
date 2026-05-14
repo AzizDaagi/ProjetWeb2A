@@ -1,6 +1,9 @@
 <div class="container admin-dashboard admin-form-page product-form-shell">
     <h1><i class="fa-solid fa-pen-to-square icon"></i> Modifier un produit</h1>
     <p class="subtitle">Mise a jour des informations du produit.</p>
+    <?php if (!empty($error ?? '')): ?>
+        <div class="alert alert-error"><?= htmlspecialchars((string) $error) ?></div>
+    <?php endif; ?>
 
     <form method="POST" class="product-form" novalidate>
         <div class="field">

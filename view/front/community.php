@@ -94,8 +94,8 @@ function resolvePostImageSrc($image)
         return null;
     }
 
-    if (strpos($image, '/Web/view/post_uploads/posts/') === 0) {
-        return $image;
+    if (strpos($image, '/Web/uploads/posts/') === 0 || strpos($image, '/Web/view/post_uploads/posts/') === 0) {
+        return str_replace('/Web/view/post_uploads/posts/', '/Web/uploads/posts/', $image);
     }
 
     return null;
@@ -685,7 +685,7 @@ function hasPostLocation($post)
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/Web/view/back/style/community.js?v=<?= filemtime(__DIR__ . '/../back/style/community.js') ?>"></script>
+    <script src="/Web/view/assets/back/style/community.js?v=<?= filemtime(__DIR__ . '/../assets/back/style/community.js') ?>"></script>
     <script>
         let currentProductAnalysis = null;
         const frontPostMaps = {};

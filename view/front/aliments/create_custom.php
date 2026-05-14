@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajouter un aliment personnalise</title>
-    <link rel="stylesheet" href="view/front/assets/css/style.css">
+    <link rel="stylesheet" href="/Web/view/assets/front/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -413,7 +413,7 @@
             customNomInput.addEventListener('input', clearLookupMessage);
         }
     </script>
-<script src="/Web/view/front/assets/js/theme.js"></script>
+<script src="/Web/view/assets/front/js/theme.js"></script>
 </body>
 
 </html>

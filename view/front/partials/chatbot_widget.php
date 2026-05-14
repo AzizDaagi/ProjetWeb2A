@@ -7,7 +7,7 @@ if (!is_array($chatWidgetHistory)) {
 
 $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
 ?>
-<link href="view/front/assets/css/chatbot.css" rel="stylesheet">
+<link href="/Web/view/assets/front/css/chatbot.css" rel="stylesheet">
 
 <button
     type="button"
@@ -131,4 +131,4 @@ $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
     </form>
 </div>
 
-<script src="view/front/assets/js/chatbot.js" defer></script>
+<script src="/Web/view/assets/front/js/chatbot.js" defer></script>

@@ -68,14 +68,14 @@ function buildSparkline(array $values, string $colorClass = ''): string {
 <head>
     <meta charset="UTF-8">
     <title>Back Office - Tableau de bord</title>
-    <link rel="stylesheet" href="/Web/view/back/style/community.css">
+    <link rel="stylesheet" href="/Web/view/assets/back/style/community.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body class="backoffice-page">
     <nav class="navbar">
         <div class="navbar-brand">
             <a href="/Web/view/back/community.php" class="brand-link">
-                <img src="/Web/view/back/style/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
+                <img src="/Web/view/assets/images/logo.png" alt="Smart Nutrition" class="brand-logo navbar-preview-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">
                 <span class="brand-fallback"><i class="fa-solid fa-leaf"></i> Smart Nutrition</span>
             </a>
         </div>
@@ -156,6 +156,6 @@ function buildSparkline(array $values, string $colorClass = ''): string {
         </div>
     </div>
 
-    <script src="/Web/view/back/style/community.js"></script>
+    <script src="/Web/view/assets/back/style/community.js"></script>
 </body>
 </html>

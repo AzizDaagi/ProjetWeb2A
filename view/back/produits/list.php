@@ -9,11 +9,51 @@
             <a href="/Web/index.php?action=product-create" class="btn-admin">
                 <i class="fa-solid fa-plus"></i> Ajouter
             </a>
+            <a href="/Web/index.php?action=admin-orders" class="btn-admin-secondary">
+                <i class="fa-solid fa-clipboard-list"></i> Commandes
+            </a>
             <a href="/Web/index.php?action=products-pending" class="btn-admin-secondary">
                 <i class="fa-solid fa-hourglass-half"></i> En attente
             </a>
+            <a href="/Web/index.php?action=products-prediction" class="btn-admin-secondary">
+                <i class="fa-solid fa-brain"></i> Prediction
+            </a>
         </div>
     </div>
+
+    <form method="GET" action="/Web/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+        <input type="hidden" name="action" value="products-admin">
+        <div class="field" style="min-width: 160px;">
+            <label for="status">Statut</label>
+            <select id="status" name="status">
+                <option value="all" <?= ($status ?? 'all') === 'all' ? 'selected' : '' ?>>Tous</option>
+                <option value="approved" <?= ($status ?? '') === 'approved' ? 'selected' : '' ?>>Approuve</option>
+                <option value="pending" <?= ($status ?? '') === 'pending' ? 'selected' : '' ?>>En attente</option>
+            </select>
+        </div>
+        <div class="field" style="min-width: 220px; flex: 1;">
+            <label for="q">Recherche</label>
+            <input id="q" name="q" value="<?= htmlspecialchars((string) ($query ?? '')) ?>" placeholder="Nom, vendeur, prix">
+        </div>
+        <div class="field" style="min-width: 160px;">
+            <label for="sort">Tri</label>
+            <select id="sort" name="sort">
+                <option value="id" <?= ($sortBy ?? '') === 'id' ? 'selected' : '' ?>>Plus recent</option>
+                <option value="name" <?= ($sortBy ?? '') === 'name' ? 'selected' : '' ?>>Nom</option>
+                <option value="price" <?= ($sortBy ?? '') === 'price' ? 'selected' : '' ?>>Prix</option>
+                <option value="calories" <?= ($sortBy ?? '') === 'calories' ? 'selected' : '' ?>>Calories</option>
+                <option value="added_by" <?= ($sortBy ?? '') === 'added_by' ? 'selected' : '' ?>>Vendeur</option>
+            </select>
+        </div>
+        <div class="field" style="min-width: 140px;">
+            <label for="order">Ordre</label>
+            <select id="order" name="order">
+                <option value="ASC" <?= strtoupper((string) ($sortOrder ?? '')) === 'ASC' ? 'selected' : '' ?>>Ascendant</option>
+                <option value="DESC" <?= strtoupper((string) ($sortOrder ?? '')) === 'DESC' ? 'selected' : '' ?>>Descendant</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-admin">Appliquer</button>
+    </form>
 
     <div class="table-wrap">
         <table class="users-table">

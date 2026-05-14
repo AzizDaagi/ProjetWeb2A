@@ -1,10 +1,10 @@
 <?php $currentAction = $_GET['action'] ?? ''; ?>
 <?php $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'store-user', 'edit-user', 'update-user', 'delete-user'], true); ?>
 <?php $isRecipesAction = $currentAction === 'recipes-management'; ?>
-<?php $isFoodsAction = in_array($currentAction, ['foods-management', 'products-admin', 'product-create', 'product-edit', 'product-delete', 'products-pending', 'product-approve'], true); ?>
+<?php $isFoodsAction = in_array($currentAction, ['foods-management', 'products-admin', 'product-create', 'product-edit', 'product-delete', 'products-pending', 'product-approve', 'products-prediction', 'products-predict', 'product-predict', 'admin-orders', 'admin-order-edit', 'admin-order-delete', 'admin-order-pdf'], true); ?>
 <?php $isRecommendationsAction = in_array($currentAction, ['recommendations-management', 'admin-community', 'admin-community-reports'], true); ?>
 <?php $isTrackingAction = $currentAction === 'tracking-management'; ?>
-<?php $isPlannerAction = $currentAction === 'planner-management'; ?>
+<?php $isPlannerAction = $currentAction === 'planner-management' || (($_GET['controller'] ?? '') === 'backoffice' && in_array(($_GET['action'] ?? ''), ['suivi', 'suiviCreate', 'suiviEdit', 'objectifs', 'objectifShow'], true)); ?>
 <?php
 $moduleDescriptions = [
     'recipes-management' => [
@@ -124,15 +124,15 @@ if ($adminInitials === '') {
                 <i class="fa-solid fa-chart-line"></i>
                 <span>Activite sportif</span>
             </button>
-            <button
-                type="button"
+            <a
+                href="/Web/index.php?controller=backoffice&action=suivi"
                 class="admin-side-link admin-module-btn<?= $isPlannerAction ? ' active' : '' ?>"
                 data-module-title="Planning"
                 data-module-description="Module planning pour organiser les objectifs, les rappels et les taches hebdomadaires."
             >
                 <i class="fa-solid fa-calendar-check"></i>
                 <span>Planning</span>
-            </button>
+            </a>
 
             <div id="adminModuleDescription" class="admin-module-description" tabindex="-1">
                 <strong id="adminModuleDescriptionTitle"><?= htmlspecialchars($defaultModuleTitle) ?></strong>
