@@ -1,0 +1,150 @@
+<?php
+require_once __DIR__ . '/Database.php';
+
+class NutritionRequest {
+    private $conn;
+
+    public $id;
+    public $user_id;
+    public $user_name;
+    public $email;
+    public $current_weight;
+    public $current_goal;
+    public $height;
+    public $message;
+    public $generated_activities;
+    public $generated_exercises;
+    public $selected_exercises;
+    public $status;
+    public $created_at;
+
+    public function __construct() {
+        $this->conn = Database::getConnection();
+    }
+
+    public function create() {
+        $query = "INSERT INTO nutrition_requests 
+                  (user_id, user_name, email, current_weight, current_goal, height, message, generated_activities, generated_exercises, selected_exercises, status) 
+                  VALUES (:user_id, :name, :email, :weight, :goal, :height, :msg, :gen_act, :gen_ex, :sel_ex, :status)";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':user_id', $this->user_id ? (int)$this->user_id : null, PDO::PARAM_INT);
+        $stmt->bindParam(':name', $this->user_name);
+        $stmt->bindParam(':email', $this->email);
+        $stmt->bindParam(':weight', $this->current_weight);
+        $stmt->bindParam(':goal', $this->current_goal);
+        $stmt->bindParam(':height', $this->height);
+        $stmt->bindParam(':msg', $this->message);
+        $stmt->bindParam(':gen_act', $this->generated_activities);
+        $stmt->bindParam(':gen_ex', $this->generated_exercises);
+        $stmt->bindParam(':sel_ex', $this->selected_exercises);
+        $stmt->bindParam(':status', $this->status);
+
+        if($stmt->execute()) {
+            return $this->conn->lastInsertId();
+        }
+        return false;
+    }
+
+    public function updateSelectedExercises() {
+        $query = "UPDATE nutrition_requests SET selected_exercises = :sel_ex WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':sel_ex', $this->selected_exercises);
+        $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function getAll() {
+        $query = "SELECT * FROM nutrition_requests ORDER BY created_at DESC";
+        $stmt = $this->conn->query($query);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getById($id) {
+        $query = "SELECT * FROM nutrition_requests WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function updateAdmin() {
+        $query = "UPDATE nutrition_requests 
+                  SET generated_activities = :gen_act, selected_exercises = :sel_ex, status = :status 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':gen_act', $this->generated_activities);
+        $stmt->bindParam(':sel_ex', $this->selected_exercises);
+        $stmt->bindParam(':status', $this->status);
+        $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function delete($id) {
+        $query = "DELETE FROM nutrition_requests WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function getByEmail($email) {
+        $query = "SELECT * FROM nutrition_requests WHERE email = :email ORDER BY created_at DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateUser() {
+        $query = "UPDATE nutrition_requests 
+                  SET user_name = :name, current_weight = :weight, current_goal = :goal, height = :height, message = :msg 
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':name', $this->user_name);
+        $stmt->bindParam(':weight', $this->current_weight);
+        $stmt->bindParam(':goal', $this->current_goal);
+        $stmt->bindParam(':height', $this->height);
+        $stmt->bindParam(':msg', $this->message);
+        $stmt->bindParam(':id', $this->id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function searchAndSort($term = '', $sort = 'date_desc', $userId = null) {
+        $query = "SELECT * FROM nutrition_requests WHERE 1=1";
+        $params = [];
+
+        if ($userId !== null) {
+            $query .= " AND user_id = :user_id";
+            $params[':user_id'] = $userId;
+        }
+
+        if (!empty($term)) {
+            $query .= " AND (user_name LIKE :term OR email LIKE :term OR current_goal LIKE :term OR status LIKE :term)";
+            $params[':term'] = '%' . $term . '%';
+        }
+
+        switch ($sort) {
+            case 'date_asc':
+                $query .= " ORDER BY created_at ASC";
+                break;
+            case 'status':
+                $query .= " ORDER BY status ASC, created_at DESC";
+                break;
+            case 'user_asc':
+                $query .= " ORDER BY user_name ASC";
+                break;
+            case 'date_desc':
+            default:
+                $query .= " ORDER BY created_at DESC";
+                break;
+        }
+
+        $stmt = $this->conn->prepare($query);
+        foreach ($params as $key => $val) {
+            $stmt->bindValue($key, $val);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+?>

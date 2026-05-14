@@ -821,7 +821,7 @@
             <?php endif; ?>
 
             <div class="calorie-badge">
-                <span class="fire-icon">🔥</span>
+                <span class="fire-icon">ðŸ”¥</span>
                 <div>
                     <div class="calorie-value">
                         <?= round((float) $total) ?> kcal

@@ -1,13 +1,10 @@
-<?php 
-$baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-$isAdminNavbar = (($_SESSION['user_role'] ?? 'user') === 'admin'); 
-?>
+<?php $isAdminNavbar = (($_SESSION['user_role'] ?? 'user') === 'admin'); ?>
 
 <nav class="navbar<?= $isAdminNavbar ? ' navbar-compact' : '' ?>">
     <div class="navbar-brand">
-        <a href="<?= $baseUrl ?>/index.php?action=home">
+        <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=home">
             <img
-                src="<?= $baseUrl ?>/view/assets/images/logo.png"
+                src="/smart_nutritionn/gestionActiviteesportive/view/assets/images/logo.png"
                 alt="Smart Nutrition"
                 class="brand-logo"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -18,41 +15,62 @@ $isAdminNavbar = (($_SESSION['user_role'] ?? 'user') === 'admin');
 
     <?php if (!$isAdminNavbar): ?>
     <ul class="navbar-menu">
-        <li><a href="<?= $baseUrl ?>/index.php?action=profile" class="nav-link">
+        <li><a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=profile" class="nav-link">
             <i class="fa-solid fa-user"></i> Mon profile 
         </a></li>
-        <li><a href="<?= $baseUrl ?>/index.php?action=tracking-management" class="nav-link">
+        <li><a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=activites" class="nav-link">
             <i class="fa-solid fa-chart-line"></i> Activite sportif
         </a></li>
-        <li><a href="<?= $baseUrl ?>/index.php?action=recipes-management" class="nav-link">
+        <li><a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=recipes-management" class="nav-link">
             <i class="fa-solid fa-book-open"></i> Recette alimentation
         </a></li>
-        <li><a href="<?= $baseUrl ?>/index.php?action=foods-management" class="nav-link">
+        <li><a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=foods-management" class="nav-link">
             <i class="fa-solid fa-apple-whole"></i> Ecommerce
         </a></li>
-        <li><a href="<?= $baseUrl ?>/index.php?action=recommendations-management" class="nav-link">
+        <li><a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=recommendations-management" class="nav-link">
             <i class="fa-solid fa-users"></i> Communaute
         </a></li>
-        <li><a href="<?= $baseUrl ?>/index.php?action=nutrition_dashboard" class="nav-link">
-            <i class="fa-solid fa-calendar-check"></i> suivi nutritionnel
+        <li><a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=suivi-nutritionnel" class="nav-link">
+            <i class="fa-solid fa-apple-whole"></i> Suivi Nutritionnel
+        </a></li>
+        <li><a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=planner-management" class="nav-link">
+            <i class="fa-solid fa-calendar-check"></i> Planning
         </a></li>
     </ul>
     <?php endif; ?>
 
     <div class="navbar-footer">
+        <?php if (isset($_SESSION['user_id'])): ?>
+            <div class="notification-center" data-notification-endpoint="/projet-web-25-26/controller/notificationController.php">
+                <button type="button" id="notificationToggle" class="notification-toggle" aria-label="Notifications" aria-expanded="false">
+                    <i class="fa-solid fa-bell"></i>
+                    <span id="notificationBadge" class="notification-badge" hidden>0</span>
+                </button>
+                <div id="notificationDropdown" class="notification-dropdown" hidden>
+                    <div class="notification-header">
+                        <strong>Notifications</strong>
+                        <button type="button" id="notificationMarkAll" class="notification-mark-all">Tout marquer comme lu</button>
+                    </div>
+                    <div id="notificationList" class="notification-list">
+                        <p class="notification-empty">Aucune notification pour le moment.</p>
+                    </div>
+                    <button type="button" id="notificationShowOlder" class="notification-show-older" hidden>Voir les anciennes notifications</button>
+                </div>
+            </div>
+        <?php endif; ?>
         <button type="button" id="themeToggle" class="nav-link theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
             <i class="fa-solid fa-moon"></i> Sombre
         </button>
         <?php if (isset($_SESSION['user_id'])): ?>
             <p class="user-info">Connecte: <strong><?= htmlspecialchars($_SESSION['user_name'] ?? 'Utilisateur') ?></strong></p>
-            <a href="<?= $baseUrl ?>/index.php?action=logout" class="nav-link logout">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=logout" class="nav-link logout">
                 <i class="fa-solid fa-sign-out-alt"></i> Deconnexion
             </a>
         <?php else: ?>
-            <a href="<?= $baseUrl ?>/index.php?action=login" class="nav-link">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=login" class="nav-link">
                 <i class="fa-solid fa-lock"></i> Connexion
             </a>
-            <a href="<?= $baseUrl ?>/index.php?action=register" class="nav-link register">
+            <a href="/smart_nutritionn/gestionActiviteesportive/index.php?action=register" class="nav-link register">
                 <i class="fa-solid fa-user-plus"></i> Inscription
             </a>
         <?php endif; ?>

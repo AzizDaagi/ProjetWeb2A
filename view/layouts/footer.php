@@ -9,6 +9,7 @@
     </footer>
     <?php endif; ?>
 
+    <?php if (!isset($_GET['embed']) || $_GET['embed'] !== 'true'): ?>
     <video id="gestureVideoHidden" class="gesture-video-hidden" autoplay playsinline muted></video>
     <canvas id="gestureCanvasHidden" class="gesture-canvas-hidden" aria-hidden="true"></canvas>
     <div id="gestureCursor" class="gesture-cursor" aria-hidden="true"></div>
@@ -29,11 +30,16 @@
             <p id="voiceLastAction" class="voice-last-action">Exemples: "ouvre profil", "descendre", "cliquer deconnexion".</p>
         </div>
     </div>
+    <?php endif; ?>
 
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <?php $baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>
-    <script src="<?= htmlspecialchars($baseUrl) ?>/view/assets/app.js?v=<?= $assetVersion ?>"></script>
-    <script src="<?= htmlspecialchars($baseUrl) ?>/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
+    <script src="/smart_nutritionn/gestionActiviteesportive/view/assets/app.js?v=<?= $assetVersion ?>"></script>
+    <script src="/smart_nutritionn/gestionActiviteesportive/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
+    <?php if (!empty($additionalScripts) && is_array($additionalScripts)): ?>
+        <?php foreach ($additionalScripts as $scriptSrc): ?>
+            <script src="<?= htmlspecialchars($scriptSrc, ENT_QUOTES, 'UTF-8') ?>"></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </body>
 </html>

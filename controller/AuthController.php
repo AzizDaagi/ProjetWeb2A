@@ -154,49 +154,13 @@ class AuthController
         ];
     }
 
-    private function isFirebaseConfigured()
-    {
-        $firebaseConfig = $this->buildFirebaseConfig();
-        foreach ($firebaseConfig as $value) {
-            $normalized = strtolower(trim((string) $value));
-            if ($normalized === '' || str_contains($normalized, 'your_') || str_contains($normalized, 'placeholder') || str_contains($normalized, 'changeme')) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function envValue(string $key, string $default = ''): string
-    {
-        $value = $_ENV[$key] ?? getenv($key);
-        if ($value === false || $value === null) {
-            return $default;
-        }
-
-        return trim((string) $value);
-    }
-
-    private function buildFirebaseConfig(): array
-    {
-        return [
-            'apiKey' => $this->envValue('FIREBASE_WEB_API_KEY', trim((string) ($this->appConfig['firebase_web_api_key'] ?? ''))),
-            'authDomain' => $this->envValue('FIREBASE_AUTH_DOMAIN', trim((string) ($this->appConfig['firebase_auth_domain'] ?? ''))),
-            'projectId' => $this->envValue('FIREBASE_PROJECT_ID', trim((string) ($this->appConfig['firebase_project_id'] ?? ''))),
-            'storageBucket' => $this->envValue('FIREBASE_STORAGE_BUCKET', trim((string) ($this->appConfig['firebase_storage_bucket'] ?? ''))),
-            'messagingSenderId' => $this->envValue('FIREBASE_MESSAGING_SENDER_ID', trim((string) ($this->appConfig['firebase_messaging_sender_id'] ?? ''))),
-            'appId' => $this->envValue('FIREBASE_APP_ID', trim((string) ($this->appConfig['firebase_app_id'] ?? ''))),
-            'measurementId' => $this->envValue('FIREBASE_MEASUREMENT_ID', trim((string) ($this->appConfig['firebase_measurement_id'] ?? ''))),
-        ];
-    }
-
     private function verifyFirebaseIdToken($idToken)
     {
         $apiKey = trim((string) ($this->appConfig['firebase_web_api_key'] ?? ''));
-        if (!$this->isFirebaseConfigured()) {
+        if ($apiKey === '') {
             return [
                 'success' => false,
-                'error' => 'Connexion Google indisponible en environnement local.',
+                'error' => 'Configuration Firebase manquante (FIREBASE_WEB_API_KEY).',
                 'user' => null,
             ];
         }
@@ -307,7 +271,7 @@ class AuthController
             return $this->sendBrevoEmailViaSmtp($to, $subject, $htmlContent, $fromEmail, $fromName);
         }
 
-        $apiKey = $this->envValue('BREVO_API_KEY');
+        $apiKey = trim((string) getenv('BREVO_API_KEY'));
         if ($apiKey === '') {
             return ['success' => false, 'error' => 'Aucune configuration d\'envoi Brevo active.'];
         }
@@ -366,8 +330,7 @@ class AuthController
             return ['success' => true, 'error' => ''];
         }
 
-        error_log('Brevo API error [' . $httpCode . ']');
-        return ['success' => false, 'error' => 'Service d\'e-mail temporairement indisponible.'];
+        return ['success' => false, 'error' => 'API Brevo ' . $httpCode . ': ' . (string) $response];
     }
 
     private function sendBrevoEmailViaSmtp($to, $subject, $htmlContent, $fromEmail, $fromName)
@@ -457,15 +420,13 @@ class AuthController
         $response = $this->sendSmtpCommand($socket, base64_encode($username), [334]);
         if (!$this->isExpectedSmtpResponse($response, [334])) {
             fclose($socket);
-            error_log('Brevo SMTP username rejected.');
-            return ['success' => false, 'error' => 'Identifiant SMTP refuse. Utilisez le SMTP login affiche dans Brevo > Settings > SMTP & API.'];
+            return ['success' => false, 'error' => 'Identifiant SMTP refuse. Utilisez le SMTP login affiche dans Brevo > Settings > SMTP & API: ' . trim((string) $response)];
         }
 
         $response = $this->sendSmtpCommand($socket, base64_encode($password), [235]);
         if (!$this->isExpectedSmtpResponse($response, [235])) {
             fclose($socket);
-            error_log('Brevo SMTP password rejected.');
-            return ['success' => false, 'error' => 'Mot de passe SMTP refuse. Verifiez la cle SMTP et le SMTP login Brevo configure dans BREVO_SMTP_USERNAME.'];
+            return ['success' => false, 'error' => 'Mot de passe SMTP refuse. Verifiez la cle SMTP et le SMTP login Brevo configure dans BREVO_SMTP_USERNAME: ' . trim((string) $response)];
         }
 
         $response = $this->sendSmtpCommand($socket, 'MAIL FROM:<' . $fromEmail . '>', [250]);
@@ -724,7 +685,7 @@ class AuthController
         if ($idToken === '') {
             $this->respondJson([
                 'success' => false,
-                'message' => 'Connexion Google indisponible pour le moment.',
+                'message' => 'Jeton Google manquant.',
             ], 400);
         }
 
@@ -784,55 +745,20 @@ class AuthController
     public function loginWithFace()
     {
         $payload = $this->getRequestPayload();
-        $email = trim((string) ($payload['email'] ?? ''));
 
         $descriptor = $this->sanitizeFaceDescriptor($payload['descriptor'] ?? null);
 
         if (!$descriptor) {
-            $this->respondJson([
-                'success' => false,
-                'message' => 'Aucun visage detecte.',
-            ], 422);
+            $this->respondJson(['success' => false]);
         }
 
-        $users = [];
-        if ($email !== '') {
-            $user = $this->userModel->findByEmail($email);
-            if (!$user) {
-                $this->respondJson([
-                    'success' => false,
-                    'message' => 'Aucun profil facial enregistre pour ce compte.',
-                ], 404);
-            }
-
-            $storedFace = trim((string) ($user['face_descriptor'] ?? ''));
-            if ($storedFace === '') {
-                $this->respondJson([
-                    'success' => false,
-                    'message' => 'Aucun profil facial enregistre pour ce compte.',
-                ], 404);
-            }
-
-            $users = [$user];
-        } else {
-            $users = $this->userModel->getAllWithFaceDescriptors();
-        }
-
-        if (empty($users)) {
-            $this->respondJson([
-                'success' => false,
-                'message' => 'Aucun profil facial enregistre pour ce compte.',
-            ], 404);
-        }
+        $users = $this->userModel->getAllWithFaceDescriptors();
 
         $bestUser = null;
         $bestDistance = INF;
 
         foreach ($users as $u) {
             $stored = json_decode($u['face_descriptor'], true);
-            if (!is_array($stored) || count($stored) !== self::FACE_DESCRIPTOR_SIZE) {
-                continue;
-            }
             $dist = $this->computeFaceDistance($stored, $descriptor);
 
             if ($dist < $bestDistance) {
@@ -841,18 +767,14 @@ class AuthController
             }
         }
 
-        if (!$bestUser || $bestDistance > self::FACE_DISTANCE_THRESHOLD) {
-            $this->respondJson([
-                'success' => false,
-                'message' => 'Visage non reconnu.',
-            ], 401);
+        if ($bestDistance > self::FACE_DISTANCE_THRESHOLD) {
+            $this->respondJson(['success' => false]);
         }
 
         $next = $this->hydrateSessionAndResolveNextAction($bestUser, true);
 
         $this->respondJson([
             'success' => true,
-            'message' => 'Connexion faciale reussie.',
             'redirect' => $this->buildActionUrl($next)
         ]);
     }
@@ -886,22 +808,7 @@ class AuthController
 
         $result = $this->sendBrevoEmail($email, 'Code de reinitialisation', $htmlContent);
         if (empty($result['success'])) {
-            $mailError = (string) ($result['error'] ?? 'Erreur inconnue');
-            error_log('Reset mail error: ' . $mailError);
-
-            $appUrl = (string) ($this->appConfig['app_url'] ?? '');
-            $serverName = strtolower((string) ($_SERVER['SERVER_NAME'] ?? ''));
-            $isLocal = in_array($serverName, ['localhost', '127.0.0.1'], true)
-                || str_contains($appUrl, 'localhost')
-                || str_contains($appUrl, '127.0.0.1');
-
-            if ($isLocal) {
-                $_SESSION['success'] = 'Mode developpement : email indisponible. Code de reinitialisation : ' . $code;
-                header('Location: /projet-web-25-26/index.php?action=reset-password&email=' . urlencode($email));
-                exit;
-            }
-
-            $_SESSION['flash_error'] = 'Impossible d\'envoyer l\'email de reinitialisation pour le moment.';
+            $_SESSION['flash_error'] = 'Envoi e-mail echoue: ' . ($result['error'] ?? '');
             $this->redirect('forgot');
         }
 
@@ -975,10 +882,17 @@ class AuthController
     $success = $_SESSION['success'] ?? '';
     unset($_SESSION['success']);
 
-    $firebaseConfig = $this->buildFirebaseConfig();
+    $firebaseConfig = [
+        'apiKey' => trim((string) (getenv('FIREBASE_WEB_API_KEY') ?: ($this->appConfig['firebase_web_api_key'] ?? ''))),
+        'authDomain' => trim((string) (getenv('FIREBASE_AUTH_DOMAIN') ?: 'smartnutrition-7f619.firebaseapp.com')),
+        'projectId' => trim((string) (getenv('FIREBASE_PROJECT_ID') ?: ($this->appConfig['firebase_project_id'] ?? 'smartnutrition-7f619'))),
+        'storageBucket' => trim((string) (getenv('FIREBASE_STORAGE_BUCKET') ?: 'smartnutrition-7f619.firebasestorage.app')),
+        'messagingSenderId' => trim((string) (getenv('FIREBASE_MESSAGING_SENDER_ID') ?: '584688286786')),
+        'appId' => trim((string) (getenv('FIREBASE_APP_ID') ?: '1:584688286786:web:abae17dce0c7979d61c1db')),
+        'measurementId' => trim((string) (getenv('FIREBASE_MEASUREMENT_ID') ?: 'G-BJTYY669Y6')),
+    ];
 
-    $firebaseGoogleEnabled = $this->isFirebaseConfigured();
-    $firebaseUnavailableMessage = 'Connexion Google indisponible en environnement local.';
+    $firebaseGoogleEnabled = $firebaseConfig['apiKey'] !== '';
 
     $pageTitle = 'Connexion';
 
@@ -1001,7 +915,7 @@ public function showRegister($errors = [], $old = [])
  
 public function showForgotPassword($errors = [])
 {
-    $pageTitle = 'Mot de passe oublié';
+    $pageTitle = 'Mot de passe oubliÃ©';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/forgot.php';
@@ -1009,7 +923,7 @@ public function showForgotPassword($errors = [])
 }
 public function showResetForm()
 {
-    $pageTitle = 'Réinitialiser mot de passe';
+    $pageTitle = 'RÃ©initialiser mot de passe';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/reset.php';

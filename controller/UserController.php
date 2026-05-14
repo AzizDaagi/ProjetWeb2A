@@ -1117,7 +1117,7 @@ class UserController
         $pageTitle = 'Tableau de bord Admin';
         $isAdminTemplate = true;
         include __DIR__ . '/../view/layouts/header.php';
-        include __DIR__ . '/../view/back/dashboard.php';
+        include __DIR__ . '/../view/back/user_dashboard.php';
         include __DIR__ . '/../view/layouts/footer.php';
     }
 

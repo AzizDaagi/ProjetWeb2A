@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const APP_BASE_URL = "/projet-web-25-26";
     const form = document.getElementById("chrono-form");
     const saveButton = document.getElementById("saveProfile");
     const feedback = document.getElementById("chrono-feedback");
@@ -40,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         try {
-            const response = await fetchJson("index.php?action=chrono_profile_save", {
+            const response = await fetchJson(`${APP_BASE_URL}/index.php?action=chrono_profile_save`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -77,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setDisclaimer("");
 
         try {
-            const response = await fetchJson("index.php?action=chrono_profile_get");
+            const response = await fetchJson(`${APP_BASE_URL}/index.php?action=chrono_profile_get`);
 
             if (response.error) {
                 throw new Error(response.error);
@@ -104,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderLoadingState(blocks.sleep, "Synchronisation sommeil");
         setDisclaimer("");
 
-        const timingPromise = fetchJson(`index.php?action=${actionMap.timing}`)
+        const timingPromise = fetchJson(`${APP_BASE_URL}/index.php?action=${actionMap.timing}`)
             .then((response) => {
                 if (response.error || !response.data) {
                     throw new Error(response.error || "Aucune recommandation d horaires disponible.");
@@ -120,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderErrorState(blocks.personalization, "Personnalisation chrono", error.message || "Impossible de charger la personnalisation chrono.");
             });
 
-        const fastingPromise = fetchJson(`index.php?action=${actionMap.fasting}`)
+        const fastingPromise = fetchJson(`${APP_BASE_URL}/index.php?action=${actionMap.fasting}`)
             .then((response) => {
                 if (response.error || !response.data) {
                     throw new Error(response.error || "Aucune indication de jeûne intermittent disponible.");
@@ -134,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 setDisclaimer("");
             });
 
-        const nutrientPromise = fetchJson(`index.php?action=${actionMap.nutrients}`)
+        const nutrientPromise = fetchJson(`${APP_BASE_URL}/index.php?action=${actionMap.nutrients}`)
             .then((response) => {
                 if (response.error || !response.data) {
                     throw new Error(response.error || "Aucun conseil nutritionnel disponible.");
@@ -146,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderErrorState(blocks.nutrients, "Nutriments par moment", error.message || "Impossible de charger les conseils nutritionnels.");
             });
 
-        const sleepPromise = fetchJson(`index.php?action=${actionMap.sleep}`)
+        const sleepPromise = fetchJson(`${APP_BASE_URL}/index.php?action=${actionMap.sleep}`)
             .then((response) => {
                 if (response.error || !response.data) {
                     throw new Error(response.error || "Aucune recommandation sommeil disponible.");
@@ -539,13 +540,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function fetchJson(url, options = {}) {
-        const response = await fetch(url, options);
+        const response = await fetch(url, {
+            credentials: "same-origin",
+            headers: {
+                "Accept": "application/json",
+                ...(options.headers || {})
+            },
+            ...options
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+        const text = await response.text();
 
         if (!response.ok) {
-            throw new Error("Le service chrono-nutrition ne repond pas correctement.");
+            throw new Error("Le service chrono-nutrition ne répond pas correctement.");
         }
 
-        return response.json();
+        if (!contentType.includes("application/json")) {
+            console.error("Réponse non JSON reçue:", text);
+            throw new Error("Le serveur a retourné une page HTML au lieu du JSON. Vérifie la session, la route ou une erreur PHP.");
+        }
+
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            console.error("JSON invalide reçu:", text);
+            throw new Error("Réponse JSON invalide du service chrono-nutrition.");
+        }
     }
 
     function escapeHtml(value) {

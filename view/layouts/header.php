@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?? 'Smart Nutrition' ?></title>
     <?php $assetVersion = time(); ?>
-    <?php $baseUrl = $baseUrl ?? rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\'); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="<?= htmlspecialchars($baseUrl) ?>/view/assets/style.css?v=<?= $assetVersion ?>">
+    <link rel="stylesheet" href="/smart_nutritionn/gestionActiviteesportive/view/assets/style.css?v=<?= $assetVersion ?>">
+    <?php if (!empty($additionalStylesheets) && is_array($additionalStylesheets)): ?>
+        <?php foreach ($additionalStylesheets as $stylesheet): ?>
+            <link rel="stylesheet" href="<?= htmlspecialchars($stylesheet, ENT_QUOTES, 'UTF-8') ?>">
+        <?php endforeach; ?>
+    <?php endif; ?>
 </head>
 <?php $showNav = $showNav ?? isset($_SESSION['user_id']); ?>
 <?php $isAdminTemplate = isset($isAdminTemplate) && $isAdminTemplate === true; ?>
@@ -20,11 +24,13 @@
     <?php include __DIR__ . '/nav.php'; ?>
     <?php endif; ?>
     <?php else: ?>
+    <?php if (!isset($_GET['embed']) || $_GET['embed'] !== 'true'): ?>
     <div class="theme-toggle-floating-wrap">
         <button type="button" id="themeToggle" class="theme-toggle theme-toggle-floating" aria-label="Changer le mode de couleur" aria-pressed="false">
             <i class="fa-solid fa-moon"></i> Sombre
         </button>
     </div>
+    <?php endif; ?>
     <?php endif; ?>
 
     <main class="main-content">

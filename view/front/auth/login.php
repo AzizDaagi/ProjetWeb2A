@@ -38,10 +38,7 @@
             </button>
             <p id="googleLoginStatus" class="google-login-status" aria-live="polite"></p>
         <?php else: ?>
-            <button type="button" class="google-login-btn" disabled aria-disabled="true">
-                <i class="fa-brands fa-google"></i>Continuer avec Google
-            </button>
-            <p class="google-login-status"><?= htmlspecialchars($firebaseUnavailableMessage ?? 'Connexion Google indisponible en environnement local.') ?></p>
+            <p class="alert alert-error">Configuration Firebase manquante. Ajoutez FIREBASE_WEB_API_KEY dans votre fichier .env.</p>
         <?php endif; ?>
     </section>
 
@@ -51,8 +48,7 @@
         data-endpoint="/projetwebmalek/index.php?action=face-login"
     >
         <h2 class="face-auth-title"><i class="fa-solid fa-camera icon"></i>Connexion faciale</h2>
-        <p class="face-auth-text">Saisissez votre e-mail, activez la camera puis lancez la verification faciale. L'apercu reste masque.</p>
-        <p class="google-login-status">Si la camera ou la reconnaissance faciale est indisponible, utilisez simplement le mot de passe classique.</p>
+        <p class="face-auth-text">Saisissez votre e-mail, activez la camera puis lancez la verification faciale. L'aperÃ§u reste masque.</p>
 
         <div class="face-preview-wrap is-hidden">
             <video class="face-video" autoplay playsinline muted></video>

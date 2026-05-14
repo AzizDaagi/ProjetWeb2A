@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Assistant Nutrition</title>
-    <link rel="stylesheet" href="view/front/assets/css/style.css">
+    <link rel="stylesheet" href="/projet-web-25-26/view/front/assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .chatbot-page-shell {

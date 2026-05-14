@@ -59,8 +59,8 @@ class  ReminderMailer  {
   <tr>
     <td style='background:#1e293b; padding:15px; border-radius:10px;'>
       <p>Bonjour {$user['nom']} </p>
-      <p>Vous n'avez pas encore enregistré votre consommation aujourd'hui.</p>
-      <p>Prenez 1 minute pour compléter votre suivi 👇</p>
+      <p>Vous n'avez pas encore enregistrÃ© votre consommation aujourd'hui.</p>
+      <p>Prenez 1 minute pour complÃ©ter votre suivi ðŸ‘‡</p>
     </td>
   </tr>
 

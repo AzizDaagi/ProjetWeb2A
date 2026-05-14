@@ -1,11 +1,83 @@
-<?php $currentAction = (string) ($_GET['action'] ?? ''); ?>
-<?php $currentController = (string) ($_GET['controller'] ?? ''); ?>
-<?php $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'store-user', 'edit-user', 'update-user', 'delete-user'], true); ?>
-<?php $isSuiviAdmin = $currentController === 'backoffice' && in_array($currentAction, ['suivi', 'suiviCreate', 'suiviStore', 'suiviEdit', 'suiviUpdate', 'suiviDelete'], true); ?>
-<?php $isObjectifsAdmin = $currentController === 'backoffice' && in_array($currentAction, ['objectifs', 'objectifShow', 'objectifDelete'], true); ?>
-<?php $isRecipesAdmin = $currentAction === 'admin-recipes'; ?>
-<?php $isRecommendationsAdmin = $currentAction === 'admin-recommendations'; ?>
 <?php
+$currentAction = $_GET['action'] ?? 'admin-dashboard';
+
+$isDashboardAction = $currentAction === 'admin-dashboard';
+$isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'edit-user', 'users-report'], true);
+$isTrackingAction = in_array($currentAction, ['nutrition_dashboard', 'suivi', 'objectif', 'admin-aliments', 'admin-objectifs'], true);
+$isRecipesAction = in_array($currentAction, ['admin-recipes', 'recipes-management', 'recipe-details', 'recipe-generate', 'recipe-optimize', 'recipe-save-optimization', 'recipe-stats', 'recipe-export'], true);
+$isRecommendationsAction = $currentAction === 'admin-recommendations';
+$isObjectivesAction = in_array($currentAction, ['admin-objectifs', 'objectif'], true);
+$isCommunityAction = $currentAction === 'admin-community';
+$isCommunityReportsAction = in_array($currentAction, ['admin-community-reports', 'admin-community-report-details', 'admin-community-review-post'], true);
+$isNewsAction = in_array($currentAction, ['admin-news', 'admin-news-create', 'admin-news-edit'], true);
+
+$adminObjectifsRouteExists = false;
+$adminNewsRouteExists = false;
+$objectifsHref = $adminObjectifsRouteExists
+    ? '/projet-web-25-26/index.php?action=admin-objectifs'
+    : '/projet-web-25-26/index.php?action=objectif';
+$newsHref = '/projet-web-25-26/index.php?action=admin-news';
+
+$moduleInfo = [
+    'dashboard' => [
+        'title' => 'Dashboard',
+        'text' => 'Module actif pour le pilotage global du back-office Smart Nutrition.',
+    ],
+    'users' => [
+        'title' => 'Utilisateurs',
+        'text' => 'Module actif pour la gestion des comptes, profils et statistiques utilisateurs.',
+    ],
+    'tracking' => [
+        'title' => 'Suivi',
+        'text' => 'Module actif pour le suivi nutritionnel, les aliments et les indicateurs quotidiens.',
+    ],
+    'recipes' => [
+        'title' => 'Recettes',
+        'text' => 'Module actif pour gerer les recettes et leurs ingredients.',
+    ],
+    'recommendations' => [
+        'title' => 'Recommandations',
+        'text' => 'Module actif pour gerer les recommandations associees aux recettes.',
+    ],
+    'objectives' => [
+        'title' => 'Objectifs',
+        'text' => 'Module actif pour la gestion des objectifs caloriques et de la progression utilisateur.',
+    ],
+    'community' => [
+        'title' => 'Community',
+        'text' => 'Module actif pour gerer les posts, commentaires, reactions et signalements.',
+    ],
+    'community_reports' => [
+        'title' => 'Signalements',
+        'text' => 'Module actif pour moderer les contenus signales par les utilisateurs.',
+    ],
+    'news' => [
+        'title' => 'Articles',
+        'text' => 'Module actif pour gerer les articles nutrition et wellness.',
+    ],
+];
+
+$activeModuleKey = 'dashboard';
+if ($isUsersAction) {
+    $activeModuleKey = 'users';
+} elseif ($isCommunityReportsAction) {
+    $activeModuleKey = 'community_reports';
+} elseif ($isCommunityAction) {
+    $activeModuleKey = 'community';
+} elseif ($isNewsAction) {
+    $activeModuleKey = 'news';
+} elseif ($isRecommendationsAction) {
+    $activeModuleKey = 'recommendations';
+} elseif ($isRecipesAction) {
+    $activeModuleKey = 'recipes';
+} elseif ($isObjectivesAction) {
+    $activeModuleKey = 'objectives';
+} elseif ($isTrackingAction) {
+    $activeModuleKey = 'tracking';
+}
+
+$currentModule = $moduleInfo[$activeModuleKey] ?? $moduleInfo['dashboard'];
+
 $adminName = trim((string) ($_SESSION['user_name'] ?? ''));
 if ($adminName === '') {
     $adminName = 'Administrateur';
@@ -30,9 +102,9 @@ if ($adminInitials === '') {
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="/projetwebmalek/index.php?action=admin-dashboard" class="admin-brand-link">
+            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/projetwebmalek/view/assets/images/logo.png"
+                    src="/projet-web-25-26/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -42,43 +114,83 @@ if ($adminInitials === '') {
         </div>
 
         <div class="admin-menu-section">
-            <p class="admin-menu-title">Navigation</p>
-            <a href="/projetwebmalek/index.php?action=admin-dashboard" class="admin-side-link<?= $currentAction === 'admin-dashboard' ? ' active' : '' ?>">
-                <i class="fa-solid fa-gauge-high"></i>
+            <p class="admin-menu-title admin-side-section-title">Navigation</p>
+            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
+                <span>🧭</span>
                 <span>Dashboard</span>
             </a>
-            <a href="/projetwebmalek/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
-                <i class="fa-solid fa-users"></i>
+            <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+                <span>👥</span>
                 <span>Utilisateurs</span>
             </a>
         </div>
 
         <div class="admin-menu-section admin-modules-section">
-            <p class="admin-menu-title">Modules</p>
-            <a href="/projetwebmalek/index.php?controller=backoffice&action=suivi" class="admin-side-link<?= $isSuiviAdmin ? ' active' : '' ?>">
-                <i class="fa-solid fa-apple-whole"></i>
-                <span>Aliments</span>
+            <p class="admin-menu-title admin-side-section-title">Modules</p>
+
+            <a href="/projet-web-25-26/index.php?action=nutrition_dashboard" class="admin-side-link<?= $isTrackingAction ? ' active' : '' ?>">
+                <span>🍎</span>
+                <span>Suivi</span>
             </a>
-            <a href="/projetwebmalek/index.php?controller=backoffice&action=objectifs" class="admin-side-link<?= $isObjectifsAdmin ? ' active' : '' ?>">
-                <i class="fa-solid fa-bullseye"></i>
-                <span>Objectifs</span>
-            </a>
-            <a href="/projetwebmalek/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAdmin ? ' active' : '' ?>">
-                <i class="fa-solid fa-book-open"></i>
+
+            <a href="/projet-web-25-26/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
+                <span>📖</span>
                 <span>Recettes</span>
             </a>
-            <a href="/projetwebmalek/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAdmin ? ' active' : '' ?>">
-                <i class="fa-solid fa-users"></i>
+
+            <a href="/projet-web-25-26/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
+                <span>💙</span>
                 <span>Recommandations</span>
             </a>
+
+            <a href="<?= htmlspecialchars($objectifsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isObjectivesAction ? ' active' : '' ?>">
+                <span>🎯</span>
+                <span>Objectifs</span>
+            </a>
+
+            <a href="/projet-web-25-26/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
+                <span>💬</span>
+                <span>Community</span>
+            </a>
+
+            <a href="/projet-web-25-26/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
+                <span>🚩</span>
+                <span>Reports Community</span>
+            </a>
+
+            <a href="<?= htmlspecialchars($newsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isNewsAction ? ' active' : '' ?>">
+                <span>📰</span>
+                <span>News / Articles</span>
+            </a>
+            <?php if (!$adminNewsRouteExists): ?>
+                <!-- TODO: add admin-news route in index.php when the back-office news module is wired -->
+            <?php endif; ?>
+
+            <div class="admin-module-description admin-side-info-card" tabindex="-1">
+                <h4><?= htmlspecialchars($currentModule['title']) ?></h4>
+                <p><?= htmlspecialchars($currentModule['text']) ?></p>
+            </div>
         </div>
     </aside>
 
     <header class="admin-topbar">
         <div class="admin-top-actions">
-            <button type="button" class="admin-icon-btn" aria-label="Notifications">
-                <i class="fa-solid fa-bell"></i>
-            </button>
+            <div class="notification-center admin-notification-center" data-notification-endpoint="/projet-web-25-26/controller/notificationController.php">
+                <button type="button" id="notificationToggle" class="admin-icon-btn notification-toggle" aria-label="Notifications" aria-expanded="false">
+                    <i class="fa-solid fa-bell"></i>
+                    <span id="notificationBadge" class="notification-badge" hidden>0</span>
+                </button>
+                <div id="notificationDropdown" class="notification-dropdown" hidden>
+                    <div class="notification-header">
+                        <strong>Notifications</strong>
+                        <button type="button" id="notificationMarkAll" class="notification-mark-all">Tout marquer comme lu</button>
+                    </div>
+                    <div id="notificationList" class="notification-list">
+                        <p class="notification-empty">Aucune notification pour le moment.</p>
+                    </div>
+                    <button type="button" id="notificationShowOlder" class="notification-show-older" hidden>Voir les anciennes notifications</button>
+                </div>
+            </div>
 
             <button type="button" id="themeToggle" class="admin-icon-btn theme-toggle admin-theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
                 <i class="fa-solid fa-moon"></i>
@@ -92,7 +204,7 @@ if ($adminInitials === '') {
                 </div>
             </div>
 
-            <a href="/projetwebmalek/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
+            <a href="/projet-web-25-26/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>
