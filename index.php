@@ -8,13 +8,15 @@ require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/WeatherController.php';
+require_once __DIR__ . '/controller/ProduitController.php';
+require_once __DIR__ . '/controller/CartController.php';
+require_once __DIR__ . '/controller/CommandeController.php';
+
+// Controllers from gestionActiviteesportive feature
 require_once __DIR__ . '/controller/FrontController.php';
 require_once __DIR__ . '/controller/ActiviteController.php';
 require_once __DIR__ . '/controller/AdminController.php';
 require_once __DIR__ . '/controller/NutritionRequestController.php';
-require_once __DIR__ . '/controller/ProduitController.php';
-require_once __DIR__ . '/controller/CartController.php';
-require_once __DIR__ . '/controller/CommandeController.php';
 
 if (isset($_SESSION['user_id']) && !isset($_SESSION['user_role'])) {
     $pdo = Database::getConnection();
@@ -73,7 +75,23 @@ $adminOnlyActions = [
     'admin-orders',
     'admin-order-edit',
     'admin-order-delete',
-    'admin-order-pdf'
+    'admin-order-pdf',
+    // Activity admin actions
+    'admin_index',
+    'admin_show',
+    'createActivite',
+    'addExercice',
+    'editExercice',
+    'updateExercice',
+    'deleteExercice',
+    'editActivite',
+    'updateActivite',
+    'deleteActivite',
+    'admin_requests',
+    'admin_edit_request',
+    'admin_update_request',
+    'admin_delete_request',
+    'export_requests_pdf'
 ];
 
 $clientOnlyActions = [
@@ -105,7 +123,19 @@ $clientOnlyActions = [
     'order-list',
     'order-edit',
     'order-delete',
-    'tracking-management'
+    'tracking-management',
+    // Activity client actions
+    'activites',
+    'showExercices',
+    'export_activite_pdf',
+    'nutrition_request',
+    'process_nutrition_request',
+    'nutrition_success',
+    'my_nutrition_requests',
+    'edit_nutrition_request',
+    'update_nutrition_request',
+    'delete_nutrition_request',
+    'export_nutrition_pdf'
 ];
 
 if (isset($_SESSION['user_id'])) {
@@ -409,7 +439,7 @@ if ($action === 'home') {
         exit;
     }
 
-    $pageTitle = 'Smart Nutrition - CommunautÃ©';
+    $pageTitle = 'Smart Nutrition - Communauté';
     $showNav = true;
     $isAdminTemplate = false;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' front-community-page'));
@@ -641,6 +671,7 @@ if ($action === 'home') {
     if (!isset($_GET['controller']) && in_array($action, ['suivi', 'objectif', 'stats'], true)) {
         $controllerName = $action;
     }
+
     if (!isset($_GET['controller']) && in_array($action, ['chatbot', 'clear_chat', 'clearChat'], true)) {
         $controllerName = 'chatbot';
     }
