@@ -472,7 +472,7 @@ function initAnimatedBackground() {
     var height = 0;
     var particles = [];
     var foodParticles = [];
-    var foodIcons = ['ðŸŽ', 'ðŸ¥•', 'ðŸ¥¦', 'ðŸŒ', 'ðŸ¥—', 'ðŸ‡', 'ðŸ¥‘', 'ðŸ“'];
+    var foodIcons = ['🥗', '🍎', '🍱', '🍕', '🥦', '🍩', '🍪', '🍰'];
     var time = 0;
 
     function resize() {
