@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 require_once __DIR__ . '/../model/Database.php';
 require_once __DIR__ . '/../model/User.php';
@@ -17,7 +17,7 @@ class UserController
 
     private function redirect($action)
     {
-        header('Location: /Web/index.php?action=' . $action);
+        header('Location: /projet-web-25-26/index.php?action=' . $action);
         exit;
     }
 
@@ -1104,7 +1104,8 @@ class UserController
         session_unset();
         session_destroy();
 
-        header('Location: /Web/index.php?action=login');
+        header('Location: /projet-web-25-26/index.php?action=login');
         exit;
     }
 }
+

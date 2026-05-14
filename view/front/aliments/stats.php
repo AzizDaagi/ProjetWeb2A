@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -620,7 +620,8 @@
         }
     </script>
     <?php require __DIR__ . '/../partials/chatbot_widget.php'; ?>
-<script src="/Web/view/front/assets/js/theme.js"></script>
+<script src="/projet-web-25-26/view/front/assets/js/theme.js"></script>
 </body>
 
 </html>
+

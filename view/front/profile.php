@@ -1,4 +1,4 @@
-<div class="container">
+﻿<div class="container">
     <?php $profileUser = is_array($user ?? null) ? $user : []; ?>
     <?php $profileRoleSlug = trim((string) ($profileUser['role'] ?? ($_SESSION['user_role'] ?? 'user'))); ?>
     <?php $isAdminProfile = $profileRoleSlug === 'admin'; ?>
@@ -38,7 +38,7 @@
         <div class="alert alert-error">Completez vos donnees personnelles pour finaliser votre compte.</div>
     <?php endif; ?>
 
-    <form method="POST" action="/Web/index.php?action=update-profile" novalidate>
+    <form method="POST" action="/projet-web-25-26/index.php?action=update-profile" novalidate>
         <div class="field">
             <label><i class="fa-solid fa-tag icon"></i>Nom</label>
             <input type="text" name="nom" value="<?= htmlspecialchars((string) ($profileUser['nom'] ?? '')) ?>" required>
@@ -96,8 +96,8 @@
     <section
         class="face-auth-card"
         data-face-auth-mode="enroll"
-        data-endpoint="/Web/index.php?action=save-face-descriptor"
-        data-clear-endpoint="/Web/index.php?action=clear-face-descriptor"
+        data-endpoint="/projet-web-25-26/index.php?action=save-face-descriptor"
+        data-clear-endpoint="/projet-web-25-26/index.php?action=clear-face-descriptor"
     >
         <h2 class="face-auth-title"><i class="fa-solid fa-id-card icon"></i>Reconnaissance faciale</h2>
         <p class="face-auth-text">Enregistrez votre visage pour vous connecter sans mot de passe depuis l'ecran de login.</p>
@@ -142,3 +142,4 @@
         <p><strong><i class="fa-solid fa-envelope icon"></i>E-mail:</strong> <?= htmlspecialchars((string) ($profileUser['email'] ?? '')) ?></p>
     </div>
 </div>
+

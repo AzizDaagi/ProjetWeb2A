@@ -1,4 +1,4 @@
-<div class="container admin-page admin-form-page">
+﻿<div class="container admin-page admin-form-page">
     <?php $newUser = is_array($user ?? null) ? $user : []; ?>
     <h1><i class="fa-solid fa-user-plus icon"></i> Ajouter un utilisateur</h1>
     <p class="subtitle">Creation d'un nouveau compte utilisateur</p>
@@ -13,7 +13,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/Web/index.php?action=store-user" novalidate>
+    <form method="POST" action="/projet-web-25-26/index.php?action=store-user" novalidate>
         <div class="field">
             <label><i class="fa-solid fa-tag icon"></i>Nom</label>
             <input type="text" name="nom" value="<?= htmlspecialchars((string) ($newUser['nom'] ?? '')) ?>" required>
@@ -72,6 +72,7 @@
     </form>
 
     <div class="actions">
-        <a href="/Web/index.php?action=users-list" class="btn-admin-secondary">Retour a la liste</a>
+        <a href="/projet-web-25-26/index.php?action=users-list" class="btn-admin-secondary">Retour a la liste</a>
     </div>
 </div>
+

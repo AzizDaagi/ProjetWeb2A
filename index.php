@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 session_start();
 
@@ -52,7 +52,7 @@ $action = $_GET['action'] ?? $defaultAction;
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
-    header('Location: /Web/index.php?action=login');
+    header('Location: /projet-web-25-26/index.php?action=login');
     exit;
 }
 
@@ -92,12 +92,12 @@ $clientOnlyActions = [
 
 if (isset($_SESSION['user_id'])) {
     if ($isAdminSession && in_array($action, $clientOnlyActions, true)) {
-        header('Location: /Web/index.php?action=admin-dashboard');
+        header('Location: /projet-web-25-26/index.php?action=admin-dashboard');
         exit;
     }
 
     if (!$isAdminSession && in_array($action, $adminOnlyActions, true)) {
-        header('Location: /Web/index.php?action=home');
+        header('Location: /projet-web-25-26/index.php?action=home');
         exit;
     }
 }
@@ -249,16 +249,16 @@ if ($action === 'home') {
 
 } elseif ($action === 'community') {
     if ($isAdminSession) {
-        header('Location: /Web/index.php?action=admin-community');
+        header('Location: /projet-web-25-26/index.php?action=admin-community');
         exit;
     }
 
-    $pageTitle = 'Smart Nutrition - Communauté';
+    $pageTitle = 'Smart Nutrition - CommunautÃ©';
     $showNav = true;
     $isAdminTemplate = false;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' front-community-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css'),
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css'),
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
     ];
     include __DIR__ . '/view/layouts/header.php';
@@ -267,16 +267,16 @@ if ($action === 'home') {
 
 } elseif ($action === 'recommendations-management') {
     if ($isAdminSession) {
-        header('Location: /Web/index.php?action=admin-community');
+        header('Location: /projet-web-25-26/index.php?action=admin-community');
         exit;
     }
 
-    header('Location: /Web/index.php?action=community');
+    header('Location: /projet-web-25-26/index.php?action=community');
     exit;
 
 } elseif ($action === 'admin-community') {
     if (!$isAdminSession) {
-        header('Location: /Web/index.php?action=home');
+        header('Location: /projet-web-25-26/index.php?action=home');
         exit;
     }
 
@@ -285,11 +285,11 @@ if ($action === 'home') {
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
         'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -298,7 +298,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'admin-community-reports') {
     if (!$isAdminSession) {
-        header('Location: /Web/index.php?action=home');
+        header('Location: /projet-web-25-26/index.php?action=home');
         exit;
     }
 
@@ -306,10 +306,10 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -318,7 +318,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'admin-community-report-details') {
     if (!$isAdminSession) {
-        header('Location: /Web/index.php?action=home');
+        header('Location: /projet-web-25-26/index.php?action=home');
         exit;
     }
 
@@ -326,10 +326,10 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -338,7 +338,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'admin-community-review-post') {
     if (!$isAdminSession) {
-        header('Location: /Web/index.php?action=home');
+        header('Location: /projet-web-25-26/index.php?action=home');
         exit;
     }
 
@@ -346,10 +346,10 @@ if ($action === 'home') {
     $isAdminTemplate = true;
     $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
     $additionalStylesheets = [
-        '/Web/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
     ];
     $additionalScripts = [
-        '/Web/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
     ];
     define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
@@ -368,7 +368,7 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'planner-management') {
-    header('Location: /Web/index.php?action=nutrition_dashboard');
+    header('Location: /projet-web-25-26/index.php?action=nutrition_dashboard');
     exit;
 
 } else {
@@ -453,7 +453,7 @@ if ($action === 'home') {
         } else {
             $fallbackAction = 'login';
         }
-        header('Location: /Web/index.php?action=' . $fallbackAction);
+        header('Location: /projet-web-25-26/index.php?action=' . $fallbackAction);
         exit;
     }
 
@@ -469,3 +469,4 @@ if ($action === 'home') {
 
     $controller->$action();
 }
+

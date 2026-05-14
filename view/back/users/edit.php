@@ -1,4 +1,4 @@
-<div class="container admin-page admin-form-page">
+﻿<div class="container admin-page admin-form-page">
     <?php $editableUser = is_array($user ?? null) ? $user : []; ?>
     <?php $editableRoleSlug = (string) ($editableUser['role'] ?? 'user'); ?>
     <?php $isEditingAdmin = $editableRoleSlug === 'admin'; ?>
@@ -16,7 +16,7 @@
         </div>
     <?php endif; ?>
 
-    <form method="POST" action="/Web/index.php?action=update-user" novalidate>
+    <form method="POST" action="/projet-web-25-26/index.php?action=update-user" novalidate>
         <input type="hidden" name="id" value="<?= (int) ($editableUser['id'] ?? 0) ?>">
 
         <div class="field">
@@ -74,6 +74,7 @@
     </form>
 
     <div class="actions">
-        <a href="/Web/index.php?action=users-list" class="btn secondary">Retour a la liste</a>
+        <a href="/projet-web-25-26/index.php?action=users-list" class="btn secondary">Retour a la liste</a>
     </div>
 </div>
+

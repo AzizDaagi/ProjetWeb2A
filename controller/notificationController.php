@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../model/connection.php';
+require_once __DIR__ . '/../model/Connection.php';
 require_once __DIR__ . '/../model/Notification.php';
 
 header('Content-Type: application/json');

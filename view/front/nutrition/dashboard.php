@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -85,8 +85,9 @@
         </div>
     </div>
 
-<script src="/Web/view/front/assets/js/theme.js"></script>
+<script src="/projet-web-25-26/view/front/assets/js/theme.js"></script>
     <script src="view/front/assets/js/nutrition-dashboard.js"></script>
 </body>
 
 </html>
+

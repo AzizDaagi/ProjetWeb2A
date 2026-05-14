@@ -4,11 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-    header('Location: /Web/index.php?action=login');
+    header('Location: /projet-web-25-26/index.php?action=login');
     exit;
 }
 if (!defined('SMART_ADMIN_VIEW')) {
-    $target = '/Web/index.php?action=admin-community-review-post';
+    $target = '/projet-web-25-26/index.php?action=admin-community-review-post';
     if (isset($_GET['report_id'])) {
         $target .= '&report_id=' . urlencode((string) $_GET['report_id']);
     }
@@ -18,7 +18,7 @@ if (!defined('SMART_ADMIN_VIEW')) {
     header('Location: ' . $target);
     exit;
 }
-require_once __DIR__ . '/../../model/connection.php';
+require_once __DIR__ . '/../../model/Connection.php';
 require_once __DIR__ . '/../../model/Post.php';
 require_once __DIR__ . '/../../model/Comment.php';
 
@@ -39,7 +39,7 @@ function resolvePostImageSrcForReview($image)
         return null;
     }
 
-    if (strpos($image, '/Web/view/post_uploads/posts/') === 0) {
+    if (strpos($image, '/projet-web-25-26/view/post_uploads/posts/') === 0) {
         return $image;
     }
 
@@ -72,7 +72,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
 
             <?php if ($report): ?>
                 <div class="review-topbar">
-                    <a href="/Web/index.php?action=admin-community-report-details&id=<?= (int) $report['id'] ?>" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour au signalement</a>
+                    <a href="/projet-web-25-26/index.php?action=admin-community-report-details&id=<?= (int) $report['id'] ?>" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour au signalement</a>
                     <span class="status-pill status-<?= htmlspecialchars($report['status'] ?: 'pending') ?>">
                         Signalement <?= htmlspecialchars(($report['status'] ?? 'pending') === 'resolved' ? 'resolu' : 'en attente') ?>
                     </span>
@@ -211,7 +211,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             <?php endif; ?>
         </div>
 
-    <script src="/Web/view/back/style/community.js"></script>
+    <script src="/projet-web-25-26/view/back/style/community.js"></script>
     <script>
         let reviewImageToRemove = false;
 
@@ -251,7 +251,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 return;
             }
 
-            fetch('/Web/controller/commentController.php?action=admin_update', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=admin_update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -273,7 +273,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
         function deleteReviewComment(commentId) {
             if (!confirm('Supprimer definitivement ce commentaire ?')) return;
 
-            fetch('/Web/controller/commentController.php?action=admin_delete', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=admin_delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -310,7 +310,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
                 formData.append('image', imageInput.files[0]);
             }
 
-            fetch('/Web/controller/postController.php?action=update', {
+            fetch('/projet-web-25-26/controller/postController.php?action=update', {
                     method: 'POST',
                     body: formData
                 })
@@ -328,7 +328,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
         function deleteReviewedPost(postId) {
             if (!confirm("Supprimer definitivement cette publication ?")) return;
 
-            fetch('/Web/controller/postController.php?action=delete', {
+            fetch('/projet-web-25-26/controller/postController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -350,7 +350,7 @@ $postImageSrc = $post ? resolvePostImageSrcForReview($post['image'] ?? null) : n
             const noteField = document.getElementById('review-resolution-note');
             const reviewNote = noteField ? noteField.value.trim() : '';
 
-            fetch('/Web/view/back/report_resolve.php', {
+            fetch('/projet-web-25-26/view/back/report_resolve.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

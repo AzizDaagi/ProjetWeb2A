@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,7 @@
     <title><?= $pageTitle ?? 'Smart Nutrition' ?></title>
     <?php $assetVersion = time(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/Web/view/assets/style.css?v=<?= $assetVersion ?>">
+    <link rel="stylesheet" href="/projet-web-25-26/view/assets/style.css?v=<?= $assetVersion ?>">
     <?php if (!empty($additionalStylesheets) && is_array($additionalStylesheets)): ?>
         <?php foreach ($additionalStylesheets as $stylesheet): ?>
             <link rel="stylesheet" href="<?= htmlspecialchars($stylesheet, ENT_QUOTES, 'UTF-8') ?>">
@@ -32,3 +32,4 @@
     <?php endif; ?>
 
     <main class="main-content">
+

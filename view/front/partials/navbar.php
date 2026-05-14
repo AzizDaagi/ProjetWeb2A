@@ -1,5 +1,5 @@
-<?php
-$baseUrl = '/Web';
+﻿<?php
+$baseUrl = '/projet-web-25-26';
 $currentAction = (string) ($_GET['action'] ?? '');
 $currentController = (string) ($_GET['controller'] ?? '');
 $showNutritionSubnav = in_array($currentAction, [
@@ -33,7 +33,7 @@ $showNutritionSubnav = in_array($currentAction, [
             class="brand-link"
             style="background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important;">
             <img
-                src="/Web/view/back/assets/images/smart-nutrition-logo.png"
+                src="/projet-web-25-26/view/back/assets/images/smart-nutrition-logo.png"
                 alt="Smart Nutrition"
                 class="brand-logo navbar-preview-logo"
                 style="background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important;"
@@ -104,3 +104,4 @@ $showNutritionSubnav = in_array($currentAction, [
 <?php endif; ?>
 
 <?php require __DIR__ . '/chatbot_widget.php'; ?>
+

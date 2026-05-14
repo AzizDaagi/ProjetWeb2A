@@ -1,4 +1,4 @@
-function initCommunityPage() {
+﻿function initCommunityPage() {
     [
         initBackofficeTables,
         initThemeToggle,
@@ -269,7 +269,7 @@ function initNotifications() {
 }
 
 function triggerModerationJobs() {
-    fetch('/Web/controller/moderationJobController.php', {
+    fetch('/projet-web-25-26/controller/moderationJobController.php', {
         method: 'POST',
         cache: 'no-store'
     })
@@ -472,7 +472,7 @@ function initAnimatedBackground() {
     var height = 0;
     var particles = [];
     var foodParticles = [];
-    var foodIcons = ['🍎', '🥕', '🥦', '🍌', '🥗', '🍇', '🥑', '🍓'];
+    var foodIcons = ['ðŸŽ', 'ðŸ¥•', 'ðŸ¥¦', 'ðŸŒ', 'ðŸ¥—', 'ðŸ‡', 'ðŸ¥‘', 'ðŸ“'];
     var time = 0;
 
     function resize() {
@@ -760,4 +760,5 @@ if (document.readyState === 'loading') {
 } else {
     initNewsCarousel();
 }
+
 

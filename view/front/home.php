@@ -1,4 +1,4 @@
-<div class="hero-wrapper">
+﻿<div class="hero-wrapper">
     <div class="cycle-diagram">
         <svg class="orbit-ring" viewBox="0 0 400 400">
             <circle cx="200" cy="200" r="140" class="ring-track" />
@@ -70,7 +70,7 @@
         id="homeWeatherCard"
         class="home-weather-card is-loading"
         data-weather-card="true"
-        data-weather-endpoint="/Web/index.php?action=weather-sport"
+        data-weather-endpoint="/projet-web-25-26/index.php?action=weather-sport"
         aria-live="polite"
     >
         <div class="home-weather-head">
@@ -88,7 +88,7 @@
                 </div>
                 <div>
                     <p class="home-weather-location" id="homeWeatherLocation">Localisation en cours...</p>
-                    <p class="home-weather-temp" id="homeWeatherTemp">--.-°C</p>
+                    <p class="home-weather-temp" id="homeWeatherTemp">--.-Â°C</p>
                     <p class="home-weather-condition" id="homeWeatherCondition">Recherche de la meteo actuelle...</p>
                 </div>
             </div>
@@ -96,7 +96,7 @@
             <div class="home-weather-stats">
                 <div class="home-weather-stat">
                     <span>Ressenti</span>
-                    <strong id="homeWeatherFeelsLike">--.-°C</strong>
+                    <strong id="homeWeatherFeelsLike">--.-Â°C</strong>
                 </div>
                 <div class="home-weather-stat">
                     <span>Humidite</span>
@@ -119,3 +119,4 @@
         </div>
     </section>
 </div>
+
