@@ -1,0 +1,51 @@
+<section class="products-shell">
+    <div class="section-heading">
+        <div>
+            <p class="section-kicker">Commande</p>
+            <h1><i class="fa-solid fa-pen icon"></i> Modifier commande</h1>
+        </div>
+        <a href="/projet-web-25-26/index.php?action=order-list" class="btn section-action">Retour</a>
+    </div>
+
+    <?php if (!empty($error ?? '')): ?>
+        <div class="alert alert-error"><?= htmlspecialchars((string) $error) ?></div>
+    <?php endif; ?>
+
+    <div class="admin-form-panel order-front-panel">
+        <form method="POST" class="product-form admin-product-form" novalidate>
+            <div class="field">
+                <label for="product_id">Produit</label>
+                <select id="product_id" name="product_id">
+                    <?php foreach ($products as $item): ?>
+                        <option value="<?= (int) $item['id'] ?>" <?= (int) ($order['product_id'] ?? 0) === (int) $item['id'] ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($item['name']) ?> - <?= htmlspecialchars((string) $item['price']) ?> DT
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="buyer_name">Nom complet</label>
+                    <input id="buyer_name" name="buyer_name" value="<?= htmlspecialchars((string) ($order['buyer_name'] ?? '')) ?>">
+                </div>
+                <div class="field">
+                    <label for="buyer_phone">Telephone</label>
+                    <input id="buyer_phone" name="buyer_phone" value="<?= htmlspecialchars((string) ($order['buyer_phone'] ?? '')) ?>">
+                </div>
+            </div>
+            <div class="field">
+                <label for="buyer_email">Email</label>
+                <input id="buyer_email" name="buyer_email" type="email" value="<?= htmlspecialchars((string) ($order['buyer_email'] ?? '')) ?>">
+            </div>
+            <div class="field">
+                <label for="buyer_address">Adresse</label>
+                <textarea id="buyer_address" name="buyer_address"><?= htmlspecialchars((string) ($order['buyer_address'] ?? '')) ?></textarea>
+            </div>
+            <div class="field">
+                <label for="quantity">Quantite</label>
+                <input id="quantity" name="quantity" value="<?= htmlspecialchars((string) ($order['quantity'] ?: 1)) ?>">
+            </div>
+            <button type="submit"><i class="fa-solid fa-floppy-disk icon success"></i> Enregistrer</button>
+        </form>
+    </div>
+</section>

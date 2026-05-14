@@ -3,13 +3,13 @@
     <p class="subtitle">Acces rapide aux actions d'authentification.</p>
 
     <div class="actions">
-        <a class="btn" href="/smart_nutritionn/gestionActiviteesportive/index.php?action=login">
+        <a class="btn" href="/projet-web-25-26/index.php?action=login">
             <i class="fa-solid fa-lock"></i> Connexion
         </a>
-        <a class="btn" href="/smart_nutritionn/gestionActiviteesportive/index.php?action=register">
+        <a class="btn" href="/projet-web-25-26/index.php?action=register">
             <i class="fa-solid fa-user-plus"></i> Inscription
         </a>
-        <a class="btn btn-accent" href="/smart_nutritionn/gestionActiviteesportive/index.php?action=logout">
+        <a class="btn btn-accent" href="/projet-web-25-26/index.php?action=logout">
             <i class="fa-solid fa-sign-out-alt"></i> Deconnexion
         </a>
     </div>

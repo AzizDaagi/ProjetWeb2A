@@ -2,6 +2,10 @@
 
 session_start();
 
+if (file_exists(__DIR__ . '/env.php')) {
+    require_once __DIR__ . '/env.php';
+}
+
 $envFile = __DIR__ . '/.env';
 if (file_exists($envFile)) {
     $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -26,6 +30,11 @@ require_once __DIR__ . '/model/Database.php';
 require_once __DIR__ . '/controller/AuthController.php';
 require_once __DIR__ . '/controller/UserController.php';
 require_once __DIR__ . '/controller/WeatherController.php';
+require_once __DIR__ . '/controller/ProduitController.php';
+require_once __DIR__ . '/controller/CartController.php';
+require_once __DIR__ . '/controller/CommandeController.php';
+
+// Controllers from gestionActiviteesportive feature
 require_once __DIR__ . '/controller/FrontController.php';
 require_once __DIR__ . '/controller/ActiviteController.php';
 require_once __DIR__ . '/controller/AdminController.php';
@@ -52,11 +61,108 @@ $action = $_GET['action'] ?? $defaultAction;
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
-    header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=login');
+    // Note: The path might need adjustment based on the environment, but keeping the master path
+    header('Location: /projet-web-25-26/index.php?action=login');
     exit;
 }
 
 $isAdminSession = isset($_SESSION['user_id']) && (($_SESSION['user_role'] ?? 'user') === 'admin');
+
+$adminOnlyActions = [
+    'admin-dashboard',
+    'users-list',
+    'users-search',
+    'users-report',
+    'edit-user',
+    'create-user',
+    'store-user',
+    'update-user',
+    'delete-user',
+    'auth-management',
+    'recommendations-management',
+    'admin-community',
+    'admin-community-reports',
+    'admin-community-report-details',
+    'admin-community-review-post',
+    'products-admin',
+    'product-create',
+    'product-edit',
+    'product-delete',
+    'products-pending',
+    'product-approve',
+    'products-prediction',
+    'products-predict',
+    'product-predict',
+    'admin-orders',
+    'admin-order-edit',
+    'admin-order-delete',
+    'admin-order-pdf',
+    // Activity admin actions
+    'admin_index',
+    'admin_show',
+    'createActivite',
+    'addExercice',
+    'editExercice',
+    'updateExercice',
+    'deleteExercice',
+    'editActivite',
+    'updateActivite',
+    'deleteActivite',
+    'admin_requests',
+    'admin_edit_request',
+    'admin_update_request',
+    'admin_delete_request',
+    'export_requests_pdf'
+];
+
+$clientOnlyActions = [
+    'home',
+    'profile',
+    'update-profile',
+    'save-face-descriptor',
+    'clear-face-descriptor',
+    'weather-sport',
+    'community',
+    'recipes-management',
+    'foods-management',
+    'product-submit',
+    'cart-add',
+    'cart-view',
+    'cart-update',
+    'cart-remove',
+    'cart-checkout',
+    'cart-process',
+    'cart-clear',
+    'order-create',
+    'order-list',
+    'order-edit',
+    'order-delete',
+    'tracking-management',
+    // Activity client actions
+    'activites',
+    'showExercices',
+    'export_activite_pdf',
+    'nutrition_request',
+    'process_nutrition_request',
+    'nutrition_success',
+    'my_nutrition_requests',
+    'edit_nutrition_request',
+    'update_nutrition_request',
+    'delete_nutrition_request',
+    'export_nutrition_pdf'
+];
+
+if (isset($_SESSION['user_id'])) {
+    if ($isAdminSession && in_array($action, $clientOnlyActions, true)) {
+        header('Location: /projet-web-25-26/index.php?action=admin-dashboard');
+        exit;
+    }
+
+    if (!$isAdminSession && in_array($action, $adminOnlyActions, true)) {
+        header('Location: /projet-web-25-26/index.php?action=home');
+        exit;
+    }
+}
 
 if ($action === 'home') {
     $pageTitle = 'Smart Nutrition - Accueil';
@@ -140,6 +246,10 @@ if ($action === 'home') {
     $user = new UserController();
     $user->usersList();
 
+} elseif ($action === 'users-search') {
+    $user = new UserController();
+    $user->usersSearch();
+
 } elseif ($action === 'users-report') {
     $user = new UserController();
     $user->usersReport();
@@ -189,25 +299,216 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'foods-management') {
-    $pageTitle = 'Ecommerce';
-    $moduleTitle = 'Ecommerce';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez gerer les produits, commandes et ventes.';
+    $products = new ProduitController();
+    $products->frontList();
+
+} elseif ($action === 'product-submit') {
+    $products = new ProduitController();
+    $products->frontCreate();
+
+} elseif ($action === 'products-admin') {
+    $products = new ProduitController();
+    $products->backList();
+
+} elseif ($action === 'product-create') {
+    $products = new ProduitController();
+    $products->create();
+
+} elseif ($action === 'product-edit') {
+    $products = new ProduitController();
+    $products->edit();
+
+} elseif ($action === 'product-delete') {
+    $products = new ProduitController();
+    $products->delete();
+
+} elseif ($action === 'products-pending') {
+    $products = new ProduitController();
+    $products->pending();
+
+} elseif ($action === 'product-approve') {
+    $products = new ProduitController();
+    $products->approve();
+
+} elseif ($action === 'products-prediction') {
+    $products = new ProduitController();
+    $products->predictionPanel();
+
+} elseif ($action === 'products-predict') {
+    $products = new ProduitController();
+    $products->formPredict();
+
+} elseif ($action === 'product-predict') {
+    $products = new ProduitController();
+    $products->predictProductStats();
+
+} elseif ($action === 'cart-add') {
+    $cart = new CartController();
+    $cart->add();
+
+} elseif ($action === 'cart-view') {
+    $cart = new CartController();
+    $cart->view();
+
+} elseif ($action === 'cart-update') {
+    $cart = new CartController();
+    $cart->update();
+
+} elseif ($action === 'cart-remove') {
+    $cart = new CartController();
+    $cart->remove();
+
+} elseif ($action === 'cart-checkout') {
+    $cart = new CartController();
+    $cart->checkoutForm();
+
+} elseif ($action === 'cart-process') {
+    $cart = new CartController();
+    $cart->checkout();
+
+} elseif ($action === 'cart-clear') {
+    $cart = new CartController();
+    $cart->clear();
+
+} elseif ($action === 'order-create') {
+    $orders = new CommandeController();
+    $orders->createFront();
+
+} elseif ($action === 'order-list') {
+    $orders = new CommandeController();
+    $orders->frontList();
+
+} elseif ($action === 'order-edit') {
+    $orders = new CommandeController();
+    $orders->editFront();
+
+} elseif ($action === 'order-delete') {
+    $orders = new CommandeController();
+    $orders->deleteFront();
+
+} elseif ($action === 'admin-orders') {
+    $orders = new CommandeController();
+    $orders->adminList();
+
+} elseif ($action === 'admin-order-edit') {
+    $orders = new CommandeController();
+    $orders->editAdmin();
+
+} elseif ($action === 'admin-order-delete') {
+    $orders = new CommandeController();
+    $orders->deleteAdmin();
+
+} elseif ($action === 'admin-order-pdf') {
+    $orders = new CommandeController();
+    $orders->downloadAdminPdf();
+
+} elseif ($action === 'community') {
     if ($isAdminSession) {
-        $isAdminTemplate = true;
+        header('Location: /projet-web-25-26/index.php?action=admin-community');
+        exit;
     }
+
+    $pageTitle = 'Smart Nutrition - Communauté';
+    $showNav = true;
+    $isAdminTemplate = false;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' front-community-page'));
+    $additionalStylesheets = [
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css'),
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+    ];
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/front/community.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'recommendations-management') {
-    $pageTitle = 'Communaute';
-    $moduleTitle = 'Communaute';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez gerer les interactions et les contenus de la communaute.';
     if ($isAdminSession) {
-        $isAdminTemplate = true;
+        header('Location: /projet-web-25-26/index.php?action=admin-community');
+        exit;
     }
+
+    header('Location: /projet-web-25-26/index.php?action=community');
+    exit;
+
+} elseif ($action === 'admin-community') {
+    if (!$isAdminSession) {
+        header('Location: /projet-web-25-26/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Communaute';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+    ];
+    $additionalScripts = [
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
     include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
+    include __DIR__ . '/view/back/community.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'admin-community-reports') {
+    if (!$isAdminSession) {
+        header('Location: /projet-web-25-26/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Signalements';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+    ];
+    $additionalScripts = [
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/back/reports.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'admin-community-report-details') {
+    if (!$isAdminSession) {
+        header('Location: /projet-web-25-26/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Details du signalement';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+    ];
+    $additionalScripts = [
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/back/report_details.php';
+    include __DIR__ . '/view/layouts/footer.php';
+
+} elseif ($action === 'admin-community-review-post') {
+    if (!$isAdminSession) {
+        header('Location: /projet-web-25-26/index.php?action=home');
+        exit;
+    }
+
+    $pageTitle = 'Back Office - Revision publication';
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page community-admin-page'));
+    $additionalStylesheets = [
+        '/projet-web-25-26/view/back/style/community.css?v=' . filemtime(__DIR__ . '/view/back/style/community.css')
+    ];
+    $additionalScripts = [
+        '/projet-web-25-26/view/back/style/community.js?v=' . filemtime(__DIR__ . '/view/back/style/community.js')
+    ];
+    define('SMART_ADMIN_VIEW', true);
+    include __DIR__ . '/view/layouts/header.php';
+    include __DIR__ . '/view/back/review_post.php';
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'tracking-management') {
@@ -226,15 +527,8 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'planner-management') {
-    $pageTitle = 'Planning';
-    $moduleTitle = 'Planning';
-    $moduleDescription = 'Module en cours de developpement. Vous pourrez planifier les activites et les objectifs.';
-    if ($isAdminSession) {
-        $isAdminTemplate = true;
-    }
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/front/modules/coming-soon.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    header('Location: /projet-web-25-26/index.php?action=nutrition_dashboard');
+    exit;
 
 } elseif ($action === 'activites') {
     $front = new FrontController();
@@ -341,11 +635,100 @@ if ($action === 'home') {
     $nutrition->delete();
 
 } else {
-    if (isset($_SESSION['user_id'])) {
-        $fallbackAction = (($_SESSION['user_role'] ?? 'user') === 'admin') ? 'admin-dashboard' : 'home';
-    } else {
-        $fallbackAction = 'login';
+    $controllerName = $_GET['controller'] ?? 'suivi';
+
+    if (!isset($_GET['controller']) && in_array($action, ['suivi', 'objectif', 'stats'], true)) {
+        $controllerName = $action;
     }
-    header('Location: /smart_nutritionn/gestionActiviteesportive/index.php?action=' . $fallbackAction);
-    exit;
+
+    if (!isset($_GET['controller']) && in_array($action, ['chatbot', 'clear_chat', 'clearChat'], true)) {
+        $controllerName = 'chatbot';
+    }
+
+    if (!isset($_GET['controller']) && $action === 'test_reminder') {
+        $controllerName = 'reminder';
+    }
+
+    if (!isset($_GET['controller']) && in_array($action, [
+        'nutrition_dashboard',
+        'nutrition_dashboard_summary',
+        'nutrition_health_score',
+        'nutrition_daily_recommendations',
+        'nutrition_weekly_analysis',
+        'nutrition_smart_reminder',
+    ], true)) {
+        $controllerName = 'nutritiondashboard';
+    }
+
+    if (!isset($_GET['controller']) && in_array($action, [
+        'nutrition_water_today',
+        'nutrition_water_add',
+    ], true)) {
+        $controllerName = 'suivi';
+    }
+
+    if (!isset($_GET['controller']) && in_array($action, [
+        'nutrition_external_lookup',
+        'nutrition_usda_lookup',
+    ], true)) {
+        $controllerName = 'aliment';
+    }
+
+    if (!isset($_GET['controller']) && in_array($action, [
+        'chrono_nutrition',
+        'chrono_profile_save',
+        'chrono_profile_get',
+        'chrono_optimal_timing',
+        'chrono_fasting_window',
+        'chrono_nutrient_timing',
+        'chrono_sleep_sync',
+    ], true)) {
+        $controllerName = 'chronoNutrition';
+    }
+
+    if (!isset($_GET['controller']) && in_array($action, [
+        'prediction_dashboard',
+        'prediction_weekly_trend',
+        'prediction_scenarios',
+        'prediction_goal_date',
+        'prediction_what_if',
+        'prediction_confidence',
+    ], true)) {
+        $controllerName = 'prediction';
+    }
+
+    $routes = [
+        'suivi' => 'suivictrl',
+        'aliment' => 'alimentctrl',
+        'objectif' => 'objectifctrl',
+        'backoffice' => 'BackofficeCtrl',
+        'stats' => 'statsCtrl',
+        'chatbot' => 'chatbotctrl',
+        'reminder' => 'ReminderController',
+        'nutritiondashboard' => 'NutritionDashboardController',
+        'chronoNutrition' => 'ChronoNutritionController',
+        'prediction' => 'PredictionController',
+    ];
+
+    if (!array_key_exists($controllerName, $routes)) {
+        if (isset($_SESSION['user_id'])) {
+            $fallbackAction = (($_SESSION['user_role'] ?? 'user') === 'admin') ? 'admin-dashboard' : 'home';
+        } else {
+            $fallbackAction = 'login';
+        }
+        header('Location: /projet-web-25-26/index.php?action=' . $fallbackAction);
+        exit;
+    }
+
+    $controllerClass = $routes[$controllerName];
+    require_once __DIR__ . "/controller/{$controllerClass}.php";
+
+    $pdo = Database::getConnection();
+    $controller = new $controllerClass($pdo);
+
+    if (!method_exists($controller, $action)) {
+        $action = 'index';
+    }
+
+    $controller->$action();
 }

@@ -10,7 +10,7 @@ class Database
         if (self::$connection === null) {
             $host = getenv('DB_HOST') ?: '127.0.0.1';
             $port = (int) (getenv('DB_PORT') ?: 3306);
-            $dbName = getenv('DB_NAME') ?: 'smart_nutrition_db';
+            $dbName = getenv('DB_NAME') ?: 'smart_nutrition';
             $username = getenv('DB_USER') ?: 'root';
             $password = getenv('DB_PASSWORD') ?: '';
             $charset = 'utf8mb4';
@@ -38,6 +38,7 @@ class Database
             self::ensureUserResetColumns();
             self::ensureUserFaceColumns();
             self::ensureNutritionRequestUserIdColumn();
+            self::ensureProductSchema();
             self::$schemaChecked = true;
         }
 
@@ -122,6 +123,66 @@ class Database
             if (!$stmt->fetch()) {
                 self::$connection->exec("ALTER TABLE users ADD COLUMN `{$column['name']}` {$column['definition']}");
             }
+        }
+    }
+
+    private static function ensureProductSchema()
+    {
+        self::$connection->exec("
+            CREATE TABLE IF NOT EXISTS produit (
+                id INT NOT NULL AUTO_INCREMENT,
+                name VARCHAR(255) DEFAULT NULL,
+                description TEXT DEFAULT NULL,
+                price DECIMAL(10,2) DEFAULT NULL,
+                calories INT DEFAULT NULL,
+                image VARCHAR(255) DEFAULT NULL,
+                added_by VARCHAR(100) DEFAULT NULL,
+                is_approved TINYINT(1) DEFAULT 1,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        ");
+
+        self::$connection->exec("
+            CREATE TABLE IF NOT EXISTS commande (
+                id INT NOT NULL AUTO_INCREMENT,
+                product_id INT DEFAULT NULL,
+                buyer_name VARCHAR(100) DEFAULT NULL,
+                buyer_phone VARCHAR(20) DEFAULT NULL,
+                buyer_address TEXT DEFAULT NULL,
+                quantity INT DEFAULT NULL,
+                total_price DECIMAL(10,2) DEFAULT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                buyer_email VARCHAR(255) DEFAULT NULL,
+                PRIMARY KEY (id),
+                KEY product_id (product_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        ");
+
+        self::ensureColumn('commande', 'buyer_email', 'ALTER TABLE commande ADD COLUMN buyer_email VARCHAR(255) DEFAULT NULL');
+
+        self::$connection->exec("
+            CREATE TABLE IF NOT EXISTS commande_item (
+                id INT NOT NULL AUTO_INCREMENT,
+                commande_id INT NOT NULL,
+                product_id INT NOT NULL,
+                quantity INT NOT NULL DEFAULT 1,
+                unit_price DECIMAL(10,2) NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                KEY idx_commande_id (commande_id),
+                KEY idx_product_id (product_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        ");
+    }
+
+    private static function ensureColumn(string $table, string $column, string $alterSql): void
+    {
+        $stmt = self::$connection->prepare("SHOW COLUMNS FROM `$table` LIKE :column_name");
+        $stmt->execute(['column_name' => $column]);
+
+        if (!$stmt->fetch()) {
+            self::$connection->exec($alterSql);
         }
     }
 
