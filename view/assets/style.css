@@ -2206,6 +2206,23 @@ button.admin-side-link {
     color: #ecf0f1;
 }
 
+.admin-side-section-title {
+    padding-left: 8px;
+}
+
+.admin-side-info-card h4 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    color: #ecf0f1;
+}
+
+.admin-side-info-card p {
+    margin: 0;
+    color: rgba(236, 240, 241, 0.78);
+    line-height: 1.45;
+    font-size: 12px;
+}
+
 .admin-module-description p {
     margin: 0;
     font-size: 12px;
@@ -2928,6 +2945,14 @@ body.theme-light .admin-module-description strong {
     color: rgba(244, 248, 253, 0.98);
 }
 
+body.theme-light .admin-side-info-card h4 {
+    color: rgba(244, 248, 253, 0.98);
+}
+
+body.theme-light .admin-side-info-card p {
+    color: rgba(244, 248, 253, 0.86);
+}
+
 body.theme-light .admin-module-description p {
     color: rgba(236, 244, 252, 0.88);
 }
@@ -3294,4 +3319,3 @@ body.theme-light .empty-state {
         height: 190px;
     }
 }
-

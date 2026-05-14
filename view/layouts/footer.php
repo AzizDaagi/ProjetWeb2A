@@ -32,8 +32,8 @@
 
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script async src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="/Web/view/assets/app.js?v=<?= $assetVersion ?>"></script>
-    <script src="/Web/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
+    <script src="/projet-web-25-26/view/assets/app.js?v=<?= $assetVersion ?>"></script>
+    <script src="/projet-web-25-26/view/assets/controlesaisie.js?v=<?= $assetVersion ?>"></script>
     <?php if (!empty($additionalScripts) && is_array($additionalScripts)): ?>
         <?php foreach ($additionalScripts as $scriptSrc): ?>
             <script src="<?= htmlspecialchars($scriptSrc, ENT_QUOTES, 'UTF-8') ?>"></script>

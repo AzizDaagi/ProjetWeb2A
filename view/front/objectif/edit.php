@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modifier le Plan Nutritionnel</title>
-    <link rel="stylesheet" href="/Web/view/assets/front/css/style.css">
+    <link rel="stylesheet" href="/projet-web-25-26/view/front/assets/css/style.css">
     <style>
         .objectif-form-grid {
             display: grid;
@@ -304,7 +304,7 @@
     </div>
 
     <?php require __DIR__ . '/../partials/chatbot_widget.php'; ?>
-<script src="/Web/view/assets/front/js/theme.js"></script>
+<script src="/projet-web-25-26/view/front/assets/js/theme.js"></script>
 </body>
 
 </html>

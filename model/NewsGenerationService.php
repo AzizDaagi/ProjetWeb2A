@@ -1,5 +1,5 @@
 <?php
-require_once '../model/HuggingFaceClient.php';
+require_once __DIR__ . '/HuggingFaceClient.php';
 
 class NewsGenerationService {
 

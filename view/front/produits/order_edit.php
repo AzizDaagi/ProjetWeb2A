@@ -4,7 +4,7 @@
             <p class="section-kicker">Commande</p>
             <h1><i class="fa-solid fa-pen icon"></i> Modifier commande</h1>
         </div>
-        <a href="/Web/index.php?action=order-list" class="btn section-action">Retour</a>
+        <a href="/projet-web-25-26/index.php?action=order-list" class="btn section-action">Retour</a>
     </div>
 
     <?php if (!empty($error ?? '')): ?>

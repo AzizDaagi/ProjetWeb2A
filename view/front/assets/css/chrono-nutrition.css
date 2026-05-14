@@ -1,7 +1,6 @@
 body {
     margin: 0;
     font-family: "Segoe UI", Arial, sans-serif;
-    background: #f8fafc;
     color: #1e293b;
 }
 
@@ -18,8 +17,20 @@ option {
     padding: 32px 20px 56px;
     background:
         radial-gradient(circle at top right, rgba(56, 189, 248, 0.08), transparent 28%),
-        radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 24%),
-        #f8fafc;
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 24%);
+}
+
+body.chrono-page-shell .bg-canvas {
+    z-index: 0 !important;
+}
+
+body.chrono-page-shell .navbar,
+body.chrono-page-shell .main-content,
+body.chrono-page-shell .footer,
+body.chrono-page-shell .theme-toggle-floating-wrap,
+body.chrono-page-shell .voice-control-dock {
+    position: relative;
+    z-index: 1;
 }
 
 .chrono-shell {
@@ -542,7 +553,6 @@ button:disabled {
 /* Dark Mode Styles */
 body.dark,
 body.theme-dark {
-    background: radial-gradient(circle at 50% 50%, rgba(30, 39, 46, 1) 0%, rgba(15, 19, 25, 1) 100%);
     color: #ecf0f1;
 }
 
@@ -550,8 +560,7 @@ body.dark .chrono-page,
 body.theme-dark .chrono-page {
     background:
         radial-gradient(circle at top right, rgba(56, 189, 248, 0.06), transparent 28%),
-        radial-gradient(circle at top left, rgba(34, 197, 94, 0.06), transparent 24%),
-        #1e272e;
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.06), transparent 24%);
 }
 
 body.dark option,

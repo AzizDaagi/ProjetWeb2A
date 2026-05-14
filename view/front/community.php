@@ -4,11 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /Web/index.php?action=login');
+    header('Location: /projet-web-25-26/index.php?action=login');
     exit;
 }
 
-require_once __DIR__ . '/../../model/connection.php';
+require_once __DIR__ . '/../../model/Connection.php';
 require_once __DIR__ . '/../../model/Post.php';
 require_once __DIR__ . '/../../model/Comment.php';
 require_once __DIR__ . '/../../model/News.php';
@@ -94,8 +94,8 @@ function resolvePostImageSrc($image)
         return null;
     }
 
-    if (strpos($image, '/Web/uploads/posts/') === 0 || strpos($image, '/Web/view/post_uploads/posts/') === 0) {
-        return str_replace('/Web/view/post_uploads/posts/', '/Web/uploads/posts/', $image);
+    if (strpos($image, '/projet-web-25-26/view/post_uploads/posts/') === 0) {
+        return $image;
     }
 
     return null;
@@ -209,7 +209,7 @@ function hasPostLocation($post)
             <?php $showAdminReturn = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'; ?>
             <?php if ($showAdminReturn): ?>
                 <div class="admin-return-bar mb-4">
-                    <a href="/Web/index.php?action=admin-dashboard" class="btn btn-outline-secondary">
+                    <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="btn btn-outline-secondary">
                         <i class="fa-solid fa-arrow-left"></i> Retour au tableau de bord admin
                     </a>
                 </div>
@@ -229,7 +229,7 @@ function hasPostLocation($post)
                             <?php endforeach; ?>
                         </select>
                         <input type="text" id="new-title" class="form-control mb-2" placeholder="Titre de votre publication">
-                        <textarea id="new-content" class="form-control" rows="3" placeholder="Écrivez votre message ici..."></textarea>
+                        <textarea id="new-content" class="form-control" rows="3" placeholder="Ã‰crivez votre message ici..."></textarea>
                         <div class="product-analysis-box mt-3">
                             <label class="form-label" for="product-query">Analyse nutritionnelle (optionnel)</label>
                             <div class="product-analysis-controls">
@@ -685,7 +685,7 @@ function hasPostLocation($post)
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="/Web/view/assets/back/style/community.js?v=<?= filemtime(__DIR__ . '/../assets/back/style/community.js') ?>"></script>
+    <script src="/projet-web-25-26/view/back/style/community.js?v=<?= filemtime(__DIR__ . '/../back/style/community.js') ?>"></script>
     <script>
         let currentProductAnalysis = null;
         const frontPostMaps = {};
@@ -846,7 +846,7 @@ function hasPostLocation($post)
             resultBox.className = 'product-analysis-result is-loading';
             resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyse du produit en cours...';
 
-            fetch('/Web/controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
+            fetch('/projet-web-25-26/controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
                     cache: 'no-store'
                 })
                 .then(res => res.json())
@@ -887,7 +887,7 @@ function hasPostLocation($post)
             resultBox.className = 'product-analysis-result is-loading';
             resultBox.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analyse du produit en cours...';
 
-            fetch('/Web/controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
+            fetch('/projet-web-25-26/controller/productAnalysisController.php?q=' + encodeURIComponent(query), {
                     cache: 'no-store'
                 })
                 .then(res => res.json())
@@ -1075,7 +1075,7 @@ function hasPostLocation($post)
                     formData.append('image', imageInput.files[0]);
                 }
 
-                fetch('/Web/controller/postController.php?action=create', {
+                fetch('/projet-web-25-26/controller/postController.php?action=create', {
                         method: 'POST',
                         body: formData
                     })
@@ -1101,10 +1101,10 @@ function hasPostLocation($post)
         let imageToRemove = {};
 
         function removeImage(id) {
-            if (confirm("Supprimer définitivement l'image ?")) {
+            if (confirm("Supprimer dÃ©finitivement l'image ?")) {
                 imageToRemove[id] = true;
                 const container = document.getElementById(`post-image-container-${id}`);
-                container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image supprimée (sera effacée à l\'enregistrement)</small>';
+                container.innerHTML = '<small class="text-success"><i class="fas fa-check-circle"></i> Image supprimÃ©e (sera effacÃ©e Ã  l\'enregistrement)</small>';
             }
         }
 
@@ -1130,7 +1130,7 @@ function hasPostLocation($post)
                 formData.append('image', imageInput.files[0]);
             }
 
-            fetch('/Web/controller/postController.php?action=update', {
+            fetch('/projet-web-25-26/controller/postController.php?action=update', {
                     method: 'POST',
                     body: formData
                 })
@@ -1150,7 +1150,7 @@ function hasPostLocation($post)
         function deletePost(id) {
             if (!confirm("Voulez-vous vraiment supprimer cette publication ?")) return;
 
-            fetch('/Web/controller/postController.php?action=delete', {
+            fetch('/projet-web-25-26/controller/postController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1167,7 +1167,7 @@ function hasPostLocation($post)
         }
 
         function reactToPost(postId, reactionType) {
-            fetch('/Web/controller/postController.php?action=react', {
+            fetch('/projet-web-25-26/controller/postController.php?action=react', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1222,7 +1222,7 @@ function hasPostLocation($post)
         }
 
         function likeComment(commentId) {
-            fetch('/Web/controller/commentController.php?action=like', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=like', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1263,7 +1263,7 @@ function hasPostLocation($post)
             const reason = reasonField.value;
             const details = detailsField.value.trim();
 
-            fetch('/Web/controller/postController.php?action=report', {
+            fetch('/projet-web-25-26/controller/postController.php?action=report', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1310,9 +1310,9 @@ function hasPostLocation($post)
 
         function addComment(postId) {
             const content = document.getElementById(`comment-content-${postId}`).value.trim();
-            if (!content) return alert("Le commentaire ne peut pas être vide");
+            if (!content) return alert("Le commentaire ne peut pas Ãªtre vide");
 
-            fetch('/Web/controller/commentController.php?action=add', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1351,7 +1351,7 @@ function hasPostLocation($post)
             const content = contentField.value.trim();
             if (!content) return alert("La reponse ne peut pas etre vide");
 
-            fetch('/Web/controller/commentController.php?action=add', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=add', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1374,9 +1374,9 @@ function hasPostLocation($post)
 
         function saveCommentEdit(id) {
             const content = document.getElementById(`edit-comment-text-${id}`).value;
-            if (!content.trim()) return alert("Le commentaire ne peut pas être vide");
+            if (!content.trim()) return alert("Le commentaire ne peut pas Ãªtre vide");
 
-            fetch('/Web/controller/commentController.php?action=update', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1396,14 +1396,14 @@ function hasPostLocation($post)
                     }
                 })
                 .catch(() => {
-                    alert("Erreur réseau ou serveur");
+                    alert("Erreur rÃ©seau ou serveur");
                 });
         }
 
         function deleteComment(id) {
             if (!confirm("Supprimer ce commentaire ?")) return;
 
-            fetch('/Web/controller/commentController.php?action=delete', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -1430,7 +1430,7 @@ function hasPostLocation($post)
                 return;
             }
 
-            fetch(`/Web/controller/newsController.php?action=getById&id=${newsId}`)
+            fetch(`/projet-web-25-26/controller/newsController.php?action=getById&id=${newsId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {

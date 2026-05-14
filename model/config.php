@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'app_url' => getenv('APP_URL') ?: 'http://localhost/Web',
+    'app_url' => getenv('APP_URL') ?: 'http://localhost/projet-web-25-26',
     'firebase_web_api_key' => getenv('FIREBASE_WEB_API_KEY') ?: '',
     'firebase_project_id' => getenv('FIREBASE_PROJECT_ID') ?: '',
     'weather_default_lat' => (float) (getenv('WEATHER_DEFAULT_LAT') ?: 36.8065),

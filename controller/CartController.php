@@ -35,7 +35,7 @@ class CartController
 
         Cart::addItem($productId, (int) $quantityRaw, (float) $product['price']);
         $_SESSION['success'] = 'Produit ajoute au panier.';
-        header('Location: /Web/index.php?action=cart-view');
+        header('Location: /projet-web-25-26/index.php?action=cart-view');
         exit;
     }
 
@@ -59,7 +59,7 @@ class CartController
         $updates = $_POST['cart_update'] ?? [];
         if (!is_array($updates)) {
             $_SESSION['error'] = 'Panier invalide.';
-            header('Location: /Web/index.php?action=cart-view');
+            header('Location: /projet-web-25-26/index.php?action=cart-view');
             exit;
         }
 
@@ -71,7 +71,7 @@ class CartController
         }
 
         $_SESSION['success'] = 'Panier mis a jour.';
-        header('Location: /Web/index.php?action=cart-view');
+        header('Location: /projet-web-25-26/index.php?action=cart-view');
         exit;
     }
 
@@ -79,7 +79,7 @@ class CartController
     {
         Cart::removeItem((int) ($_GET['product_id'] ?? 0));
         $_SESSION['success'] = 'Produit retire du panier.';
-        header('Location: /Web/index.php?action=cart-view');
+        header('Location: /projet-web-25-26/index.php?action=cart-view');
         exit;
     }
 
@@ -87,7 +87,7 @@ class CartController
     {
         if (Cart::isEmpty()) {
             $_SESSION['error'] = 'Votre panier est vide.';
-            header('Location: /Web/index.php?action=foods-management');
+            header('Location: /projet-web-25-26/index.php?action=foods-management');
             exit;
         }
 
@@ -110,7 +110,7 @@ class CartController
 
         if (Cart::isEmpty()) {
             $_SESSION['error'] = 'Votre panier est vide.';
-            header('Location: /Web/index.php?action=foods-management');
+            header('Location: /projet-web-25-26/index.php?action=foods-management');
             exit;
         }
 
@@ -153,7 +153,7 @@ class CartController
         }
 
         Cart::clear();
-        header('Location: /Web/index.php?action=order-list&created=1');
+        header('Location: /projet-web-25-26/index.php?action=order-list&created=1');
         exit;
     }
 
@@ -161,7 +161,7 @@ class CartController
     {
         Cart::clear();
         $_SESSION['success'] = 'Panier vide.';
-        header('Location: /Web/index.php?action=foods-management');
+        header('Location: /projet-web-25-26/index.php?action=foods-management');
         exit;
     }
 
@@ -175,7 +175,7 @@ class CartController
 
     private function redirectBack(): void
     {
-        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/Web/index.php?action=foods-management'));
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/projet-web-25-26/index.php?action=foods-management'));
         exit;
     }
 }

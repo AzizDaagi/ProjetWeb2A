@@ -1,8 +1,8 @@
 <?php
-require_once '../model/News.php';
-require_once '../model/Connection.php';
-require_once '../model/NewsGenerationService.php';
-require_once '../model/InputValidator.php';
+require_once __DIR__ . '/../model/News.php';
+require_once __DIR__ . '/../model/Connection.php';
+require_once __DIR__ . '/../model/NewsGenerationService.php';
+require_once __DIR__ . '/../model/InputValidator.php';
 
 class NewsController {
 

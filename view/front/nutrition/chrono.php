@@ -1,8 +1,8 @@
-<div class="chrono-page">
+<section class="chrono-page">
     <div class="chrono-shell">
         <section class="chrono-hero">
             <div class="chrono-hero__content">
-                <a href="index.php?action=objectif" class="chrono-back-link">
+                <a href="/projet-web-25-26/index.php?action=objectif" class="chrono-back-link">
                     Retour a mon objectif nutritionnel
                 </a>
                 <span class="chrono-hero-badge">Rythme circadien</span>
@@ -34,76 +34,76 @@
                         </select>
                     </div>
 
-                        <div class="chrono-field">
-                            <label for="wake_time">Heure de reveil</label>
-                            <input type="time" id="wake_time" name="wake_time">
-                        </div>
-
-                        <div class="chrono-field">
-                            <label for="sleep_time">Heure de coucher</label>
-                            <input type="time" id="sleep_time" name="sleep_time">
-                        </div>
-
-                        <div class="chrono-field">
-                            <label for="sleep_quality">Qualite du sommeil</label>
-                            <select id="sleep_quality" name="sleep_quality">
-                                <option value="bonne">Bonne</option>
-                                <option value="moyenne">Moyenne</option>
-                                <option value="mauvaise">Mauvaise</option>
-                            </select>
-                        </div>
-
-                        <div class="chrono-field">
-                            <label for="energy_peak">Pic d'energie</label>
-                            <select id="energy_peak" name="energy_peak">
-                                <option value="">Choisir</option>
-                                <option value="matin">Matin</option>
-                                <option value="apres_midi">Apres-midi</option>
-                                <option value="soir">Soir</option>
-                            </select>
-                        </div>
-
-                        <div class="chrono-field">
-                            <label for="energy_dip">Creux d'energie</label>
-                            <select id="energy_dip" name="energy_dip">
-                                <option value="aucun">Aucun</option>
-                                <option value="fin_matin">Fin de matinee</option>
-                                <option value="apres_midi">Apres-midi</option>
-                                <option value="soir">Soir</option>
-                            </select>
-                        </div>
-
-                        <div class="chrono-field">
-                            <label for="workout_time">Heure habituelle de sport</label>
-                            <select id="workout_time" name="workout_time">
-                                <option value="aucun">Aucun</option>
-                                <option value="matin">Matin</option>
-                                <option value="midi">Midi</option>
-                                <option value="apres_midi">Apres-midi</option>
-                                <option value="soir">Soir</option>
-                            </select>
-                        </div>
-
-                        <div class="chrono-field">
-                            <label for="last_caffeine_time">Dernier cafe</label>
-                            <select id="last_caffeine_time" name="last_caffeine_time">
-                                <option value="aucun">Aucun</option>
-                                <option value="avant_12h">Avant 12h</option>
-                                <option value="12_14h">12h-14h</option>
-                                <option value="14_17h">14h-17h</option>
-                                <option value="apres_17h">Apres 17h</option>
-                            </select>
-                        </div>
-
-                        <div class="chrono-field">
-                            <label for="preferred_meals_count">Nombre de repas souhaite</label>
-                            <select id="preferred_meals_count" name="preferred_meals_count">
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                            </select>
-                        </div>
+                    <div class="chrono-field">
+                        <label for="wake_time">Heure de reveil</label>
+                        <input type="time" id="wake_time" name="wake_time">
                     </div>
+
+                    <div class="chrono-field">
+                        <label for="sleep_time">Heure de coucher</label>
+                        <input type="time" id="sleep_time" name="sleep_time">
+                    </div>
+
+                    <div class="chrono-field">
+                        <label for="sleep_quality">Qualite du sommeil</label>
+                        <select id="sleep_quality" name="sleep_quality">
+                            <option value="bonne">Bonne</option>
+                            <option value="moyenne">Moyenne</option>
+                            <option value="mauvaise">Mauvaise</option>
+                        </select>
+                    </div>
+
+                    <div class="chrono-field">
+                        <label for="energy_peak">Pic d'energie</label>
+                        <select id="energy_peak" name="energy_peak">
+                            <option value="">Choisir</option>
+                            <option value="matin">Matin</option>
+                            <option value="apres_midi">Apres-midi</option>
+                            <option value="soir">Soir</option>
+                        </select>
+                    </div>
+
+                    <div class="chrono-field">
+                        <label for="energy_dip">Creux d'energie</label>
+                        <select id="energy_dip" name="energy_dip">
+                            <option value="aucun">Aucun</option>
+                            <option value="fin_matin">Fin de matinee</option>
+                            <option value="apres_midi">Apres-midi</option>
+                            <option value="soir">Soir</option>
+                        </select>
+                    </div>
+
+                    <div class="chrono-field">
+                        <label for="workout_time">Heure habituelle de sport</label>
+                        <select id="workout_time" name="workout_time">
+                            <option value="aucun">Aucun</option>
+                            <option value="matin">Matin</option>
+                            <option value="midi">Midi</option>
+                            <option value="apres_midi">Apres-midi</option>
+                            <option value="soir">Soir</option>
+                        </select>
+                    </div>
+
+                    <div class="chrono-field">
+                        <label for="last_caffeine_time">Dernier cafe</label>
+                        <select id="last_caffeine_time" name="last_caffeine_time">
+                            <option value="aucun">Aucun</option>
+                            <option value="avant_12h">Avant 12h</option>
+                            <option value="12_14h">12h-14h</option>
+                            <option value="14_17h">14h-17h</option>
+                            <option value="apres_17h">Apres 17h</option>
+                        </select>
+                    </div>
+
+                    <div class="chrono-field">
+                        <label for="preferred_meals_count">Nombre de repas souhaite</label>
+                        <select id="preferred_meals_count" name="preferred_meals_count">
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div class="chrono-form-actions">
                     <button type="submit" id="saveProfile">Sauvegarder mon profil</button>
@@ -127,4 +127,4 @@
 
         <p id="chrono-disclaimer" class="chrono-disclaimer" hidden></p>
     </div>
-</div>
+</section>

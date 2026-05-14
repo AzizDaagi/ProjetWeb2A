@@ -4,7 +4,7 @@
             <p class="section-kicker">Commande rapide</p>
             <h1><i class="fa-solid fa-bag-shopping icon"></i> Commander</h1>
         </div>
-        <a href="/Web/index.php?action=foods-management" class="btn section-action">
+        <a href="/projet-web-25-26/index.php?action=foods-management" class="btn section-action">
             <i class="fa-solid fa-arrow-left"></i> Produits
         </a>
     </div>
@@ -14,7 +14,7 @@
     <?php endif; ?>
 
     <div class="admin-form-panel order-front-panel">
-        <form method="POST" action="/Web/index.php?action=order-create" class="product-form admin-product-form" novalidate>
+        <form method="POST" action="/projet-web-25-26/index.php?action=order-create" class="product-form admin-product-form" novalidate>
             <div class="field">
                 <label for="product_id">Produit</label>
                 <select id="product_id" name="product_id">

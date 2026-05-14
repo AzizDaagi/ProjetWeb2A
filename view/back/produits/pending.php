@@ -5,12 +5,12 @@
             <h1><i class="fa-solid fa-hourglass-half icon"></i> Produits en attente</h1>
             <p class="subtitle">Validation des produits proposes par les utilisateurs.</p>
         </div>
-        <a href="/Web/index.php?action=products-admin" class="btn-admin-secondary">
+        <a href="/projet-web-25-26/index.php?action=products-admin" class="btn-admin-secondary">
             <i class="fa-solid fa-arrow-left"></i> Retour
         </a>
     </div>
 
-    <form method="GET" action="/Web/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+    <form method="GET" action="/projet-web-25-26/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
         <input type="hidden" name="action" value="products-pending">
         <div class="field" style="min-width: 220px; flex: 1;">
             <label for="q">Recherche</label>
@@ -56,10 +56,10 @@
                             <td><?= htmlspecialchars((string) $row['calories']) ?> kcal</td>
                             <td><?= htmlspecialchars($row['added_by']) ?></td>
                             <td class="users-actions">
-                                <a href="/Web/index.php?action=product-approve&id=<?= (int) $row['id'] ?>" class="btn-edit">
+                                <a href="/projet-web-25-26/index.php?action=product-approve&id=<?= (int) $row['id'] ?>" class="btn-edit">
                                     <i class="fa-solid fa-check"></i> Approuver
                                 </a>
-                                <a href="/Web/index.php?action=product-delete&id=<?= (int) $row['id'] ?>&from=pending" class="btn-delete-user" onclick="return confirm('Rejeter ce produit ?');">
+                                <a href="/projet-web-25-26/index.php?action=product-delete&id=<?= (int) $row['id'] ?>&from=pending" class="btn-delete-user" onclick="return confirm('Rejeter ce produit ?');">
                                     <i class="fa-solid fa-xmark"></i> Rejeter
                                 </a>
                             </td>

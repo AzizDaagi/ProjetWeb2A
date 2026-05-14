@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Nutrition</title>
-    <link rel="stylesheet" href="/Web/view/assets/front/css/style.css">
-<script src="/Web/view/assets/app.js" defer></script>
+    <link rel="stylesheet" href="view/front/assets/css/style.css">
+<script src="/projet-web-25-26/view/assets/app.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
@@ -821,7 +821,7 @@
             <?php endif; ?>
 
             <div class="calorie-badge">
-                <span class="fire-icon">🔥</span>
+                <span class="fire-icon">ðŸ”¥</span>
                 <div>
                     <div class="calorie-value">
                         <?= round((float) $total) ?> kcal
@@ -1447,7 +1447,7 @@
         }
     </script>
     <?php require __DIR__ . '/../partials/chatbot_widget.php'; ?>
-<script src="/Web/view/assets/front/js/theme.js"></script>
+<script src="/projet-web-25-26/view/front/assets/js/theme.js"></script>
 </body>
 
 </html>

@@ -5,7 +5,7 @@
             <h1><i class="fa-solid fa-cart-shopping icon"></i> Panier</h1>
             <p class="subtitle">Verifiez vos produits avant la validation.</p>
         </div>
-        <a href="/Web/index.php?action=foods-management" class="btn section-action">
+        <a href="/projet-web-25-26/index.php?action=foods-management" class="btn section-action">
             <i class="fa-solid fa-arrow-left"></i> Continuer les achats
         </a>
     </div>
@@ -24,7 +24,7 @@
         </div>
     <?php else: ?>
         <div class="table-wrap">
-            <form method="POST" action="/Web/index.php?action=cart-update" novalidate>
+            <form method="POST" action="/projet-web-25-26/index.php?action=cart-update" novalidate>
                 <table class="users-table">
                     <thead>
                         <tr>
@@ -45,7 +45,7 @@
                                 </td>
                                 <td><?= number_format((float) $item['subtotal'], 2) ?> DT</td>
                                 <td>
-                                    <a href="/Web/index.php?action=cart-remove&product_id=<?= (int) $item['product_id'] ?>" class="btn-delete-user">
+                                    <a href="/projet-web-25-26/index.php?action=cart-remove&product_id=<?= (int) $item['product_id'] ?>" class="btn-delete-user">
                                         <i class="fa-solid fa-trash"></i> Retirer
                                     </a>
                                 </td>
@@ -59,10 +59,10 @@
                     <button type="submit" class="btn section-action">
                         <i class="fa-solid fa-rotate"></i> Mettre a jour
                     </button>
-                    <a href="/Web/index.php?action=cart-checkout" class="btn section-action">
+                    <a href="/projet-web-25-26/index.php?action=cart-checkout" class="btn section-action">
                         <i class="fa-solid fa-credit-card"></i> Valider
                     </a>
-                    <a href="/Web/index.php?action=cart-clear" class="btn section-action" onclick="return confirm('Vider le panier ?');">
+                    <a href="/projet-web-25-26/index.php?action=cart-clear" class="btn section-action" onclick="return confirm('Vider le panier ?');">
                         <i class="fa-solid fa-xmark"></i> Vider
                     </a>
                 </div>

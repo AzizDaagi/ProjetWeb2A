@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../model/connection.php';
+require_once __DIR__ . '/../model/Connection.php';
 require_once __DIR__ . '/../model/ModerationJob.php';
 require_once __DIR__ . '/../model/AiModeration.php';
 require_once __DIR__ . '/../model/ImageModeration.php';

@@ -80,7 +80,7 @@ class ProduitController
             $data['is_approved'] = 1;
             $this->model->create($data);
 
-            header('Location: /Web/index.php?action=products-admin');
+            header('Location: /projet-web-25-26/index.php?action=products-admin');
             exit;
         }
 
@@ -98,7 +98,7 @@ class ProduitController
         $product = $this->model->getById($id);
 
         if (!$product) {
-            header('Location: /Web/index.php?action=products-admin');
+            header('Location: /projet-web-25-26/index.php?action=products-admin');
             exit;
         }
 
@@ -115,7 +115,7 @@ class ProduitController
                 ]);
                 return;
             }
-            header('Location: /Web/index.php?action=products-admin');
+            header('Location: /projet-web-25-26/index.php?action=products-admin');
             exit;
         }
 
@@ -135,7 +135,7 @@ class ProduitController
         }
 
         $target = ($_GET['from'] ?? '') === 'pending' ? 'products-pending' : 'products-admin';
-        header('Location: /Web/index.php?action=' . $target);
+        header('Location: /projet-web-25-26/index.php?action=' . $target);
         exit;
     }
 
@@ -162,7 +162,7 @@ class ProduitController
             $data['is_approved'] = 0;
             $this->model->create($data);
 
-            header('Location: /Web/index.php?action=foods-management&submitted=1');
+            header('Location: /projet-web-25-26/index.php?action=foods-management&submitted=1');
             exit;
         }
 
@@ -198,7 +198,7 @@ class ProduitController
             $this->model->approve($id);
         }
 
-        header('Location: /Web/index.php?action=products-pending');
+        header('Location: /projet-web-25-26/index.php?action=products-pending');
         exit;
     }
 
@@ -231,7 +231,7 @@ class ProduitController
     public function formPredict(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /Web/index.php?action=products-prediction');
+            header('Location: /projet-web-25-26/index.php?action=products-prediction');
             exit;
         }
 
@@ -399,7 +399,7 @@ class ProduitController
 
     private function redirectPrediction(string $message, string $type): void
     {
-        header('Location: /Web/index.php?action=products-prediction&pred_message=' . urlencode($message) . '&pred_type=' . urlencode($type));
+        header('Location: /projet-web-25-26/index.php?action=products-prediction&pred_message=' . urlencode($message) . '&pred_type=' . urlencode($type));
         exit;
     }
 }

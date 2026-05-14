@@ -5,12 +5,12 @@
             <h1><i class="fa-solid fa-clipboard-list icon"></i> Commandes</h1>
             <p class="subtitle">Liste des commandes ecommerce.</p>
         </div>
-        <a href="/Web/index.php?action=products-admin" class="btn-admin-secondary">
+        <a href="/projet-web-25-26/index.php?action=products-admin" class="btn-admin-secondary">
             <i class="fa-solid fa-boxes-stacked"></i> Produits
         </a>
     </div>
 
-    <form method="GET" action="/Web/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+    <form method="GET" action="/projet-web-25-26/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
         <input type="hidden" name="action" value="admin-orders">
         <div class="field" style="min-width: 220px; flex: 1;">
             <label for="q">Recherche</label>
@@ -56,9 +56,9 @@
                             <td><?= number_format((float) $orderRow['total_price'], 2) ?> DT</td>
                             <td><?= htmlspecialchars((string) $orderRow['created_at']) ?></td>
                             <td class="users-actions">
-                                <a href="/Web/index.php?action=admin-order-pdf&id=<?= (int) $orderRow['id'] ?>" class="btn-edit"><i class="fa-solid fa-file-pdf"></i> PDF</a>
-                                <a href="/Web/index.php?action=admin-order-edit&id=<?= (int) $orderRow['id'] ?>" class="btn-edit">Modifier</a>
-                                <a href="/Web/index.php?action=admin-order-delete&id=<?= (int) $orderRow['id'] ?>" class="btn-delete-user" onclick="return confirm('Supprimer cette commande ?');">Supprimer</a>
+                                <a href="/projet-web-25-26/index.php?action=admin-order-pdf&id=<?= (int) $orderRow['id'] ?>" class="btn-edit"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+                                <a href="/projet-web-25-26/index.php?action=admin-order-edit&id=<?= (int) $orderRow['id'] ?>" class="btn-edit">Modifier</a>
+                                <a href="/projet-web-25-26/index.php?action=admin-order-delete&id=<?= (int) $orderRow['id'] ?>" class="btn-delete-user" onclick="return confirm('Supprimer cette commande ?');">Supprimer</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

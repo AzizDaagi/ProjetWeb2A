@@ -4,16 +4,16 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-    header('Location: /Web/index.php?action=login');
+    header('Location: /projet-web-25-26/index.php?action=login');
     exit;
 }
 
 if (!defined('SMART_ADMIN_VIEW')) {
-    header('Location: /Web/index.php?action=admin-community');
+    header('Location: /projet-web-25-26/index.php?action=admin-community');
     exit;
 }
 
-require_once __DIR__ . '/../../model/connection.php';
+require_once __DIR__ . '/../../model/Connection.php';
 require_once __DIR__ . '/../../model/Post.php';
 require_once __DIR__ . '/../../model/Comment.php';
 require_once __DIR__ . '/../../model/AiModeration.php';
@@ -49,8 +49,8 @@ function resolvePostImageSrc($image)
         return null;
     }
 
-    if (strpos($image, '/Web/uploads/posts/') === 0 || strpos($image, '/Web/view/post_uploads/posts/') === 0) {
-        return str_replace('/Web/view/post_uploads/posts/', '/Web/uploads/posts/', $image);
+    if (strpos($image, '/projet-web-25-26/view/post_uploads/posts/') === 0) {
+        return $image;
     }
 
     return null;
@@ -540,7 +540,7 @@ function getPostCategoryMeta($category)
                 formData.append('image', imageInput.files[0]);
             }
 
-            fetch('/Web/controller/postController.php?action=update', {
+            fetch('/projet-web-25-26/controller/postController.php?action=update', {
                     method: 'POST',
                     body: formData
                 })
@@ -557,7 +557,7 @@ function getPostCategoryMeta($category)
         function deletePost(id) {
             if (!confirm("Supprimer cette publication ?")) return;
 
-            fetch('/Web/controller/postController.php?action=delete', {
+            fetch('/projet-web-25-26/controller/postController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -586,7 +586,7 @@ function getPostCategoryMeta($category)
             const content = document.getElementById(`edit-comment-text-${id}`).value;
             if (!content.trim()) return alert("Le commentaire ne peut pas etre vide");
 
-            fetch('/Web/controller/commentController.php?action=admin_update', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=admin_update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -606,7 +606,7 @@ function getPostCategoryMeta($category)
         function deleteComment(id) {
             if (!confirm("Supprimer ce commentaire ?")) return;
 
-            fetch('/Web/controller/commentController.php?action=admin_delete', {
+            fetch('/projet-web-25-26/controller/commentController.php?action=admin_delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
