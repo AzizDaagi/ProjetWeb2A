@@ -915,7 +915,7 @@ public function showRegister($errors = [], $old = [])
  
 public function showForgotPassword($errors = [])
 {
-    $pageTitle = 'Mot de passe oubliÃ©';
+    $pageTitle = 'Mot de passe oublie';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/forgot.php';
@@ -923,7 +923,7 @@ public function showForgotPassword($errors = [])
 }
 public function showResetForm()
 {
-    $pageTitle = 'RÃ©initialiser mot de passe';
+    $pageTitle = 'Reinitialiser mot de passe';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/reset.php';

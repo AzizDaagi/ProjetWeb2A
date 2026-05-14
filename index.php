@@ -36,6 +36,7 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $action = $_GET['action'] ?? $defaultAction;
+$requestMethod = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
 
 $publicActions = ['login', 'register', 'face-login', 'google-login', 'forgot', 'reset-password'];
 if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
@@ -44,6 +45,52 @@ if (!isset($_SESSION['user_id']) && !in_array($action, $publicActions, true)) {
 }
 
 $isAdminSession = isset($_SESSION['user_id']) && (($_SESSION['user_role'] ?? 'user') === 'admin');
+$baseUrl = '/projet-web-25-26';
+
+$renderAdminFragment = static function (string $pageTitle, string $viewPath, array $vars = []) {
+    $isAdminTemplate = true;
+    $bodyClass = trim((string) (($vars['bodyClass'] ?? '') . ' admin-page-body'));
+    extract($vars, EXTR_SKIP);
+    require __DIR__ . '/view/layouts/header.php';
+    require $viewPath;
+    require __DIR__ . '/view/layouts/footer.php';
+};
+
+$normalizeAdminAlimentPayload = static function (array $source): ?array {
+    $nom = trim((string) ($source['nom'] ?? ''));
+    $calories = isset($source['calories']) ? (float) $source['calories'] : 0;
+    $proteines = isset($source['proteines']) ? (float) $source['proteines'] : 0;
+    $glucides = isset($source['glucides']) ? (float) $source['glucides'] : 0;
+    $lipides = isset($source['lipides']) ? (float) $source['lipides'] : 0;
+    $unite = (string) ($source['unite'] ?? 'g');
+    $type = (string) ($source['type'] ?? '');
+
+    if (
+        $nom === '' ||
+        $calories <= 0 ||
+        $proteines < 0 ||
+        $glucides < 0 ||
+        $lipides < 0 ||
+        !in_array($unite, ['g', 'piece'], true) ||
+        !in_array($type, ['proteine', 'glucide', 'lipide'], true)
+    ) {
+        $_SESSION['admin_aliment_error'] = 'Nom, calories, unite, type et macros valides sont obligatoires';
+        return null;
+    }
+
+    return [
+        'nom' => $nom,
+        'calories' => $calories,
+        'unite' => $unite,
+        'proteines' => $proteines,
+        'glucides' => $glucides,
+        'lipides' => $lipides,
+        'type' => $type,
+        'sucre_g' => isset($source['sucre_g']) ? (float) $source['sucre_g'] : 0,
+        'fibres' => isset($source['fibres']) ? (float) $source['fibres'] : 0,
+        'image_url' => trim((string) ($source['image_url'] ?? '')) ?: null,
+    ];
+};
 
 $adminOnlyActions = [
     'admin-dashboard',
@@ -61,8 +108,18 @@ $adminOnlyActions = [
     'admin-community-reports',
     'admin-community-report-details',
     'admin-community-review-post',
+    'admin-aliments',
+    'admin-aliment-create',
+    'admin-aliment-store',
+    'admin-aliment-edit',
+    'admin-aliment-update',
+    'admin-aliment-delete',
+    'admin-objectifs',
+    'admin-objectif-show',
+    'admin-objectif-delete',
     'admin-recipes',
     'admin-recommendations',
+    'admin-sport',
     'products-admin',
     'product-create',
     'product-edit',
@@ -102,6 +159,35 @@ $clientOnlyActions = [
     'clear-face-descriptor',
     'weather-sport',
     'community',
+    'suivi',
+    'objectif',
+    'stats',
+    'chatbot',
+    'clear_chat',
+    'clearChat',
+    'nutrition_dashboard',
+    'nutrition_dashboard_summary',
+    'nutrition_health_score',
+    'nutrition_daily_recommendations',
+    'nutrition_weekly_analysis',
+    'nutrition_smart_reminder',
+    'nutrition_water_today',
+    'nutrition_water_add',
+    'nutrition_external_lookup',
+    'nutrition_usda_lookup',
+    'chrono_nutrition',
+    'chrono_profile_save',
+    'chrono_profile_get',
+    'chrono_optimal_timing',
+    'chrono_fasting_window',
+    'chrono_nutrient_timing',
+    'chrono_sleep_sync',
+    'prediction_dashboard',
+    'prediction_weekly_trend',
+    'prediction_scenarios',
+    'prediction_goal_date',
+    'prediction_what_if',
+    'prediction_confidence',
     'recipes-management',
     'recipe-details',
     'recipe-details-aliment',
@@ -158,7 +244,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'login') {
     $auth = new AuthController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->login();
     } else {
         $auth->showLogin();
@@ -166,7 +252,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'face-login') {
     $auth = new AuthController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->loginWithFace();
     } else {
         $auth->showLogin();
@@ -174,7 +260,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'google-login') {
     $auth = new AuthController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->loginWithGoogle();
     } else {
         $auth->showLogin();
@@ -182,7 +268,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'register') {
     $auth = new AuthController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->register();
     } else {
         $auth->showRegister();
@@ -190,7 +276,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'forgot') {
     $auth = new AuthController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->forgotPassword();
     } else {
         $auth->showForgotPassword();
@@ -198,7 +284,7 @@ if ($action === 'home') {
 
 } elseif ($action === 'reset-password') {
     $auth = new AuthController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($requestMethod === 'POST') {
         $auth->performReset();
     } else {
         $auth->showResetForm();
@@ -264,21 +350,179 @@ if ($action === 'home') {
     $user = new UserController();
     $user->adminDashboard();
 
+} elseif ($action === 'admin-aliments') {
+    require_once __DIR__ . '/model/aliment.php';
+    $pageTitle = 'Gestion des aliments';
+    $db = Database::getConnection();
+    $aliments = [];
+    $alimentsError = null;
+
+    try {
+        $stmt = $db->query('SELECT * FROM aliments ORDER BY nom ASC');
+        $aliments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $alimentsError = $e->getMessage();
+    }
+
+    $renderAdminFragment($pageTitle, __DIR__ . '/view/back/aliments/index.php', compact('pageTitle', 'baseUrl', 'aliments', 'alimentsError'));
+
+} elseif ($action === 'admin-aliment-create') {
+    $pageTitle = 'Ajouter un aliment';
+    $aliment = $_SESSION['admin_aliment_old'] ?? [];
+    unset($_SESSION['admin_aliment_old']);
+    $renderAdminFragment($pageTitle, __DIR__ . '/view/back/aliments/create.php', compact('pageTitle', 'baseUrl', 'aliment'));
+
+} elseif ($action === 'admin-aliment-store') {
+    require_once __DIR__ . '/model/aliment.php';
+    $_SESSION['admin_aliment_old'] = $_POST;
+    $payload = $normalizeAdminAlimentPayload($_POST);
+    if ($payload === null) {
+        header('Location: ' . $baseUrl . '/index.php?action=admin-aliment-create');
+        exit;
+    }
+
+    $alimentModel = new Aliment(Database::getConnection());
+    $alimentModel->create($payload);
+    unset($_SESSION['admin_aliment_old']);
+    $_SESSION['admin_aliment_success'] = 'Aliment ajoute avec succes';
+    header('Location: ' . $baseUrl . '/index.php?action=admin-aliments');
+    exit;
+
+} elseif ($action === 'admin-aliment-edit') {
+    require_once __DIR__ . '/model/aliment.php';
+    $pageTitle = 'Modifier un aliment';
+    $alimentModel = new Aliment(Database::getConnection());
+    $aliment = !empty($_GET['id']) ? $alimentModel->getById($_GET['id']) : null;
+
+    if (!$aliment) {
+        $_SESSION['admin_aliment_error'] = 'Aliment introuvable';
+        header('Location: ' . $baseUrl . '/index.php?action=admin-aliments');
+        exit;
+    }
+
+    $oldInput = $_SESSION['admin_aliment_old'] ?? [];
+    unset($_SESSION['admin_aliment_old']);
+    if (!empty($oldInput) && (int) ($oldInput['id'] ?? 0) === (int) $aliment['id']) {
+        $aliment = array_merge($aliment, $oldInput);
+    }
+
+    $renderAdminFragment($pageTitle, __DIR__ . '/view/back/aliments/edit.php', compact('pageTitle', 'baseUrl', 'aliment'));
+
+} elseif ($action === 'admin-aliment-update') {
+    require_once __DIR__ . '/model/aliment.php';
+    $_SESSION['admin_aliment_old'] = $_POST;
+    $payload = $normalizeAdminAlimentPayload($_POST);
+    $id = (int) ($_POST['id'] ?? 0);
+
+    if ($payload === null || $id <= 0) {
+        header('Location: ' . $baseUrl . '/index.php?action=admin-aliment-edit&id=' . urlencode((string) $id));
+        exit;
+    }
+
+    $payload['id'] = $id;
+    $alimentModel = new Aliment(Database::getConnection());
+    $alimentModel->update($payload);
+    unset($_SESSION['admin_aliment_old']);
+    $_SESSION['admin_aliment_success'] = 'Aliment modifie avec succes';
+    header('Location: ' . $baseUrl . '/index.php?action=admin-aliments');
+    exit;
+
+} elseif ($action === 'admin-aliment-delete') {
+    require_once __DIR__ . '/model/aliment.php';
+    if (!empty($_GET['id'])) {
+        $alimentModel = new Aliment(Database::getConnection());
+        $alimentModel->delete($_GET['id']);
+        $_SESSION['admin_aliment_success'] = 'Aliment supprime avec succes';
+    }
+    header('Location: ' . $baseUrl . '/index.php?action=admin-aliments');
+    exit;
+
+} elseif ($action === 'admin-objectifs') {
+    require_once __DIR__ . '/model/ObjectifCalculatorService.php';
+    $pageTitle = 'Gestion des objectifs';
+    $db = Database::getConnection();
+    $objectifs = [];
+    $objectifsError = null;
+    $objectifCalculator = new ObjectifCalculatorService();
+
+    try {
+        $stmt = $db->query("
+            SELECT
+                o.*,
+                COALESCE(rc.repas_count, 0) AS repas_count
+            FROM objectif o
+            LEFT JOIN (
+                SELECT objectif_id, COUNT(*) AS repas_count
+                FROM repas_consomme
+                GROUP BY objectif_id
+            ) rc ON rc.objectif_id = o.id
+            ORDER BY o.id DESC
+        ");
+        $objectifs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($objectifs as &$objectif) {
+            $objectif['activite_label'] = $objectifCalculator->getActiviteLabel($objectif['activite'] ?? null);
+        }
+        unset($objectif);
+    } catch (Throwable $e) {
+        $objectifsError = $e->getMessage();
+    }
+
+    $sexeOptions = $objectifCalculator->getSexeOptions();
+    $objectifTypeOptions = $objectifCalculator->getObjectifTypeOptions();
+    $renderAdminFragment($pageTitle, __DIR__ . '/view/back/objectifs/index.php', compact('pageTitle', 'baseUrl', 'objectifs', 'objectifsError', 'sexeOptions', 'objectifTypeOptions'));
+
+} elseif ($action === 'admin-objectif-show') {
+    require_once __DIR__ . '/model/objectif.php';
+    require_once __DIR__ . '/model/ObjectifCalculatorService.php';
+    $pageTitle = 'Detail objectif';
+    $objectifModel = new Objectif(Database::getConnection());
+    $objectifCalculator = new ObjectifCalculatorService();
+    $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    $objectif = $id > 0 ? $objectifModel->getById($id) : null;
+
+    if (!$objectif) {
+        $_SESSION['admin_objectif_error'] = 'Objectif introuvable';
+        header('Location: ' . $baseUrl . '/index.php?action=admin-objectifs');
+        exit;
+    }
+
+    $objectifSummary = isset($objectif['poids'], $objectif['taille'], $objectif['age'], $objectif['sexe'], $objectif['activite'], $objectif['objectif_type'])
+        ? $objectifCalculator->calculateNutritionTargets($objectif)
+        : [];
+    $repasCount = $objectifModel->countLinkedMeals($id);
+    $sexeLabel = $objectifCalculator->getSexeLabel($objectif['sexe'] ?? 'homme');
+    $activiteLabel = $objectifCalculator->getActiviteLabel($objectif['activite'] ?? null);
+    $objectifTypeLabel = $objectifCalculator->getObjectifTypeLabel($objectif['objectif_type'] ?? 'maintien');
+    $renderAdminFragment($pageTitle, __DIR__ . '/view/back/objectifs/show.php', compact('pageTitle', 'baseUrl', 'objectif', 'objectifSummary', 'repasCount', 'sexeLabel', 'activiteLabel', 'objectifTypeLabel'));
+
+} elseif ($action === 'admin-objectif-delete') {
+    require_once __DIR__ . '/model/objectif.php';
+    $objectifModel = new Objectif(Database::getConnection());
+    $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    if ($id > 0) {
+        $deleted = $objectifModel->delete($id);
+        if ($deleted) {
+            $_SESSION['admin_objectif_success'] = 'Objectif supprime avec succes';
+        } else {
+            $_SESSION['admin_objectif_error'] = $objectifModel->getLastError() ?: "Impossible de supprimer l'objectif";
+        }
+    }
+    header('Location: ' . $baseUrl . '/index.php?action=admin-objectifs');
+    exit;
+
 } elseif ($action === 'admin-recipes') {
-    $pageTitle = 'Back Office - Recettes';
-    $isAdminTemplate = true;
-    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page recipes-admin-page'));
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/backoffice/manage_recettes.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->adminIndex();
 
 } elseif ($action === 'admin-recommendations') {
-    $pageTitle = 'Back Office - Recommandations';
-    $isAdminTemplate = true;
-    $bodyClass = trim((string) (($bodyClass ?? '') . ' backoffice-page recommendations-admin-page'));
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/backoffice/manage_recommandations.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecommandationController.php';
+    $recommendations = new RecommandationController(Database::getConnection());
+    $recommendations->adminIndex();
+
+} elseif ($action === 'admin-sport') {
+    $back = new ActiviteController();
+    $back->index();
 } elseif ($action === 'auth-management') {
     $pageTitle = 'Authentification';
     if ($isAdminSession) {
@@ -289,46 +533,44 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/footer.php';
 
 } elseif ($action === 'recipes-management') {
-    $pageTitle = 'Nos recettes';
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/liste_recettes.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->showRecipesManagement();
 
 } elseif ($action === 'recipe-details') {
-    $pageTitle = 'Detail recette';
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/details_recette.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->showRecipeDetails();
 
 } elseif ($action === 'recipe-details-aliment') {
-    $pageTitle = 'Detail aliment';
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/details_aliment.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->showAlimentDetails();
 
 } elseif ($action === 'recipe-generate') {
-    $pageTitle = 'Generation recette';
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/generate_recette.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->showGenerator();
 
 } elseif ($action === 'recipe-optimize') {
-    $pageTitle = 'Optimisation recette';
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/optimiser_recette.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->showOptimizer();
 
 } elseif ($action === 'recipe-save-optimization') {
-    include __DIR__ . '/view/frontoffice/save_optimisation.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->saveOptimization();
 
 } elseif ($action === 'recipe-stats') {
-    $pageTitle = 'Statistiques nutritionnelles';
-    include __DIR__ . '/view/layouts/header.php';
-    include __DIR__ . '/view/frontoffice/stats_nutrition.php';
-    include __DIR__ . '/view/layouts/footer.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->showStats();
 
 } elseif ($action === 'recipe-export') {
-    include __DIR__ . '/view/frontoffice/export_pdf.php';
+    require_once __DIR__ . '/controller/RecetteController.php';
+    $recipes = new RecetteController(Database::getConnection());
+    $recipes->exportPdf();
 } elseif ($action === 'foods-management') {
     $products = new ProduitController();
     $products->frontList();
@@ -728,11 +970,28 @@ if ($action === 'home') {
         $controllerName = 'prediction';
     }
 
+    if ($controllerName === 'backoffice') {
+        $legacyAdminActionMap = [
+            'suivi' => 'admin-aliments',
+            'suiviCreate' => 'admin-aliment-create',
+            'suiviStore' => 'admin-aliment-store',
+            'suiviEdit' => 'admin-aliment-edit',
+            'suiviUpdate' => 'admin-aliment-update',
+            'suiviDelete' => 'admin-aliment-delete',
+            'objectifs' => 'admin-objectifs',
+            'objectifShow' => 'admin-objectif-show',
+            'objectifDelete' => 'admin-objectif-delete',
+        ];
+        $legacyAction = (string) ($_GET['action'] ?? '');
+        $targetAction = $legacyAdminActionMap[$legacyAction] ?? 'admin-dashboard';
+        header('Location: ' . $baseUrl . '/index.php?action=' . $targetAction . (!empty($_GET['id']) ? '&id=' . urlencode((string) $_GET['id']) : ''));
+        exit;
+    }
+
     $routes = [
         'suivi' => 'suivictrl',
         'aliment' => 'alimentctrl',
         'objectif' => 'objectifctrl',
-        'backoffice' => 'BackofficeCtrl',
         'stats' => 'statsCtrl',
         'chatbot' => 'chatbotctrl',
         'reminder' => 'ReminderController',

@@ -1,534 +1,331 @@
 <?php
+
 require_once __DIR__ . '/../model/Recette.php';
+require_once __DIR__ . '/../model/aliment.php';
 require_once __DIR__ . '/../model/Database.php';
 
-class RecetteController {
-    private $db;
+class RecetteController
+{
+    private PDO $db;
+    private Recette $model;
+    private Aliment $alimentModel;
+    private string $baseUrl = '/projet-web-25-26';
 
-    public function __construct($pdo = null) {
-        $this->db = $pdo ?: Database::getConnection();
+    public function __construct($pdo = null)
+    {
+        $this->db = $pdo instanceof PDO ? $pdo : Database::getConnection();
+        $this->model = new Recette($this->db);
+        $this->alimentModel = new Aliment($this->db);
     }
 
-    public function listRecettes() {
-        $query = $this->db->query("SELECT * FROM recettes");
-        return $query->fetchAll(PDO::FETCH_ASSOC);
+    public function listRecettes(): array { return $this->model->getAll(); }
+    public function countRecettes(): int { return $this->model->countAll(); }
+    public function getLatestRecettes(int $limit = 5): array { return $this->model->getLatest($limit); }
+    public function getRecette($id): ?array { return $this->model->getById((int) $id); }
+    public function getAlimentsByRecette($recetteId): array { return $this->model->getIngredientsByRecette((int) $recetteId); }
+    public function addRecette($nom, $description, $tempsPreparation, $difficulte, $imageUrl = null, $alimentsQuantites = []): bool
+    {
+        return $this->model->create([
+            'nom' => $nom,
+            'description' => $description,
+            'temps_preparation' => $tempsPreparation,
+            'difficulte' => $difficulte,
+            'image_url' => $imageUrl,
+        ], $alimentsQuantites);
+    }
+    public function updateRecette($id, $nom, $description, $tempsPreparation, $difficulte, $imageUrl = null, $alimentsQuantites = []): bool
+    {
+        return $this->model->updateRecette((int) $id, [
+            'nom' => $nom,
+            'description' => $description,
+            'temps_preparation' => $tempsPreparation,
+            'difficulte' => $difficulte,
+            'image_url' => $imageUrl,
+        ], $alimentsQuantites);
+    }
+    public function deleteRecette($id): bool { return $this->model->deleteRecette((int) $id); }
+    public function checkEquilibreNutritionnel($alimentsQuantites): array { return $this->model->checkEquilibreNutritionnel($alimentsQuantites); }
+    public function calculerNutritionTotale($recetteId): array { return $this->model->calculerNutritionTotale((int) $recetteId); }
+    public function generateRecipeFromConstraints($maxKcal, $minProt, $maxLipides, $dietType) { return $this->model->generateRecipeFromConstraints((float) $maxKcal, (float) $minProt, (float) $maxLipides, (string) $dietType); }
+    public function optimiserRecette($recetteId, $objectif = 'equilibre_global') { return $this->model->optimiserRecette((int) $recetteId, (string) $objectif); }
+    public function appliquerOptimisation($recetteId, $nouvellesQuantites): void { $this->model->appliquerOptimisation((int) $recetteId, (array) $nouvellesQuantites); }
+    public function getStatistiquesNutritionnelles() { return $this->model->getStatistiquesNutritionnelles(); }
+
+    private function hasRecipeSchema(): bool
+    {
+        return Database::tableExists($this->db, 'recettes')
+            && Database::tableExists($this->db, 'aliments')
+            && Database::tableExists($this->db, 'recette_aliment');
     }
 
-    public function countRecettes() {
-        $query = $this->db->query("SELECT COUNT(*) as total FROM recettes");
-        return $query->fetch(PDO::FETCH_ASSOC)['total'];
+    private function getRecipesStylesheets(): array
+    {
+        $recipesStylesheetPath = __DIR__ . '/../view/front/assets/css/recipes.css';
+
+        return is_file($recipesStylesheetPath)
+            ? [$this->baseUrl . '/view/front/assets/css/recipes.css?v=' . filemtime($recipesStylesheetPath)]
+            : [];
     }
 
-    public function getLatestRecettes($limit = 5) {
-        $query = $this->db->query("SELECT * FROM recettes ORDER BY id DESC LIMIT $limit");
-        return $query->fetchAll(PDO::FETCH_ASSOC);
+    private function renderFront(string $viewPath, array $vars = []): void
+    {
+        $pageTitle = $vars['pageTitle'] ?? 'Smart Nutrition - Recettes';
+        $bodyClass = trim((string) (($vars['bodyClass'] ?? '') . ' recipes-page'));
+        $showFooter = $vars['showFooter'] ?? false;
+        $baseUrl = $this->baseUrl;
+        extract($vars, EXTR_SKIP);
+        require __DIR__ . '/../view/layouts/header.php';
+        require $viewPath;
+        require __DIR__ . '/../view/layouts/footer.php';
     }
 
-    public function getRecette($id) {
-        $query = $this->db->prepare("SELECT * FROM recettes WHERE id = :id");
-        $query->execute(['id' => $id]);
-        return $query->fetch(PDO::FETCH_ASSOC);
+    private function renderAdmin(string $viewPath, array $vars = []): void
+    {
+        $pageTitle = $vars['pageTitle'] ?? 'Back Office - Recettes';
+        $isAdminTemplate = true;
+        $bodyClass = trim((string) (($vars['bodyClass'] ?? '') . ' backoffice-page recipes-admin-page'));
+        $baseUrl = $this->baseUrl;
+        extract($vars, EXTR_SKIP);
+        require __DIR__ . '/../view/layouts/header.php';
+        require $viewPath;
+        require __DIR__ . '/../view/layouts/footer.php';
     }
 
-    // Récupérer les aliments associés à une recette avec leur quantité
-    public function getAlimentsByRecette($recette_id) {
-        $query = $this->db->prepare("
-            SELECT a.*, ra.quantite FROM aliments a
-            JOIN recette_aliment ra ON a.id = ra.id_aliment
-            WHERE ra.id_recette = :id_recette
-        ");
-        $query->execute(['id_recette' => $recette_id]);
-        return $query->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function addRecette($nom, $description, $temps_preparation, $difficulte, $image_url = null, $aliments_quantites = []) {
-        $query = $this->db->prepare("INSERT INTO recettes (nom, description, temps_preparation, niveau_difficulte, image_url) VALUES (:nom, :description, :temps_preparation, :niveau_difficulte, :image_url)");
-        $query->execute([
-            'nom'              => $nom,
-            'description'      => $description,
-            'temps_preparation'=> $temps_preparation,
-            'niveau_difficulte'=> $difficulte,
-            'image_url'        => $image_url
-        ]);
-
-        $recetteId = $this->db->lastInsertId();
-
-        // Insérer les aliments associés avec leur quantité
-        if (!empty($aliments_quantites)) {
-            $stmt = $this->db->prepare("INSERT INTO recette_aliment (id_recette, id_aliment, quantite) VALUES (:id_recette, :id_aliment, :quantite)");
-            foreach ($aliments_quantites as $aliment_id => $quantite) {
-                $stmt->execute([
-                    'id_recette' => $recetteId,
-                    'id_aliment' => $aliment_id,
-                    'quantite'   => $quantite
-                ]);
-            }
-        }
-    }
-
-    public function updateRecette($id, $nom, $description, $temps_preparation, $difficulte, $image_url = null, $aliments_quantites = []) {
-        $query = $this->db->prepare("UPDATE recettes SET nom = :nom, description = :description, temps_preparation = :temps_preparation, niveau_difficulte = :niveau_difficulte, image_url = :image_url WHERE id = :id");
-        $query->execute([
-            'nom'              => $nom,
-            'description'      => $description,
-            'temps_preparation'=> $temps_preparation,
-            'niveau_difficulte'=> $difficulte,
-            'image_url'        => $image_url,
-            'id'               => $id
-        ]);
-
-        // Mettre à jour les aliments associés (supprimer puis recréer)
-        $del = $this->db->prepare("DELETE FROM recette_aliment WHERE id_recette = :id_recette");
-        $del->execute(['id_recette' => $id]);
-
-        if (!empty($aliments_quantites)) {
-            $stmt = $this->db->prepare("INSERT INTO recette_aliment (id_recette, id_aliment, quantite) VALUES (:id_recette, :id_aliment, :quantite)");
-            foreach ($aliments_quantites as $aliment_id => $quantite) {
-                $stmt->execute([
-                    'id_recette' => $id,
-                    'id_aliment' => $aliment_id,
-                    'quantite'   => $quantite
-                ]);
-            }
-        }
-    }
-
-    public function deleteRecette($id) {
-        $query = $this->db->prepare("DELETE FROM recettes WHERE id = :id");
-        $query->execute(['id' => $id]);
-    }
-
-    public function checkEquilibreNutritionnel($aliments_quantites) {
-        if (empty($aliments_quantites)) {
-            return []; // Aucune alerte si pas d'aliments
+    public function showRecipesManagement(): void
+    {
+        $moduleUnavailableMessage = null;
+        if (!$this->hasRecipeSchema()) {
+            $moduleUnavailableMessage = 'Module recettes temporairement indisponible. Lancez la migration fix_recettes_integration.php.';
         }
 
-        $totalProteines = 0;
-        $totalGlucides = 0;
-        $totalLipides = 0;
+        $recettes = $this->hasRecipeSchema() ? $this->listRecettes() : [];
+        $aliments = Database::tableExists($this->db, 'aliments') ? $this->alimentModel->getAll() : [];
 
-        $ids = array_keys($aliments_quantites);
-        $in = str_repeat('?,', count($ids) - 1) . '?';
-        $stmt = $this->db->prepare("SELECT id, proteines, glucides, lipides FROM aliments WHERE id IN ($in)");
-        $stmt->execute($ids);
-        $aliments = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($aliments as $aliment) {
-            $qte = isset($aliments_quantites[$aliment['id']]) ? (float)$aliments_quantites[$aliment['id']] : 0;
-            $totalProteines += ((float)$aliment['proteines'] * $qte) / 100;
-            $totalGlucides += ((float)$aliment['glucides'] * $qte) / 100;
-            $totalLipides += ((float)$aliment['lipides'] * $qte) / 100;
-        }
-
-        // Calcul de la répartition calorique
-        $calProteines = $totalProteines * 4;
-        $calGlucides = $totalGlucides * 4;
-        $calLipides = $totalLipides * 9;
-
-        $totalCalories = $calProteines + $calGlucides + $calLipides;
-
-        if ($totalCalories == 0) {
-            return []; // Pas de macros, pas d'alerte
-        }
-
-        $pctProteines = ($calProteines / $totalCalories) * 100;
-        $pctGlucides = ($calGlucides / $totalCalories) * 100;
-        $pctLipides = ($calLipides / $totalCalories) * 100;
-
-        $warnings = [];
-
-        // Protéines entre 15% et 35%
-        if ($pctProteines < 15) {
-            $warnings[] = "Recette trop pauvre en protéines (" . round($pctProteines, 1) . "%). L'idéal est entre 15% et 35%.";
-        } elseif ($pctProteines > 35) {
-            $warnings[] = "Recette trop riche en protéines (" . round($pctProteines, 1) . "%). L'idéal est entre 15% et 35%.";
-        }
-
-        // Glucides entre 40% et 60%
-        if ($pctGlucides < 40) {
-            $warnings[] = "Recette trop pauvre en glucides (" . round($pctGlucides, 1) . "%). L'idéal est entre 40% et 60%.";
-        } elseif ($pctGlucides > 60) {
-            $warnings[] = "Recette trop riche en glucides (" . round($pctGlucides, 1) . "%). L'idéal est entre 40% et 60%.";
-        }
-
-        // Lipides entre 20% et 35%
-        if ($pctLipides < 20) {
-            $warnings[] = "Recette trop pauvre en lipides (" . round($pctLipides, 1) . "%). L'idéal est entre 20% et 35%.";
-        } elseif ($pctLipides > 35) {
-            $warnings[] = "Recette trop riche en lipides (" . round($pctLipides, 1) . "%). L'idéal est entre 20% et 35%.";
-        }
-
-        return $warnings;
-    }
-
-    public function calculerNutritionTotale($recette_id) {
-        $aliments = $this->getAlimentsByRecette($recette_id);
-        
-        $totaux = [
-            'calories' => 0,
-            'proteines' => 0,
-            'glucides' => 0,
-            'lipides' => 0,
-            'fibres' => 0,
-            'sucre_g' => 0
-        ];
-
-        foreach ($aliments as $aliment) {
-            $qte = (float)($aliment['quantite'] ?: 0);
-            
-            $totaux['calories'] += ((float)$aliment['calories'] * $qte) / 100;
-            $totaux['proteines'] += ((float)$aliment['proteines'] * $qte) / 100;
-            $totaux['glucides'] += ((float)$aliment['glucides'] * $qte) / 100;
-            $totaux['lipides'] += ((float)$aliment['lipides'] * $qte) / 100;
-            
-            // Si fibres existe dans la table
-            if (isset($aliment['fibres'])) {
-                $totaux['fibres'] += ((float)$aliment['fibres'] * $qte) / 100;
-            }
-            
-            // Si sucre_g existe dans la table
-            if (isset($aliment['sucre_g'])) {
-                $totaux['sucre_g'] += ((float)$aliment['sucre_g'] * $qte) / 100;
-            }
-        }
-        
-        return $totaux;
-    }
-
-    public function generateRecipeFromConstraints($maxKcal, $minProt, $maxLipides, $dietType) {
-        $query = "SELECT * FROM aliments";
-        $aliments = $this->db->query($query)->fetchAll(PDO::FETCH_ASSOC);
-
-        // Filtrage selon le régime
-        $filtered = [];
-        foreach ($aliments as $al) {
-            $nom = mb_strtolower($al['nom'], 'UTF-8');
-            $type = mb_strtolower($al['type'], 'UTF-8');
-            
-            if ($dietType === 'vegetarien') {
-                if (strpos($nom, 'viande') !== false || strpos($type, 'viande') !== false ||
-                    strpos($nom, 'poisson') !== false || strpos($type, 'poisson') !== false ||
-                    strpos($nom, 'poulet') !== false || strpos($type, 'poulet') !== false ||
-                    strpos($nom, 'boeuf') !== false || strpos($nom, 'porc') !== false) {
-                    continue; // Exclure viandes
-                }
-            }
-            if ($dietType === 'sans_gluten') {
-                if (strpos($nom, 'blé') !== false || strpos($type, 'blé') !== false ||
-                    strpos($nom, 'pâte') !== false || strpos($type, 'pâte') !== false ||
-                    strpos($nom, 'pain') !== false || strpos($type, 'pain') !== false ||
-                    strpos($nom, 'farine') !== false) {
-                    continue; // Exclure gluten
-                }
-            }
-            $filtered[] = $al;
-        }
-
-        // Si aucun aliment dispo, retourner false
-        if (empty($filtered)) {
-            return false;
-        }
-
-        // Catégorisation basique (Heuristique)
-        $proteins = [];
-        $carbs = [];
-        $veggies = [];
-
-        foreach ($filtered as $al) {
-            if ($al['proteines'] >= 10 && $al['proteines'] >= $al['glucides']) {
-                $proteins[] = $al;
-            } elseif ($al['glucides'] >= 15) {
-                $carbs[] = $al;
-            } else {
-                // Le reste (légumes, autres, faibles en calories)
-                $veggies[] = $al;
-            }
-        }
-
-        if (empty($proteins)) $proteins = $filtered;
-        if (empty($carbs)) $carbs = $filtered;
-        if (empty($veggies)) $veggies = $filtered;
-
-        $bestCombo = null;
-        $bestScore = INF;
-
-        // Boucle pour essayer 100 combinaisons aléatoires
-        for ($i = 0; $i < 100; $i++) {
-            $p = $proteins[array_rand($proteins)];
-            $c = $carbs[array_rand($carbs)];
-            $v = $veggies[array_rand($veggies)];
-
-            // Quantités de base
-            $qP = 150;
-            $qC = 100;
-            $qV = 150;
-
-            // Ajustement basique
-            $calcP = ($p['proteines'] * $qP/100) + ($c['proteines'] * $qC/100) + ($v['proteines'] * $qV/100);
-            if ($calcP < $minProt) {
-                $qP += 50; // Ajouter des protéines
-            }
-
-            $calcK = ($p['calories'] * $qP/100) + ($c['calories'] * $qC/100) + ($v['calories'] * $qV/100);
-            if ($calcK > $maxKcal) {
-                $qC -= 40; // Réduire les glucides pour baisser les calories
-                if ($qC < 0) $qC = 0;
-                $qP -= 20;
-                if ($qP < 50) $qP = 50;
-            }
-
-            // Recalcul des valeurs finales
-            $calcP = ($p['proteines'] * $qP/100) + ($c['proteines'] * $qC/100) + ($v['proteines'] * $qV/100);
-            $calcL = ($p['lipides'] * $qP/100) + ($c['lipides'] * $qC/100) + ($v['lipides'] * $qV/100);
-            $calcK = ($p['calories'] * $qP/100) + ($c['calories'] * $qC/100) + ($v['calories'] * $qV/100);
-            $calcG = ($p['glucides'] * $qP/100) + ($c['glucides'] * $qC/100) + ($v['glucides'] * $qV/100);
-            $calcF = (($p['fibres'] ?? 0) * $qP/100) + (($c['fibres'] ?? 0) * $qC/100) + (($v['fibres'] ?? 0) * $qV/100);
-
-            // Évaluation (Pénalités si on dépasse les contraintes)
-            $score = 0;
-            if ($calcK > $maxKcal) $score += ($calcK - $maxKcal) * 2;
-            if ($calcP < $minProt) $score += ($minProt - $calcP) * 5;
-            if ($calcL > $maxLipides) $score += ($calcL - $maxLipides) * 3;
-
-            if ($score < $bestScore) {
-                $bestScore = $score;
-                $bestCombo = [
-                    'aliments' => [
-                        $p['id'] => ['aliment' => $p, 'quantite' => $qP],
-                        $c['id'] => ['aliment' => $c, 'quantite' => $qC],
-                        $v['id'] => ['aliment' => $v, 'quantite' => $qV],
-                    ],
-                    'totaux' => [
-                        'calories' => round($calcK),
-                        'proteines' => round($calcP, 1),
-                        'lipides' => round($calcL, 1),
-                        'glucides' => round($calcG, 1),
-                        'fibres' => round($calcF, 1)
-                    ],
-                    'score' => $score
-                ];
-            }
-            
-            // Si le score est 0, on a trouvé une solution parfaite, on peut s'arrêter
-            if ($score === 0) break;
-        }
-
-        // Nettoyage : retirer les aliments en double s'il y a lieu, fusionner les quantités
-        $finalAliments = [];
-        foreach ($bestCombo['aliments'] as $id => $data) {
-            if ($data['quantite'] > 0) {
-                if (isset($finalAliments[$id])) {
-                    $finalAliments[$id]['quantite'] += $data['quantite'];
-                } else {
-                    $finalAliments[$id] = $data;
-                }
-            }
-        }
-        $bestCombo['aliments'] = array_values($finalAliments); // re-index
-
-        return $bestCombo;
-    }
-
-    /**
-     * Optimise les quantités d'une recette existante vers un objectif nutritionnel.
-     * Objectifs possibles : equilibre_global | plus_proteines | moins_lipides | plus_fibres
-     * Retourne : ['avant' => [...], 'apres' => [...], 'nouvelles_quantites' => [id=>qte], 'analyse' => [...]]
-     */
-    public function optimiserRecette($id_recette, $objectif = 'equilibre_global') {
-        $aliments = $this->getAlimentsByRecette($id_recette);
-        if (empty($aliments)) return false;
-
-        // === 1. Calcul de l'état actuel ===
-        // Note: PDO retourne "" (chaîne vide) pour les FLOAT NULL, pas null
-        // On utilise ?: pour couvrir null, "" et 0
-        $avant = ['calories'=>0,'proteines'=>0,'glucides'=>0,'lipides'=>0,'fibres'=>0];
-        foreach ($aliments as $a) {
-            $q = (float)($a['quantite'] ?: 0);
-            $avant['calories']  += ($a['calories']  * $q) / 100;
-            $avant['proteines'] += ($a['proteines'] * $q) / 100;
-            $avant['glucides']  += ($a['glucides']  * $q) / 100;
-            $avant['lipides']   += ($a['lipides']   * $q) / 100;
-            $avant['fibres']    += (($a['fibres'] ?: 0) * $q) / 100;
-        }
-
-        // === 2. Analyse des écarts ===
-        $calProt = $avant['proteines'] * 4;
-        $calGluc = $avant['glucides']  * 4;
-        $calLip  = $avant['lipides']   * 9;
-        $calTotal = $calProt + $calGluc + $calLip;
-
-        $pctProt = $calTotal > 0 ? ($calProt / $calTotal * 100) : 0;
-        $pctGluc = $calTotal > 0 ? ($calGluc / $calTotal * 100) : 0;
-        $pctLip  = $calTotal > 0 ? ($calLip  / $calTotal * 100) : 0;
-
-        $ecarts = [];
-        if ($pctProt < 15) $ecarts[] = ['type' => 'prot_faible', 'label' => 'Protéines trop faibles ('  . round($pctProt,1) . '% < 15%)'];
-        if ($pctProt > 35) $ecarts[] = ['type' => 'prot_eleve', 'label' => 'Protéines trop élevées ('  . round($pctProt,1) . '% > 35%)'];
-        if ($pctGluc < 40) $ecarts[] = ['type' => 'gluc_faible','label' => 'Glucides insuffisants ('    . round($pctGluc,1) . '% < 40%)'];
-        if ($pctGluc > 60) $ecarts[] = ['type' => 'gluc_eleve', 'label' => 'Glucides excessifs ('       . round($pctGluc,1) . '% > 60%)'];
-        if ($pctLip  < 20) $ecarts[] = ['type' => 'lip_faible', 'label' => 'Lipides insuffisants ('     . round($pctLip,1)  . '% < 20%)'];
-        if ($pctLip  > 35) $ecarts[] = ['type' => 'lip_eleve',  'label' => 'Lipides trop élevés ('      . round($pctLip,1)  . '% > 35%)'];
-        if ($avant['fibres'] < 5) $ecarts[] = ['type' => 'fibres_faible','label' => 'Fibres insuffisantes (' . round($avant['fibres'],1) . 'g < 5g)'];
-
-        // === 3. Construction des nouvelles quantités selon l'objectif ===
-        $nouvellesQuantites = [];
-
-        foreach ($aliments as $a) {
-            $id = $a['id'];
-            // Si la quantite est vide/null/0, on utilise 100g par défaut pour l'optimisation
-            $q  = (float)($a['quantite'] ?: 100);
-
-            $protPer100 = (float)$a['proteines'];
-            $glucPer100 = (float)$a['glucides'];
-            $lipPer100  = (float)$a['lipides'];
-            $fibrePer100= (float)($a['fibres'] ?? 0);
-            $calPer100  = (float)$a['calories'];
-
-            $isHighProt  = $protPer100 >= 15;
-            $isHighLip   = $lipPer100  >= 10;
-            $isHighFibre = $fibrePer100 >= 3;
-            $isHighCarb  = $glucPer100  >= 20 && $protPer100 < 10;
-
-            switch ($objectif) {
-
-                case 'plus_proteines':
-                    if ($isHighProt)  $q = min($q * 1.5, $q + 80);  // +50% pour les protéinés
-                    if ($isHighCarb)  $q = max($q * 0.75, 30);       // -25% glucides
-                    break;
-
-                case 'moins_lipides':
-                    if ($isHighLip)   $q = max($q * 0.55, 20);       // -45% aliments gras
-                    if ($isHighProt && !$isHighLip) $q = min($q * 1.2, $q + 40); // compenser
-                    break;
-
-                case 'plus_fibres':
-                    if ($isHighFibre) $q = min($q * 1.6, $q + 100);  // +60% fibres
-                    if ($calPer100 > 200 && !$isHighFibre) $q = max($q * 0.8, 30); // réduire dense
-                    break;
-
-                case 'equilibre_global':
-                default:
-                    // Cible : Prot 25%, Gluc 50%, Lip 25%
-                    if ($isHighProt && $pctProt < 20)  $q = min($q * 1.4, $q + 60);
-                    if ($isHighCarb && $pctGluc < 40)  $q = min($q * 1.3, $q + 50);
-                    if ($isHighLip  && $pctLip  > 30)  $q = max($q * 0.65, 20);
-                    if ($isHighFibre && $avant['fibres'] < 5) $q = min($q * 1.5, $q + 60);
-                    break;
-            }
-
-            $nouvellesQuantites[$id] = round($q);
-        }
-
-        // === 4. Recalcul des nouvelles valeurs nutritionnelles ===
-        $apres = ['calories'=>0,'proteines'=>0,'glucides'=>0,'lipides'=>0,'fibres'=>0];
-        foreach ($aliments as $a) {
-            $q = $nouvellesQuantites[$a['id']] ?? (float)$a['quantite'];
-            $apres['calories']  += ($a['calories']  * $q) / 100;
-            $apres['proteines'] += ($a['proteines'] * $q) / 100;
-            $apres['glucides']  += ($a['glucides']  * $q) / 100;
-            $apres['lipides']   += ($a['lipides']   * $q) / 100;
-            $apres['fibres']    += (($a['fibres'] ?? 0) * $q) / 100;
-        }
-
-        foreach ($avant as $k => $v) $avant[$k] = round($v, 1);
-        foreach ($apres as $k => $v) $apres[$k] = round($v, 1);
-
-        // Pourcentages caloriques APRÈS
-        $cpProt = $apres['proteines'] * 4;
-        $cpGluc = $apres['glucides']  * 4;
-        $cpLip  = $apres['lipides']   * 9;
-        $cpTot  = $cpProt + $cpGluc + $cpLip;
-
-        return [
-            'avant' => $avant,
-            'apres' => $apres,
-            'nouvelles_quantites' => $nouvellesQuantites,
+        $this->renderFront(__DIR__ . '/../view/front/recettes/index.php', [
+            'pageTitle' => 'Nos Recettes',
+            'bodyClass' => 'recipe-catalog-page',
+            'additionalStylesheets' => $this->getRecipesStylesheets(),
+            'recettes' => $recettes,
             'aliments' => $aliments,
-            'ecarts' => $ecarts,
-            'pct_avant' => [
-                'prot' => round($pctProt, 1),
-                'gluc' => round($pctGluc, 1),
-                'lip'  => round($pctLip,  1),
-            ],
-            'pct_apres' => [
-                'prot' => $cpTot > 0 ? round($cpProt / $cpTot * 100, 1) : 0,
-                'gluc' => $cpTot > 0 ? round($cpGluc / $cpTot * 100, 1) : 0,
-                'lip'  => $cpTot > 0 ? round($cpLip  / $cpTot * 100, 1) : 0,
-            ],
-        ];
+            'moduleUnavailableMessage' => $moduleUnavailableMessage,
+        ]);
     }
 
-    /**
-     * Applique une version optimisée en mettant à jour les quantités dans la DB.
-     */
-    public function appliquerOptimisation($recette_id, $nouvelles_quantites) {
-        $recette_id = (int)$recette_id;
-        $stmt = $this->db->prepare("UPDATE recette_aliment SET quantite = :qte WHERE id_recette = :id_recette AND id_aliment = :id_aliment");
-        foreach ($nouvelles_quantites as $aliment_id => $qte) {
-            $stmt->execute([
-                'qte'        => (float)$qte,
-                'id_recette' => $recette_id,
-                'id_aliment' => (int)$aliment_id
-            ]);
+    public function showRecipeDetails(): void
+    {
+        $id = (int) ($_GET['id'] ?? 0);
+        $recette = $id > 0 ? $this->getRecette($id) : null;
+        $aliments_associes = $recette ? $this->getAlimentsByRecette((int) $recette['id']) : [];
+        $nutrition_totale = $recette ? $this->calculerNutritionTotale((int) $recette['id']) : [];
+        $optimised_flash = isset($_GET['optimised']) && $_GET['optimised'] === '1';
+
+        $this->renderFront(__DIR__ . '/../view/front/recettes/details.php', [
+            'pageTitle' => 'Detail recette',
+            'bodyClass' => 'recipe-detail-page',
+            'additionalStylesheets' => $this->getRecipesStylesheets(),
+            'recette' => $recette,
+            'aliments_associes' => $aliments_associes,
+            'nutrition_totale' => $nutrition_totale,
+            'optimised_flash' => $optimised_flash,
+        ]);
+    }
+
+    public function showAlimentDetails(): void
+    {
+        $id = (int) ($_GET['id'] ?? 0);
+        $aliment = $id > 0 ? $this->alimentModel->getById($id) : null;
+
+        $this->renderFront(__DIR__ . '/../view/front/recettes/aliment.php', [
+            'pageTitle' => 'Detail aliment',
+            'bodyClass' => 'recipe-aliment-page',
+            'additionalStylesheets' => $this->getRecipesStylesheets(),
+            'aliment' => $aliment,
+        ]);
+    }
+
+    public function showGenerator(): void
+    {
+        $generated = null;
+        $errorMsg = '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate'])) {
+            $generated = $this->generateRecipeFromConstraints(
+                (float) ($_POST['max_kcal'] ?? 0),
+                (float) ($_POST['min_prot'] ?? 0),
+                (float) ($_POST['max_lipides'] ?? 0),
+                (string) ($_POST['diet_type'] ?? 'standard')
+            );
+
+            if (!$generated) {
+                $errorMsg = "Aucune combinaison trouvee pour ces contraintes. Essayez d'etre moins restrictif.";
+            }
         }
+
+        $this->renderFront(__DIR__ . '/../view/front/recettes/generate.php', [
+            'pageTitle' => 'Generation recette',
+            'bodyClass' => 'recipe-generator-page',
+            'additionalStylesheets' => $this->getRecipesStylesheets(),
+            'generated' => $generated,
+            'errorMsg' => $errorMsg,
+        ]);
     }
 
-    /**
-     * Calcule les statistiques nutritionnelles globales sur toutes les recettes.
-     */
-    public function getStatistiquesNutritionnelles() {
+    public function showOptimizer(): void
+    {
+        $objectif = (string) ($_POST['objectif'] ?? $_GET['objectif'] ?? 'equilibre_global');
+        $id_recette = isset($_POST['id_recette']) ? (int) $_POST['id_recette'] : (int) ($_GET['id'] ?? 0);
+        $recette = $id_recette > 0 ? $this->getRecette($id_recette) : null;
+        $result = $recette ? $this->optimiserRecette($id_recette, $objectif) : null;
+
+        $objectifLabels = [
+            'equilibre_global' => ['label' => 'Equilibre Global', 'icon' => 'fa-scale-balanced', 'color' => '#2ecc71'],
+            'plus_proteines' => ['label' => 'Plus de Proteines', 'icon' => 'fa-dumbbell', 'color' => '#3498db'],
+            'moins_lipides' => ['label' => 'Moins de Lipides', 'icon' => 'fa-droplet-slash', 'color' => '#f39c12'],
+            'plus_fibres' => ['label' => 'Plus de Fibres', 'icon' => 'fa-leaf', 'color' => '#27ae60'],
+        ];
+        $objInfo = $objectifLabels[$objectif] ?? $objectifLabels['equilibre_global'];
+
+        $this->renderFront(__DIR__ . '/../view/front/recettes/optimize.php', [
+            'pageTitle' => 'Optimisation recette',
+            'bodyClass' => 'recipe-optimizer-page',
+            'additionalStylesheets' => $this->getRecipesStylesheets(),
+            'objectif' => $objectif,
+            'id_recette' => $id_recette,
+            'recette' => $recette,
+            'result' => $result,
+            'objectifLabels' => $objectifLabels,
+            'objInfo' => $objInfo,
+        ]);
+    }
+
+    public function saveOptimization(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $this->baseUrl . '/index.php?action=recipes-management');
+            exit;
+        }
+
+        $id_recette = (int) ($_POST['id_recette'] ?? 0);
+        $objectif = (string) ($_POST['objectif'] ?? 'equilibre_global');
+        $nouvellesQuantites = $_POST['nouvelles_quantites'] ?? [];
+        $quantitesCastes = [];
+
+        foreach ($nouvellesQuantites as $alimentId => $qte) {
+            $alimentIdInt = (int) $alimentId;
+            $qteFloat = (float) $qte;
+            if ($alimentIdInt > 0 && $qteFloat >= 0) {
+                $quantitesCastes[$alimentIdInt] = $qteFloat;
+            }
+        }
+
+        if ($id_recette <= 0 || empty($quantitesCastes)) {
+            header('Location: ' . $this->baseUrl . '/index.php?action=recipe-optimize&id=' . $id_recette . '&objectif=' . urlencode($objectif) . '&error=empty');
+            exit;
+        }
+
+        $this->appliquerOptimisation($id_recette, $quantitesCastes);
+        header('Location: ' . $this->baseUrl . '/index.php?action=recipe-details&id=' . $id_recette . '&optimised=1');
+        exit;
+    }
+
+    public function showStats(): void
+    {
+        $stats = $this->getStatistiquesNutritionnelles();
+        $this->renderFront(__DIR__ . '/../view/front/recettes/stats.php', [
+            'pageTitle' => 'Statistiques nutritionnelles',
+            'bodyClass' => 'recipe-stats-page',
+            'additionalStylesheets' => $this->getRecipesStylesheets(),
+            'stats' => $stats,
+        ]);
+    }
+
+    public function exportPdf(): void
+    {
+        require __DIR__ . '/../view/front/recettes/export_pdf.php';
+    }
+
+    public function adminIndex(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+            $alimentsIds = $_POST['aliments'] ?? [];
+            $quantitesRaw = $_POST['quantites'] ?? [];
+            $alimentsQuantites = [];
+            foreach ($alimentsIds as $id) {
+                $alimentsQuantites[(int) $id] = (float) ($quantitesRaw[$id] ?? 0);
+            }
+
+            $imageUrl = $_POST['existing_image_url'] ?? null;
+            if (isset($_FILES['image']) && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../view/uploads/recettes/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+
+                $fileName = uniqid('recette_', true) . '_' . basename((string) $_FILES['image']['name']);
+                $targetPath = $uploadDir . $fileName;
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
+                    $imageUrl = $this->baseUrl . '/view/uploads/recettes/' . $fileName;
+                }
+            }
+
+            if ($_POST['action'] === 'add') {
+                $this->addRecette($_POST['nom'] ?? '', $_POST['description'] ?? '', $_POST['temps_preparation'] ?? '', $_POST['difficulte'] ?? '', $imageUrl, $alimentsQuantites);
+                $_SESSION['flash_warnings'] = $this->checkEquilibreNutritionnel($alimentsQuantites);
+            } elseif ($_POST['action'] === 'update') {
+                $this->updateRecette((int) ($_POST['id'] ?? 0), $_POST['nom'] ?? '', $_POST['description'] ?? '', $_POST['temps_preparation'] ?? '', $_POST['difficulte'] ?? '', $imageUrl, $alimentsQuantites);
+                $_SESSION['flash_warnings'] = $this->checkEquilibreNutritionnel($alimentsQuantites);
+            } elseif ($_POST['action'] === 'delete') {
+                $this->deleteRecette((int) ($_POST['id'] ?? 0));
+            }
+
+            header('Location: ' . $this->baseUrl . '/index.php?action=admin-recipes');
+            exit;
+        }
+
+        $flashWarnings = $_SESSION['flash_warnings'] ?? [];
+        unset($_SESSION['flash_warnings']);
+
         $recettes = $this->listRecettes();
+        $tous_aliments = $this->alimentModel->getAll();
+        $recettes_aliments_map = [];
+        $recettes_aliments_quantites_map = [];
+        $recettesNutritionMap = [];
 
-        if (empty($recettes)) {
-            return null;
+        foreach ($recettes as $recette) {
+            $assoc = $this->getAlimentsByRecette((int) $recette['id']);
+            $recettes_aliments_map[$recette['id']] = array_map(static fn($a) => $a['id'], $assoc);
+            $quantitesMap = [];
+            foreach ($assoc as $aliment) {
+                $quantitesMap[$aliment['id']] = $aliment['quantite'];
+            }
+            $recettes_aliments_quantites_map[$recette['id']] = $quantitesMap;
+            $recettesNutritionMap[$recette['id']] = $this->calculerNutritionTotale((int) $recette['id']);
         }
 
-        $totaux = ['calories'=>0,'proteines'=>0,'glucides'=>0,'lipides'=>0,'fibres'=>0];
-        $plusCalorique  = null;
-        $moinsCalorique = null;
-        $nbValides = 0; // recettes avec au moins un aliment renseigné
-
-        foreach ($recettes as $r) {
-            $nutrition = $this->calculerNutritionTotale($r['id']);
-
-            // Ignorer les recettes sans aliments associés (calories = 0)
-            if ($nutrition['calories'] <= 0) continue;
-
-            $nbValides++;
-            $totaux['calories']  += $nutrition['calories'];
-            $totaux['proteines'] += $nutrition['proteines'];
-            $totaux['glucides']  += $nutrition['glucides'];
-            $totaux['lipides']   += $nutrition['lipides'];
-            $totaux['fibres']    += $nutrition['fibres'];
-
-            // Plus calorique
-            if ($plusCalorique === null || $nutrition['calories'] > $plusCalorique['nutrition']['calories']) {
-                $plusCalorique = ['recette' => $r, 'nutrition' => $nutrition];
-            }
-
-            // Moins calorique
-            if ($moinsCalorique === null || $nutrition['calories'] < $moinsCalorique['nutrition']['calories']) {
-                $moinsCalorique = ['recette' => $r, 'nutrition' => $nutrition];
+        $recetteToEdit = null;
+        $editId = (int) ($_GET['edit_id'] ?? 0);
+        if ($editId > 0) {
+            foreach ($recettes as $recette) {
+                if ((int) $recette['id'] === $editId) {
+                    $recetteToEdit = $recette;
+                    break;
+                }
             }
         }
 
-        if ($nbValides === 0) return null;
-
-        // Moyennes arrondies
-        $moyennes = [
-            'calories'  => round($totaux['calories']  / $nbValides),
-            'proteines' => round($totaux['proteines'] / $nbValides, 1),
-            'glucides'  => round($totaux['glucides']  / $nbValides, 1),
-            'lipides'   => round($totaux['lipides']   / $nbValides, 1),
-            'fibres'    => round($totaux['fibres']    / $nbValides, 1),
-        ];
-
-        return [
-            'nb_recettes'     => count($recettes),
-            'nb_valides'      => $nbValides,
-            'moyennes'        => $moyennes,
-            'plus_calorique'  => $plusCalorique,
-            'moins_calorique' => $moinsCalorique,
-        ];
+        $this->renderAdmin(__DIR__ . '/../view/back/recettes/index.php', [
+            'pageTitle' => 'Back Office - Recettes',
+            'recettes' => $recettes,
+            'tous_aliments' => $tous_aliments,
+            'recettes_aliments_map' => $recettes_aliments_map,
+            'recettes_aliments_quantites_map' => $recettes_aliments_quantites_map,
+            'recettesNutritionMap' => $recettesNutritionMap,
+            'recetteToEdit' => $recetteToEdit,
+            'flashWarnings' => array_filter((array) $flashWarnings),
+        ]);
     }
 }

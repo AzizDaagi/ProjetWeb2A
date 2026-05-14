@@ -10,7 +10,7 @@
         <a class="btn" href="<?= $baseUrl ?>/index.php?action=register">
             <i class="fa-solid fa-user-plus"></i> Register
         </a>
-        <a class="btn btn-accent" href="<?= $baseUrl ?>/index.php?action=logout">
+        <a class="btn btn-accent" href="/projet-web-25-26/index.php?action=logout">
             <i class="fa-solid fa-sign-out-alt"></i> Logout
         </a>
     </div>

@@ -25,7 +25,7 @@ class PostController {
         'image/jpeg' => 'jpg',
         'image/png' => 'png',
         'image/gif' => 'gif',
-        'image/projet-web-25-26p' => 'webp'
+        'image/webp' => 'webp'
     ];
     private const MAX_UPLOAD_SIZE = 5242880;
     private const ALLOWED_REACTIONS = ['love', 'laugh', 'sad', 'angry'];
@@ -43,7 +43,7 @@ class PostController {
     }
 
     public function getAll() {
-        require_once 'model/Comment.php';
+        require_once __DIR__ . '/../model/Comment.php';
         $commentModel = new Comment($this->postModel->database);
 
         $posts = $this->postModel->getAllPosts();
@@ -322,6 +322,11 @@ class PostController {
     }
 
     private function jsonError(string $message): void {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
+        header('Content-Type: application/json; charset=UTF-8');
         echo json_encode([
             'success' => false,
             'message' => $message

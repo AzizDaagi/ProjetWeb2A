@@ -30,23 +30,23 @@ class ChronoNutritionController {
     }
 
     public function chrono_profile_get() {
-        $userId = $_SESSION['user_id'] ?? 1;
+        $userId = $this->requireFrontUserId();
         $this->respondJson($this->model->getProfile($userId));
     }
 
     public function chrono_profile_save() {
-        $userId = $_SESSION['user_id'] ?? 1;
+        $userId = $this->requireFrontUserId();
         $data = json_decode(file_get_contents('php://input'), true);
         $this->respondJson($this->model->saveProfile($userId, is_array($data) ? $data : []));
     }
 
     public function chrono_optimal_timing() {
-        $userId = $_SESSION['user_id'] ?? 1;
+        $userId = $this->requireFrontUserId();
         $this->respondJson($this->service->getOptimalTiming($userId));
     }
 
     public function chrono_fasting_window() {
-        $userId = $_SESSION['user_id'] ?? 1;
+        $userId = $this->requireFrontUserId();
         $this->respondJson($this->service->getFastingWindow($userId));
     }
 
@@ -55,9 +55,30 @@ class ChronoNutritionController {
     }
 
     public function chrono_sleep_sync() {
-        $userId = $_SESSION['user_id'] ?? 1;
+        $userId = $this->requireFrontUserId();
         $data = json_decode(file_get_contents('php://input'), true);
         $this->respondJson($this->service->sleepSync($userId, is_array($data) ? $data : []));
+    }
+
+    private function requireFrontUserId(): int {
+        $userId = (int) ($_SESSION['user_id'] ?? 0);
+        $role = (string) ($_SESSION['user_role'] ?? 'user');
+
+        if ($userId <= 0) {
+            $this->respondJson([
+                'success' => false,
+                'message' => 'Session invalide.',
+            ]);
+        }
+
+        if ($role === 'admin') {
+            $this->respondJson([
+                'success' => false,
+                'message' => 'Acces front office refuse.',
+            ]);
+        }
+
+        return $userId;
     }
 
     private function respondJson(array $payload): void {

@@ -60,11 +60,26 @@ class PredictionController
 
     private function getCurrentUserId(): int
     {
-        return (int) ($_SESSION['user_id'] ?? 1);
+        $userId = (int) ($_SESSION['user_id'] ?? 0);
+        $role = (string) ($_SESSION['user_role'] ?? 'user');
+
+        if ($userId <= 0) {
+            $this->error('Session invalide.', 401);
+        }
+
+        if ($role === 'admin') {
+            $this->error('Acces front office refuse.', 403);
+        }
+
+        return $userId;
     }
 
     private function success(array $data): void
     {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
         header('Content-Type: application/json; charset=UTF-8');
         echo json_encode([
             'data' => $data,
@@ -76,6 +91,10 @@ class PredictionController
 
     private function error(string $message, int $statusCode = 400): void
     {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
         header('Content-Type: application/json; charset=UTF-8', true, $statusCode);
         echo json_encode([
             'data' => null,

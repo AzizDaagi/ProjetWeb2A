@@ -33,4 +33,4 @@
     <?php endif; ?>
     <?php endif; ?>
 
-    <main class="main-content">
+    <main class="<?= $isAdminTemplate ? 'main-content admin-main' : 'main-content' ?>">

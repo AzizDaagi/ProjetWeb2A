@@ -25,6 +25,10 @@ class chatbotctrl
 
     public function handle()
     {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
         header('Content-Type: application/json; charset=UTF-8');
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -101,6 +105,10 @@ class chatbotctrl
 
     public function clear_chat()
     {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
         header('Content-Type: application/json; charset=UTF-8');
 
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {

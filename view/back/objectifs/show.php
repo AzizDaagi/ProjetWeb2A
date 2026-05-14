@@ -15,13 +15,13 @@ $hasComputedSummary = !empty($objectifSummary);
         </div>
 
         <div class="admin-action-group">
-            <a href="index.php?controller=backoffice&action=objectifs" class="admin-btn admin-btn-secondary">
+            <a href="/projet-web-25-26/index.php?action=admin-objectifs" class="admin-btn admin-btn-secondary">
                 <i class="fa-solid fa-arrow-left"></i>
                 Retour
             </a>
 
             <?php if ($repasCount === 0): ?>
-                <a href="index.php?controller=backoffice&action=objectifDelete&id=<?= urlencode((string) ($objectif['id'] ?? '')) ?>" class="admin-btn admin-btn-danger" onclick="return confirm('Supprimer cet objectif ?');">
+                <a href="/projet-web-25-26/index.php?action=admin-objectif-delete&id=<?= urlencode((string) ($objectif['id'] ?? '')) ?>" class="admin-btn admin-btn-danger" onclick="return confirm('Supprimer cet objectif ?');">
                     <i class="fa-solid fa-trash"></i>
                     Supprimer
                 </a>

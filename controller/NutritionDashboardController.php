@@ -69,8 +69,18 @@ class NutritionDashboardController
 
     private function getCurrentUserId(): int
     {
-        // TODO: retirer le fallback user_id = 1 lors de l'integration finale de l'authentification.
-        return (int) ($_SESSION['user_id'] ?? 1);
+        $userId = (int) ($_SESSION['user_id'] ?? 0);
+        $role = (string) ($_SESSION['user_role'] ?? 'user');
+
+        if ($userId <= 0) {
+            $this->error('Session invalide.', 401);
+        }
+
+        if ($role === 'admin') {
+            $this->error('Acces front office refuse.', 403);
+        }
+
+        return $userId;
     }
 
     private function resolveDaysParameter(): int
@@ -87,6 +97,10 @@ class NutritionDashboardController
 
     private function success($data, bool $cached = false, ?int $debugUserId = null): void
     {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
         header('Content-Type: application/json; charset=UTF-8');
         $payload = [
             'data' => $data,
@@ -104,6 +118,10 @@ class NutritionDashboardController
 
     private function error(string $message, int $statusCode = 400): void
     {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
         header('Content-Type: application/json; charset=UTF-8', true, $statusCode);
         echo json_encode([
             'data' => null,

@@ -31,10 +31,14 @@ function runInitSafely(initFn, label) {
 
 function initThemeToggle() {
     var storageKey = 'smartNutritionTheme';
+    var legacyStorageKey = 'theme';
     var savedTheme = null;
 
     try {
         savedTheme = localStorage.getItem(storageKey);
+        if (savedTheme !== 'light' && savedTheme !== 'dark') {
+            savedTheme = localStorage.getItem(legacyStorageKey);
+        }
     } catch (error) {
         savedTheme = null;
     }
@@ -51,37 +55,45 @@ function initThemeToggle() {
 
     applyTheme(initialTheme, storageKey);
 
-    var toggleButton = document.getElementById('themeToggle');
-    if (!toggleButton) {
+    var toggleButtons = document.querySelectorAll('#themeToggle, .theme-toggle');
+    if (!toggleButtons.length) {
         return;
     }
 
-    toggleButton.addEventListener('click', function () {
-        var nextTheme = document.body.classList.contains('theme-light')
-            ? 'dark'
-            : 'light';
-        applyTheme(nextTheme, storageKey);
+    toggleButtons.forEach(function (toggleButton) {
+        if (toggleButton.dataset.themeBound === 'true') {
+            return;
+        }
+
+        toggleButton.dataset.themeBound = 'true';
+        toggleButton.addEventListener('click', function () {
+            var nextTheme = document.body.classList.contains('theme-light')
+                ? 'dark'
+                : 'light';
+            applyTheme(nextTheme, storageKey);
+        });
     });
 }
 
 function applyTheme(theme, storageKey) {
     var isLight = theme === 'light';
 
+    document.body.classList.toggle('dark', !isLight);
     document.body.classList.toggle('theme-light', isLight);
     document.body.classList.toggle('theme-dark', !isLight);
     document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
 
-    var toggleButton = document.getElementById('themeToggle');
-    if (toggleButton) {
+    document.querySelectorAll('#themeToggle, .theme-toggle').forEach(function (toggleButton) {
         toggleButton.setAttribute('aria-pressed', isLight ? 'true' : 'false');
         toggleButton.title = isLight ? 'Passer en mode sombre' : 'Passer en mode clair';
         toggleButton.innerHTML = isLight
             ? '<i class="fa-solid fa-sun"></i> Clair'
             : '<i class="fa-solid fa-moon"></i> Sombre';
-    }
+    });
 
     try {
         localStorage.setItem(storageKey, isLight ? 'light' : 'dark');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
     } catch (error) {
     }
 }
@@ -1523,45 +1535,50 @@ function initVoiceControl() {
 }
 
 function initNotifications() {
-    var center = document.querySelector('.notification-center');
-    if (!center || center.dataset.notificationReady === 'true') {
+    var centers = document.querySelectorAll('.notification-center');
+    if (!centers.length) {
         return;
     }
 
-    center.dataset.notificationReady = 'true';
-
-    var endpoint = center.getAttribute('data-notification-endpoint') || '';
-    var toggle = document.getElementById('notificationToggle');
-    var dropdown = document.getElementById('notificationDropdown');
-    var badge = document.getElementById('notificationBadge');
-    var list = document.getElementById('notificationList');
-    var markAll = document.getElementById('notificationMarkAll');
-    var showOlder = document.getElementById('notificationShowOlder');
-    var initialVisibleCount = 5;
-    var olderVisible = false;
-    var latestItems = [];
-
-    if (!endpoint || !toggle || !dropdown || !badge || !list) {
-        return;
-    }
-
-    function escapeHtml(value) {
-        var div = document.createElement('div');
-        div.textContent = value || '';
-        return div.innerHTML;
-    }
-
-    function renderNotifications(items) {
-        latestItems = Array.isArray(items) ? items : [];
-        var visibleItems = olderVisible ? latestItems : latestItems.slice(0, initialVisibleCount);
-
-        if (!visibleItems.length) {
-            list.innerHTML = '<p class="notification-empty">Aucune notification pour le moment.</p>';
-            if (showOlder) showOlder.hidden = true;
+    centers.forEach(function (center) {
+        if (center.dataset.notificationReady === 'true') {
             return;
         }
 
-        list.innerHTML = visibleItems.map(function (item) {
+        center.dataset.notificationReady = 'true';
+
+        var endpoint = center.getAttribute('data-notification-endpoint') || '';
+        var toggle = center.querySelector('#notificationToggle, .notification-toggle');
+        var dropdown = center.querySelector('#notificationDropdown, .notification-dropdown');
+        var badge = center.querySelector('#notificationBadge, .notification-badge');
+        var list = center.querySelector('#notificationList, .notification-list');
+        var markAll = center.querySelector('#notificationMarkAll, .notification-mark-all');
+        var showOlder = center.querySelector('#notificationShowOlder, .notification-show-older');
+        var initialVisibleCount = 5;
+        var olderVisible = false;
+        var latestItems = [];
+
+        if (!endpoint || !toggle || !dropdown || !badge || !list) {
+            return;
+        }
+
+        function escapeHtml(value) {
+            var div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
+        }
+
+        function renderNotifications(items) {
+            latestItems = Array.isArray(items) ? items : [];
+            var visibleItems = olderVisible ? latestItems : latestItems.slice(0, initialVisibleCount);
+
+            if (!visibleItems.length) {
+                list.innerHTML = '<p class="notification-empty">Aucune notification pour le moment.</p>';
+                if (showOlder) showOlder.hidden = true;
+                return;
+            }
+
+            list.innerHTML = visibleItems.map(function (item) {
             var unreadClass = Number(item.is_read) ? '' : ' is-unread';
             var time = item.created_at ? new Date(String(item.created_at).replace(' ', 'T')).toLocaleString() : '';
             return '' +
@@ -1570,89 +1587,50 @@ function initNotifications() {
                     '<span class="notification-item-message">' + escapeHtml(item.message) + '</span>' +
                     '<span class="notification-item-time">' + escapeHtml(time) + '</span>' +
                 '</button>';
-        }).join('');
+            }).join('');
 
-        if (showOlder) {
-            showOlder.hidden = latestItems.length <= initialVisibleCount;
-            showOlder.textContent = olderVisible ? 'Anciennes notifications affichees' : 'Voir les anciennes notifications';
-            showOlder.disabled = olderVisible;
-        }
-    }
-
-    function updateBadge(count) {
-        var unreadCount = Number(count || 0);
-        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
-        badge.hidden = unreadCount === 0;
-    }
-
-    function positionDropdown() {
-        var rect = toggle.getBoundingClientRect();
-        var dropdownWidth = Math.min(360, window.innerWidth - 28);
-        dropdown.style.width = dropdownWidth + 'px';
-        dropdown.style.right = Math.max(14, window.innerWidth - rect.right) + 'px';
-        dropdown.style.top = Math.max(12, Math.min(rect.bottom + 10, window.innerHeight - 120)) + 'px';
-    }
-
-    function fetchNotifications() {
-        fetch(endpoint + '?action=list', {
-            cache: 'no-store',
-            credentials: 'same-origin'
-        })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (!data || data.success !== true) return;
-                updateBadge(data.unreadCount);
-                renderNotifications(data.notifications || []);
-            })
-            .catch(function () {});
-    }
-
-    function markRead(id, callback) {
-        fetch(endpoint + '?action=mark_read', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'id=' + encodeURIComponent(id)
-        })
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                if (data && data.success) {
-                    updateBadge(data.unreadCount);
-                    fetchNotifications();
-                }
-                if (callback) callback();
-            })
-            .catch(function () {
-                if (callback) callback();
-            });
-    }
-
-    toggle.addEventListener('click', function () {
-        var isOpen = !dropdown.hidden;
-        dropdown.hidden = isOpen;
-        toggle.setAttribute('aria-expanded', String(!isOpen));
-        if (!isOpen) {
-            positionDropdown();
-            fetchNotifications();
-        }
-    });
-
-    list.addEventListener('click', function (event) {
-        var item = event.target.closest('.notification-item');
-        if (!item) return;
-
-        markRead(item.dataset.id, function () {
-            if (item.dataset.link) {
-                window.location.href = item.dataset.link;
+            if (showOlder) {
+                showOlder.hidden = latestItems.length <= initialVisibleCount;
+                showOlder.textContent = olderVisible ? 'Anciennes notifications affichees' : 'Voir les anciennes notifications';
+                showOlder.disabled = olderVisible;
             }
-        });
-    });
+        }
 
-    if (markAll) {
-        markAll.addEventListener('click', function () {
-            fetch(endpoint + '?action=mark_all_read', {
-                method: 'POST',
+        function updateBadge(count) {
+            var unreadCount = Number(count || 0);
+            badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+            badge.hidden = unreadCount === 0;
+        }
+
+        function positionDropdown() {
+            var dropdownWidth = Math.min(360, window.innerWidth - 28);
+            dropdown.style.width = dropdownWidth + 'px';
+            dropdown.style.top = '';
+            dropdown.style.right = '';
+            dropdown.style.left = '';
+            dropdown.style.transform = '';
+        }
+
+        function fetchNotifications() {
+            fetch(endpoint + '?action=list', {
+                cache: 'no-store',
                 credentials: 'same-origin'
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (!data || data.success !== true) return;
+                    updateBadge(data.unreadCount);
+                    renderNotifications(data.notifications || []);
+                })
+                .catch(function () {});
+        }
+
+        function markRead(id, callback) {
+            fetch(endpoint + '?action=mark_read', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'id=' + encodeURIComponent(id)
             })
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
@@ -1660,34 +1638,75 @@ function initNotifications() {
                         updateBadge(data.unreadCount);
                         fetchNotifications();
                     }
+                    if (callback) callback();
                 })
-                .catch(function () {});
-        });
-    }
-
-    if (showOlder) {
-        showOlder.addEventListener('click', function () {
-            olderVisible = true;
-            dropdown.classList.add('is-expanded');
-            renderNotifications(latestItems);
-        });
-    }
-
-    document.addEventListener('click', function (event) {
-        if (!center.contains(event.target)) {
-            dropdown.hidden = true;
-            olderVisible = false;
-            dropdown.classList.remove('is-expanded');
-            toggle.setAttribute('aria-expanded', 'false');
+                .catch(function () {
+                    if (callback) callback();
+                });
         }
-    });
 
-    window.addEventListener('resize', function () {
-        if (!dropdown.hidden) positionDropdown();
-    });
+        toggle.addEventListener('click', function () {
+            var isOpen = !dropdown.hidden;
+            dropdown.hidden = isOpen;
+            toggle.setAttribute('aria-expanded', String(!isOpen));
+            if (!isOpen) {
+                positionDropdown();
+                fetchNotifications();
+            }
+        });
 
-    fetchNotifications();
-    window.setInterval(fetchNotifications, 10000);
+        list.addEventListener('click', function (event) {
+            var item = event.target.closest('.notification-item');
+            if (!item) return;
+
+            markRead(item.dataset.id, function () {
+                if (item.dataset.link) {
+                    window.location.href = item.dataset.link;
+                }
+            });
+        });
+
+        if (markAll) {
+            markAll.addEventListener('click', function () {
+                fetch(endpoint + '?action=mark_all_read', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (data && data.success) {
+                            updateBadge(data.unreadCount);
+                            fetchNotifications();
+                        }
+                    })
+                    .catch(function () {});
+            });
+        }
+
+        if (showOlder) {
+            showOlder.addEventListener('click', function () {
+                olderVisible = true;
+                dropdown.classList.add('is-expanded');
+                renderNotifications(latestItems);
+            });
+        }
+
+        document.addEventListener('click', function (event) {
+            if (!center.contains(event.target)) {
+                dropdown.hidden = true;
+                olderVisible = false;
+                dropdown.classList.remove('is-expanded');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        window.addEventListener('resize', function () {
+            if (!dropdown.hidden) positionDropdown();
+        });
+
+        fetchNotifications();
+        window.setInterval(fetchNotifications, 10000);
+    });
 }
 
 function initAdminModuleButtons() {

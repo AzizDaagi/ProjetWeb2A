@@ -29,7 +29,7 @@
             <input id="email" name="email" type="email" class="form-control" required />
         </div>
         <div class="form-group">
-            <button type="submit" class="btn btn-primary">Envoyer le code de vÃ©rification</button>
+            <button type="submit" class="btn btn-primary">Envoyer le code de verification</button>
             <a href="/projet-web-25-26/index.php?action=login" class="btn btn-link">Retour</a>
         </div>
     </form>

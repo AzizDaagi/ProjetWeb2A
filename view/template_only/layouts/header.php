@@ -6,7 +6,7 @@
     <title><?= $pageTitle ?? 'Smart Nutrition' ?></title>
     <?php $assetVersion = time(); ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="/projetwebmalek/view/template_only/assets/css/style.css?v=<?= $assetVersion ?>">
+    <link rel="stylesheet" href="/projet-web-25-26/view/template_only/assets/css/style.css?v=<?= $assetVersion ?>">
 </head>
 <?php 
 if (session_status() === PHP_SESSION_NONE) {

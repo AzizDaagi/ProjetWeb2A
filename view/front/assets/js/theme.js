@@ -1,6 +1,7 @@
 (function () {
     var storageKey = 'theme';
     var oldStorageKey = 'smartNutritionTheme';
+    var toggleSelector = '#themeToggle, .theme-toggle';
 
     function getSavedTheme() {
         var theme = null;
@@ -28,17 +29,19 @@
     }
 
     function updateToggle(theme) {
-        var toggle = document.getElementById('themeToggle');
+        var toggles = document.querySelectorAll(toggleSelector);
 
-        if (!toggle) {
+        if (!toggles.length) {
             return;
         }
 
-        toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-        toggle.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
-        toggle.innerHTML = theme === 'dark'
-            ? '<i class="fa-solid fa-moon"></i> Dark'
-            : '<i class="fa-solid fa-sun"></i> Light';
+        toggles.forEach(function (toggle) {
+            toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+            toggle.title = theme === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre';
+            toggle.innerHTML = theme === 'dark'
+                ? '<i class="fa-solid fa-moon"></i> Sombre'
+                : '<i class="fa-solid fa-sun"></i> Clair';
+        });
     }
 
     function applyTheme(theme) {
@@ -55,19 +58,25 @@
 
     function initTheme() {
         var theme = getSavedTheme();
-        var toggle = document.getElementById('themeToggle');
+        var toggles = document.querySelectorAll(toggleSelector);
 
         applyTheme(theme);
         document.body.classList.add('is-ready');
 
-        if (!toggle || toggle.dataset.themeBound === 'true') {
+        if (!toggles.length) {
             return;
         }
 
-        toggle.dataset.themeBound = 'true';
-        toggle.addEventListener('click', function () {
-            var nextTheme = document.body.classList.contains('dark') ? 'light' : 'dark';
-            applyTheme(nextTheme);
+        toggles.forEach(function (toggle) {
+            if (toggle.dataset.themeBound === 'true') {
+                return;
+            }
+
+            toggle.dataset.themeBound = 'true';
+            toggle.addEventListener('click', function () {
+                var nextTheme = document.body.classList.contains('dark') ? 'light' : 'dark';
+                applyTheme(nextTheme);
+            });
         });
     }
 

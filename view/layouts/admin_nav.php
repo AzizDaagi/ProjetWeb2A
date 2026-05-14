@@ -1,22 +1,53 @@
 <?php
+$baseUrl = '/projet-web-25-26';
 $currentAction = $_GET['action'] ?? 'admin-dashboard';
 
 $isDashboardAction = $currentAction === 'admin-dashboard';
 $isUsersAction = in_array($currentAction, ['users-list', 'create-user', 'edit-user', 'users-report'], true);
-$isTrackingAction = in_array($currentAction, ['nutrition_dashboard', 'suivi', 'objectif', 'admin-aliments', 'admin-objectifs'], true);
-$isRecipesAction = in_array($currentAction, ['admin-recipes', 'recipes-management', 'recipe-details', 'recipe-generate', 'recipe-optimize', 'recipe-save-optimization', 'recipe-stats', 'recipe-export'], true);
-$isRecommendationsAction = $currentAction === 'admin-recommendations';
-$isObjectivesAction = in_array($currentAction, ['admin-objectifs', 'objectif'], true);
+$isAlimentsAction = in_array($currentAction, [
+    'admin-aliments',
+    'admin-aliment-create',
+    'admin-aliment-edit',
+    'admin-aliment-store',
+    'admin-aliment-update',
+    'admin-aliment-delete',
+], true);
+$isObjectivesAction = in_array($currentAction, [
+    'admin-objectifs',
+    'admin-objectif-show',
+    'admin-objectif-delete',
+    'admin-objectif-create',
+    'admin-objectif-edit',
+    'admin-objectif-store',
+    'admin-objectif-update',
+], true);
+$isRecipesAction = in_array($currentAction, [
+    'admin-recipes',
+    'admin-recipe-create',
+    'admin-recipe-edit',
+    'admin-recipe-store',
+    'admin-recipe-update',
+    'admin-recipe-delete',
+    'recipes-management',
+    'recipe-details',
+    'recipe-generate',
+    'recipe-optimize',
+    'recipe-save-optimization',
+    'recipe-stats',
+    'recipe-export',
+], true);
+$isRecommendationsAction = in_array($currentAction, [
+    'admin-recommendations',
+    'admin-recommendation-create',
+    'admin-recommendation-edit',
+    'admin-recommendation-store',
+    'admin-recommendation-update',
+    'admin-recommendation-delete',
+], true);
 $isCommunityAction = $currentAction === 'admin-community';
 $isCommunityReportsAction = in_array($currentAction, ['admin-community-reports', 'admin-community-report-details', 'admin-community-review-post'], true);
-$isNewsAction = in_array($currentAction, ['admin-news', 'admin-news-create', 'admin-news-edit'], true);
-
-$adminObjectifsRouteExists = false;
-$adminNewsRouteExists = false;
-$objectifsHref = $adminObjectifsRouteExists
-    ? '/projet-web-25-26/index.php?action=admin-objectifs'
-    : '/projet-web-25-26/index.php?action=objectif';
-$newsHref = '/projet-web-25-26/index.php?action=admin-news';
+$isSportAction = in_array($currentAction, ['admin-sport', 'admin_index', 'admin_show', 'admin_requests'], true);
+$adminSportRouteExists = true;
 
 $moduleInfo = [
     'dashboard' => [
@@ -27,9 +58,13 @@ $moduleInfo = [
         'title' => 'Utilisateurs',
         'text' => 'Module actif pour la gestion des comptes, profils et statistiques utilisateurs.',
     ],
-    'tracking' => [
-        'title' => 'Suivi',
-        'text' => 'Module actif pour le suivi nutritionnel, les aliments et les indicateurs quotidiens.',
+    'aliments' => [
+        'title' => 'Aliments',
+        'text' => 'Module actif pour gerer le catalogue nutritionnel officiel.',
+    ],
+    'objectives' => [
+        'title' => 'Objectifs',
+        'text' => 'Module actif pour gerer les objectifs caloriques et nutritionnels.',
     ],
     'recipes' => [
         'title' => 'Recettes',
@@ -37,11 +72,7 @@ $moduleInfo = [
     ],
     'recommendations' => [
         'title' => 'Recommandations',
-        'text' => 'Module actif pour gerer les recommandations associees aux recettes.',
-    ],
-    'objectives' => [
-        'title' => 'Objectifs',
-        'text' => 'Module actif pour la gestion des objectifs caloriques et de la progression utilisateur.',
+        'text' => 'Module actif pour gerer les regles de recommandations nutritionnelles.',
     ],
     'community' => [
         'title' => 'Community',
@@ -51,9 +82,9 @@ $moduleInfo = [
         'title' => 'Signalements',
         'text' => 'Module actif pour moderer les contenus signales par les utilisateurs.',
     ],
-    'news' => [
-        'title' => 'Articles',
-        'text' => 'Module actif pour gerer les articles nutrition et wellness.',
+    'sport' => [
+        'title' => 'Activite sportive',
+        'text' => 'Module actif pour gerer les activites sportives et le suivi des exercices.',
     ],
 ];
 
@@ -64,16 +95,16 @@ if ($isUsersAction) {
     $activeModuleKey = 'community_reports';
 } elseif ($isCommunityAction) {
     $activeModuleKey = 'community';
-} elseif ($isNewsAction) {
-    $activeModuleKey = 'news';
 } elseif ($isRecommendationsAction) {
     $activeModuleKey = 'recommendations';
 } elseif ($isRecipesAction) {
     $activeModuleKey = 'recipes';
 } elseif ($isObjectivesAction) {
     $activeModuleKey = 'objectives';
-} elseif ($isTrackingAction) {
-    $activeModuleKey = 'tracking';
+} elseif ($isAlimentsAction) {
+    $activeModuleKey = 'aliments';
+} elseif ($isSportAction) {
+    $activeModuleKey = 'sport';
 }
 
 $currentModule = $moduleInfo[$activeModuleKey] ?? $moduleInfo['dashboard'];
@@ -102,9 +133,9 @@ if ($adminInitials === '') {
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-brand-link">
+            <a href="<?= $baseUrl ?>/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/projet-web-25-26/view/assets/images/logo.png"
+                    src="<?= $baseUrl ?>/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -115,12 +146,12 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section">
             <p class="admin-menu-title admin-side-section-title">Navigation</p>
-            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
-                <span>🧭</span>
+            <a href="<?= $baseUrl ?>/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-compass"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
-                <span>👥</span>
+            <a href="<?= $baseUrl ?>/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-users"></i>
                 <span>Utilisateurs</span>
             </a>
         </div>
@@ -128,42 +159,41 @@ if ($adminInitials === '') {
         <div class="admin-menu-section admin-modules-section">
             <p class="admin-menu-title admin-side-section-title">Modules</p>
 
-            <a href="/projet-web-25-26/index.php?action=nutrition_dashboard" class="admin-side-link<?= $isTrackingAction ? ' active' : '' ?>">
-                <span>🍎</span>
-                <span>Suivi</span>
+            <a href="<?= $baseUrl ?>/index.php?action=admin-aliments" class="admin-side-link<?= $isAlimentsAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-apple-whole"></i>
+                <span>Aliments</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
-                <span>📖</span>
-                <span>Recettes</span>
-            </a>
-
-            <a href="/projet-web-25-26/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
-                <span>💙</span>
-                <span>Recommandations</span>
-            </a>
-
-            <a href="<?= htmlspecialchars($objectifsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isObjectivesAction ? ' active' : '' ?>">
-                <span>🎯</span>
+            <a href="<?= $baseUrl ?>/index.php?action=admin-objectifs" class="admin-side-link<?= $isObjectivesAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-bullseye"></i>
                 <span>Objectifs</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
-                <span>💬</span>
+            <a href="<?= $baseUrl ?>/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Recettes</span>
+            </a>
+
+            <a href="<?= $baseUrl ?>/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Recommandations</span>
+            </a>
+
+            <a href="<?= $baseUrl ?>/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-comments"></i>
                 <span>Community</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
-                <span>🚩</span>
-                <span>Reports Community</span>
+            <a href="<?= $baseUrl ?>/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-flag"></i>
+                <span>Signalements</span>
             </a>
 
-            <a href="<?= htmlspecialchars($newsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isNewsAction ? ' active' : '' ?>">
-                <span>📰</span>
-                <span>News / Articles</span>
+            <?php if ($adminSportRouteExists): ?>
+            <a href="<?= $baseUrl ?>/index.php?action=admin-sport" class="admin-side-link<?= $isSportAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-person-running"></i>
+                <span>Activite sportive</span>
             </a>
-            <?php if (!$adminNewsRouteExists): ?>
-                <!-- TODO: add admin-news route in index.php when the back-office news module is wired -->
             <?php endif; ?>
 
             <div class="admin-module-description admin-side-info-card" tabindex="-1">
@@ -173,40 +203,40 @@ if ($adminInitials === '') {
         </div>
     </aside>
 
-    <header class="admin-topbar">
-        <div class="admin-top-actions">
-            <div class="notification-center admin-notification-center" data-notification-endpoint="/projet-web-25-26/controller/notificationController.php">
-                <button type="button" id="notificationToggle" class="admin-icon-btn notification-toggle" aria-label="Notifications" aria-expanded="false">
-                    <i class="fa-solid fa-bell"></i>
-                    <span id="notificationBadge" class="notification-badge" hidden>0</span>
+    <div class="admin-workspace">
+        <header class="admin-topbar">
+            <div class="admin-top-actions">
+                <div class="notification-center admin-notification-center" data-notification-endpoint="<?= $baseUrl ?>/controller/notificationController.php">
+                    <button type="button" id="notificationToggle" class="admin-icon-btn notification-toggle" aria-label="Notifications" aria-expanded="false">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="notificationBadge" class="notification-badge" hidden>0</span>
+                    </button>
+                    <div id="notificationDropdown" class="notification-dropdown" hidden>
+                        <div class="notification-header">
+                            <strong>Notifications</strong>
+                            <button type="button" id="notificationMarkAll" class="notification-mark-all">Tout marquer comme lu</button>
+                        </div>
+                        <div id="notificationList" class="notification-list">
+                            <p class="notification-empty">Aucune notification pour le moment.</p>
+                        </div>
+                        <button type="button" id="notificationShowOlder" class="notification-show-older" hidden>Voir les anciennes notifications</button>
+                    </div>
+                </div>
+
+                <button type="button" id="themeToggle" class="admin-icon-btn theme-toggle admin-theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
+                    <i class="fa-solid fa-moon"></i>
                 </button>
-                <div id="notificationDropdown" class="notification-dropdown" hidden>
-                    <div class="notification-header">
-                        <strong>Notifications</strong>
-                        <button type="button" id="notificationMarkAll" class="notification-mark-all">Tout marquer comme lu</button>
+
+                <div class="admin-user-chip">
+                    <span class="admin-user-avatar"><?= htmlspecialchars($adminInitials) ?></span>
+                    <div class="admin-user-meta">
+                        <strong><?= htmlspecialchars($adminName) ?></strong>
+                        <span>Administrator</span>
                     </div>
-                    <div id="notificationList" class="notification-list">
-                        <p class="notification-empty">Aucune notification pour le moment.</p>
-                    </div>
-                    <button type="button" id="notificationShowOlder" class="notification-show-older" hidden>Voir les anciennes notifications</button>
                 </div>
+
+                <a href="<?= $baseUrl ?>/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
             </div>
-
-            <button type="button" id="themeToggle" class="admin-icon-btn theme-toggle admin-theme-toggle" aria-label="Changer le mode de couleur" aria-pressed="false">
-                <i class="fa-solid fa-moon"></i>
-            </button>
-
-            <div class="admin-user-chip">
-                <span class="admin-user-avatar"><?= htmlspecialchars($adminInitials) ?></span>
-                <div class="admin-user-meta">
-                    <strong><?= htmlspecialchars($adminName) ?></strong>
-                    <span>Administrator</span>
-                </div>
-            </div>
-
-            <a href="/projet-web-25-26/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
-                <i class="fa-solid fa-right-from-bracket"></i>
-            </a>
-        </div>
-    </header>
-</div>
+        </header>

@@ -37,8 +37,8 @@ class BackofficeCtrl
     public function suivi()
     {
         $this->render('aliments/index.php', [
-            'pageTitle' => 'Suivi',
-            'currentSection' => 'suivi',
+            'pageTitle' => 'Aliments',
+            'currentSection' => 'admin-aliments',
             'aliments' => $this->alimentModel->getAll(),
         ]);
     }
@@ -50,7 +50,7 @@ class BackofficeCtrl
 
         $this->render('aliments/create.php', [
             'pageTitle' => 'Ajouter un aliment',
-            'currentSection' => 'suivi',
+            'currentSection' => 'admin-aliments',
             'aliment' => $aliment,
         ]);
     }
@@ -61,7 +61,7 @@ class BackofficeCtrl
         $data = $this->validateAliment($_POST);
 
         if (!$data) {
-            header("Location: index.php?controller=backoffice&action=suiviCreate");
+            header("Location: /projet-web-25-26/index.php?action=admin-aliment-create");
             exit;
         }
 
@@ -69,14 +69,14 @@ class BackofficeCtrl
         unset($_SESSION['admin_aliment_old']);
         $_SESSION['admin_aliment_success'] = "Aliment ajoute avec succes";
 
-        header("Location: index.php?controller=backoffice&action=suivi");
+        header("Location: /projet-web-25-26/index.php?action=admin-aliments");
         exit;
     }
 
     public function suiviEdit()
     {
         if (empty($_GET['id'])) {
-            header("Location: index.php?controller=backoffice&action=suivi");
+            header("Location: /projet-web-25-26/index.php?action=admin-aliments");
             exit;
         }
 
@@ -84,7 +84,7 @@ class BackofficeCtrl
 
         if (!$aliment) {
             $_SESSION['admin_aliment_error'] = "Aliment introuvable";
-            header("Location: index.php?controller=backoffice&action=suivi");
+            header("Location: /projet-web-25-26/index.php?action=admin-aliments");
             exit;
         }
 
@@ -97,7 +97,7 @@ class BackofficeCtrl
 
         $this->render('aliments/edit.php', [
             'pageTitle' => 'Modifier un aliment',
-            'currentSection' => 'suivi',
+            'currentSection' => 'admin-aliments',
             'aliment' => $aliment,
         ]);
     }
@@ -108,7 +108,7 @@ class BackofficeCtrl
         $data = $this->validateAliment($_POST);
 
         if (!$data || empty($_POST['id'])) {
-            header("Location: index.php?controller=backoffice&action=suiviEdit&id=" . urlencode((string) ($_POST['id'] ?? '')));
+            header("Location: /projet-web-25-26/index.php?action=admin-aliment-edit&id=" . urlencode((string) ($_POST['id'] ?? '')));
             exit;
         }
 
@@ -117,7 +117,7 @@ class BackofficeCtrl
         unset($_SESSION['admin_aliment_old']);
         $_SESSION['admin_aliment_success'] = "Aliment modifie avec succes";
 
-        header("Location: index.php?controller=backoffice&action=suivi");
+        header("Location: /projet-web-25-26/index.php?action=admin-aliments");
         exit;
     }
 
@@ -128,7 +128,7 @@ class BackofficeCtrl
             $_SESSION['admin_aliment_success'] = "Aliment supprime avec succes";
         }
 
-        header("Location: index.php?controller=backoffice&action=suivi");
+        header("Location: /projet-web-25-26/index.php?action=admin-aliments");
         exit;
     }
 
@@ -142,8 +142,8 @@ class BackofficeCtrl
         unset($objectif);
 
         $this->render('objectifs/index.php', [
-            'pageTitle' => 'Objectifs',
-            'currentSection' => 'objectifs',
+            'pageTitle' => 'Objectifs nutritionnels',
+            'currentSection' => 'admin-objectifs',
             'objectifs' => $objectifs,
             'sexeOptions' => $this->objectifCalculator->getSexeOptions(),
             'objectifTypeOptions' => $this->objectifCalculator->getObjectifTypeOptions(),
@@ -157,13 +157,13 @@ class BackofficeCtrl
 
         if (!$objectif) {
             $_SESSION['admin_objectif_error'] = "Objectif introuvable";
-            header("Location: index.php?controller=backoffice&action=objectifs");
+            header("Location: /projet-web-25-26/index.php?action=admin-objectifs");
             exit;
         }
 
         $this->render('objectifs/show.php', [
             'pageTitle' => 'Detail objectif',
-            'currentSection' => 'objectifs',
+            'currentSection' => 'admin-objectifs',
             'objectif' => $objectif,
             'objectifSummary' => $this->hasPhysicalProfile($objectif)
                 ? $this->objectifCalculator->calculateNutritionTargets($objectif)
@@ -189,7 +189,7 @@ class BackofficeCtrl
             }
         }
 
-        header("Location: index.php?controller=backoffice&action=objectifs");
+        header("Location: /projet-web-25-26/index.php?action=admin-objectifs");
         exit;
     }
 

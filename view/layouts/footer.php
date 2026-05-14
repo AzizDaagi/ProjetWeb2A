@@ -1,4 +1,8 @@
     </main>
+    <?php if (isset($isAdminTemplate) && $isAdminTemplate === true): ?>
+    </div>
+    </div>
+    <?php endif; ?>
 
     <?php if (isset($showFooter) && $showFooter === true): ?>
     <footer class="footer">

@@ -16,6 +16,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="/projetwebmalek/view/template_only/assets/js/app.js?v=<?= $assetVersion ?>"></script>
+    <script src="/projet-web-25-26/view/template_only/assets/js/app.js?v=<?= $assetVersion ?>"></script>
 </body>
 </html>

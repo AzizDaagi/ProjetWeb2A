@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../model/Aliment.php';
+require_once __DIR__ . '/../model/aliment.php';
 require_once __DIR__ . '/../model/Database.php';
 
 class AlimentController {

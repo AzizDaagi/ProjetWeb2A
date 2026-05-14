@@ -227,7 +227,11 @@ class CommentController {
     }
 
     private function jsonError(string $message): void {
-        header('Content-Type: application/json');
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
+        header('Content-Type: application/json; charset=UTF-8');
         echo json_encode([
             'success' => false,
             'message' => $message
