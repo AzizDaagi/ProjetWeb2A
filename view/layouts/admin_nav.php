@@ -122,12 +122,12 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section">
             <p class="admin-menu-title admin-side-section-title">Navigation</p>
-            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
-                <span>ðŸ§­</span>
+            <a href="/Web/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-chart-line"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
-                <span>ðŸ‘¥</span>
+            <a href="/Web/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+                <i class="fa-solid fa-users"></i>
                 <span>Utilisateurs</span>
             </a>
         </div>
