@@ -249,7 +249,6 @@ if ($action === 'home') {
     include __DIR__ . '/view/layouts/header.php';
     include __DIR__ . '/view/backoffice/manage_recommandations.php';
     include __DIR__ . '/view/layouts/footer.php';
-
 } elseif ($action === 'auth-management') {
     $pageTitle = 'Authentification';
     if ($isAdminSession) {
@@ -300,7 +299,6 @@ if ($action === 'home') {
 
 } elseif ($action === 'recipe-export') {
     include __DIR__ . '/view/frontoffice/export_pdf.php';
-
 } elseif ($action === 'foods-management') {
     $products = new ProduitController();
     $products->frontList();
@@ -734,4 +732,3 @@ if ($action === 'home') {
 
     $controller->$action();
 }
-?>
