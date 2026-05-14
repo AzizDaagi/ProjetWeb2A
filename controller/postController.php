@@ -25,7 +25,7 @@ class PostController {
         'image/jpeg' => 'jpg',
         'image/png' => 'png',
         'image/gif' => 'gif',
-        'image/projet-web-25-26p' => 'webp'
+        'image/webp' => 'webp'
     ];
     private const MAX_UPLOAD_SIZE = 5242880;
     private const ALLOWED_REACTIONS = ['love', 'laugh', 'sad', 'angry'];
@@ -318,7 +318,7 @@ class PostController {
             throw new RuntimeException('Impossible d\'enregistrer l\'image sur le serveur');
         }
 
-        return '/projet-web-25-26/view/post_uploads/posts/' . $filename;
+        return '/Web/view/post_uploads/posts/' . $filename;
     }
 
     private function jsonError(string $message): void {
@@ -435,7 +435,7 @@ class PostController {
             return null;
         }
 
-        $relativePath = ltrim(str_replace('/projet-web-25-26/', '', $image), '/');
+        $relativePath = ltrim(str_replace('/Web/', '', $image), '/');
         return $this->projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
     }
 
@@ -444,7 +444,7 @@ class PostController {
             return;
         }
 
-        $relativePath = ltrim(str_replace('/projet-web-25-26/', '', $image), '/');
+        $relativePath = ltrim(str_replace('/Web/', '', $image), '/');
         $absolutePath = $this->projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
 
         if (is_file($absolutePath)) {
@@ -453,7 +453,7 @@ class PostController {
     }
 
     private function isManagedUploadPath($image) {
-        return is_string($image) && strpos($image, '/projet-web-25-26/view/post_uploads/posts/') === 0;
+        return is_string($image) && strpos($image, '/Web/view/post_uploads/posts/') === 0;
     }
 
     private function notifyReaction(int $postId, int $actorUserId, string $reactionType): void {
@@ -472,7 +472,7 @@ class PostController {
             'post_reaction',
             'Nouvelle reaction sur votre publication',
             $actorName . ' a reagi "' . $reactionLabel . '" a votre publication "' . $postTitle . '".',
-            '/projet-web-25-26/index.php?action=community#post-' . $postId,
+            '/Web/index.php?action=community#post-' . $postId,
             $postId
         );
     }

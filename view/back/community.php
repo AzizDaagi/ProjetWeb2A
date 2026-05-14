@@ -4,12 +4,12 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-    header('Location: /projet-web-25-26/index.php?action=login');
+    header('Location: /Web/index.php?action=login');
     exit;
 }
 
 if (!defined('SMART_ADMIN_VIEW')) {
-    header('Location: /projet-web-25-26/index.php?action=admin-community');
+    header('Location: /Web/index.php?action=admin-community');
     exit;
 }
 
@@ -49,7 +49,7 @@ function resolvePostImageSrc($image)
         return null;
     }
 
-    if (strpos($image, '/projet-web-25-26/view/post_uploads/posts/') === 0) {
+    if (strpos($image, '/Web/view/post_uploads/posts/') === 0) {
         return $image;
     }
 
@@ -540,7 +540,7 @@ function getPostCategoryMeta($category)
                 formData.append('image', imageInput.files[0]);
             }
 
-            fetch('/projet-web-25-26/controller/postController.php?action=update', {
+            fetch('/Web/controller/postController.php?action=update', {
                     method: 'POST',
                     body: formData
                 })
@@ -557,7 +557,7 @@ function getPostCategoryMeta($category)
         function deletePost(id) {
             if (!confirm("Supprimer cette publication ?")) return;
 
-            fetch('/projet-web-25-26/controller/postController.php?action=delete', {
+            fetch('/Web/controller/postController.php?action=delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -586,7 +586,7 @@ function getPostCategoryMeta($category)
             const content = document.getElementById(`edit-comment-text-${id}`).value;
             if (!content.trim()) return alert("Le commentaire ne peut pas etre vide");
 
-            fetch('/projet-web-25-26/controller/commentController.php?action=admin_update', {
+            fetch('/Web/controller/commentController.php?action=admin_update', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'
@@ -606,7 +606,7 @@ function getPostCategoryMeta($category)
         function deleteComment(id) {
             if (!confirm("Supprimer ce commentaire ?")) return;
 
-            fetch('/projet-web-25-26/controller/commentController.php?action=admin_delete', {
+            fetch('/Web/controller/commentController.php?action=admin_delete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded'

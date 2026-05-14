@@ -3,7 +3,7 @@
     <div class="admin-brand">
         <a href="index.php?action=admin-dashboard" class="admin-brand-link">
             <img
-                src="/projet-web-25-26/view/assets/images/logo.png"
+                src="/Web/view/assets/images/logo.png"
                 alt="Smart Nutrition"
                 class="admin-brand-logo"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">

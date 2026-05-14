@@ -25,7 +25,7 @@ class CommandeController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $this->orders->create($this->validatedOrderPayload());
-                header('Location: /projet-web-25-26/index.php?action=order-list&created=1');
+                header('Location: /Web/index.php?action=order-list&created=1');
                 exit;
             } catch (InvalidArgumentException $exception) {
                 $this->render('front/produits/order_create', [
@@ -128,14 +128,14 @@ class CommandeController
         $id = (int) ($_GET['id'] ?? 0);
         $order = $this->orders->find($id);
         if (!$order) {
-            header('Location: /projet-web-25-26/index.php?action=' . $redirectAction);
+            header('Location: /Web/index.php?action=' . $redirectAction);
             exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $this->orders->update($id, $this->validatedOrderPayload());
-                header('Location: /projet-web-25-26/index.php?action=' . $redirectAction . '&updated=1');
+                header('Location: /Web/index.php?action=' . $redirectAction . '&updated=1');
                 exit;
             } catch (InvalidArgumentException $exception) {
                 $order = array_merge($order, $this->oldOrderInput());
@@ -167,7 +167,7 @@ class CommandeController
             $this->orders->delete($id);
         }
 
-        header('Location: /projet-web-25-26/index.php?action=' . $action . '&deleted=1');
+        header('Location: /Web/index.php?action=' . $action . '&deleted=1');
         exit;
     }
 

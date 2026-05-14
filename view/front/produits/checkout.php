@@ -5,7 +5,7 @@
             <h1><i class="fa-solid fa-credit-card icon"></i> Checkout</h1>
             <p class="subtitle">Confirmez vos informations de livraison.</p>
         </div>
-        <a href="/projet-web-25-26/index.php?action=cart-view" class="btn section-action">
+        <a href="/Web/index.php?action=cart-view" class="btn section-action">
             <i class="fa-solid fa-arrow-left"></i> Retour au panier
         </a>
     </div>
@@ -15,7 +15,7 @@
     <?php endif; ?>
 
     <div class="admin-form-panel order-front-panel">
-        <form method="POST" action="/projet-web-25-26/index.php?action=cart-process" class="product-form admin-product-form" novalidate>
+        <form method="POST" action="/Web/index.php?action=cart-process" class="product-form admin-product-form" novalidate>
             <div class="field-grid">
                 <div class="field">
                     <label for="buyer_name">Nom complet</label>

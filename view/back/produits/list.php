@@ -6,22 +6,22 @@
             <p class="subtitle">Gestion des produits ecommerce.</p>
         </div>
         <div class="section-actions">
-            <a href="/projet-web-25-26/index.php?action=product-create" class="btn-admin">
+            <a href="/Web/index.php?action=product-create" class="btn-admin">
                 <i class="fa-solid fa-plus"></i> Ajouter
             </a>
-            <a href="/projet-web-25-26/index.php?action=admin-orders" class="btn-admin-secondary">
+            <a href="/Web/index.php?action=admin-orders" class="btn-admin-secondary">
                 <i class="fa-solid fa-clipboard-list"></i> Commandes
             </a>
-            <a href="/projet-web-25-26/index.php?action=products-pending" class="btn-admin-secondary">
+            <a href="/Web/index.php?action=products-pending" class="btn-admin-secondary">
                 <i class="fa-solid fa-hourglass-half"></i> En attente
             </a>
-            <a href="/projet-web-25-26/index.php?action=products-prediction" class="btn-admin-secondary">
+            <a href="/Web/index.php?action=products-prediction" class="btn-admin-secondary">
                 <i class="fa-solid fa-brain"></i> Prediction
             </a>
         </div>
     </div>
 
-    <form method="GET" action="/projet-web-25-26/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+    <form method="GET" action="/Web/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
         <input type="hidden" name="action" value="products-admin">
         <div class="field" style="min-width: 160px;">
             <label for="status">Statut</label>
@@ -83,10 +83,10 @@
                                 </span>
                             </td>
                             <td class="users-actions">
-                                <a href="/projet-web-25-26/index.php?action=product-edit&id=<?= (int) $row['id'] ?>" class="btn-edit">
+                                <a href="/Web/index.php?action=product-edit&id=<?= (int) $row['id'] ?>" class="btn-edit">
                                     <i class="fa-solid fa-pen"></i> Modifier
                                 </a>
-                                <a href="/projet-web-25-26/index.php?action=product-delete&id=<?= (int) $row['id'] ?>" class="btn-delete-user" onclick="return confirm('Supprimer ce produit ?');">
+                                <a href="/Web/index.php?action=product-delete&id=<?= (int) $row['id'] ?>" class="btn-delete-user" onclick="return confirm('Supprimer ce produit ?');">
                                     <i class="fa-solid fa-trash"></i> Supprimer
                                 </a>
                             </td>

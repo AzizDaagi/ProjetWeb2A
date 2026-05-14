@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const APP_BASE_URL = "/projet-web-25-26";
+    const APP_BASE_URL = "/Web";
     const form = document.getElementById("chrono-form");
     const saveButton = document.getElementById("saveProfile");
     const feedback = document.getElementById("chrono-feedback");
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderLoadingState(blocks.summary, "Resume chrono");
         renderLoadingState(blocks.timing, "Horaires recommandes");
         renderLoadingState(blocks.personalization, "Personnalisation chrono");
-        renderLoadingState(blocks.fasting, "Jeûne intermittent");
+        renderLoadingState(blocks.fasting, "JeÃ»ne intermittent");
         renderLoadingState(blocks.nutrients, "Nutriments par moment");
         renderLoadingState(blocks.sleep, "Synchronisation sommeil");
         setDisclaimer("");
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderLoadingState(blocks.summary, "Resume chrono");
         renderLoadingState(blocks.timing, "Horaires recommandes");
         renderLoadingState(blocks.personalization, "Personnalisation chrono");
-        renderLoadingState(blocks.fasting, "Jeûne intermittent");
+        renderLoadingState(blocks.fasting, "JeÃ»ne intermittent");
         renderLoadingState(blocks.nutrients, "Nutriments par moment");
         renderLoadingState(blocks.sleep, "Synchronisation sommeil");
         setDisclaimer("");
@@ -124,14 +124,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const fastingPromise = fetchJson(`${APP_BASE_URL}/index.php?action=${actionMap.fasting}`)
             .then((response) => {
                 if (response.error || !response.data) {
-                    throw new Error(response.error || "Aucune indication de jeûne intermittent disponible.");
+                    throw new Error(response.error || "Aucune indication de jeÃ»ne intermittent disponible.");
                 }
 
                 renderFasting(response.data);
                 setDisclaimer(response.data.disclaimer || "");
             })
             .catch((error) => {
-                renderErrorState(blocks.fasting, "Jeûne intermittent", error.message || "Impossible de charger le jeûne intermittent.");
+                renderErrorState(blocks.fasting, "JeÃ»ne intermittent", error.message || "Impossible de charger le jeÃ»ne intermittent.");
                 setDisclaimer("");
             });
 
@@ -273,42 +273,42 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="chrono-panel">
                 <div class="chrono-section-head">
                     <div>
-                        <h2 class="chrono-panel__title">Jeûne intermittent</h2>
+                        <h2 class="chrono-panel__title">JeÃ»ne intermittent</h2>
                         <p class="chrono-panel__intro">${escapeHtml(data.message || "Cette fenetre indique la periode de jeune estimee entre le dernier repas de la journee et le premier repas du lendemain.")}</p>
                     </div>
                     <span class="chrono-badge chrono-badge--protocol">Protocole ${escapeHtml(data.protocol || "12/12")}</span>
                 </div>
                 <div class="chrono-fasting-grid">
                     <article class="chrono-subcard chrono-subcard--window">
-                        <span class="chrono-badge chrono-badge--period-noon">Fenêtre alimentaire</span>
+                        <span class="chrono-badge chrono-badge--period-noon">FenÃªtre alimentaire</span>
                         <h3>${escapeHtml(data.eating_start || "--:--")} &rarr; ${escapeHtml(data.eating_end || "--:--")}</h3>
-                        <p>Durée alimentaire : ${escapeHtml(formatDuration(data.eating_duration_h))}</p>
+                        <p>DurÃ©e alimentaire : ${escapeHtml(formatDuration(data.eating_duration_h))}</p>
                     </article>
                     <article class="chrono-subcard chrono-subcard--window">
-                        <span class="chrono-badge chrono-badge--period-evening">Fenêtre de jeûne</span>
+                        <span class="chrono-badge chrono-badge--period-evening">FenÃªtre de jeÃ»ne</span>
                         <h3>${escapeHtml(data.fast_start || "--:--")} &rarr; ${escapeHtml(data.fast_end || "--:--")}</h3>
-                        <p>Durée du jeûne : ${escapeHtml(formatDuration(data.fast_duration_h))}</p>
+                        <p>DurÃ©e du jeÃ»ne : ${escapeHtml(formatDuration(data.fast_duration_h))}</p>
                     </article>
                 </div>
                 <div class="chrono-inline-list">
                     <div class="chrono-row">
-                        <span>Type recommandé</span>
+                        <span>Type recommandÃ©</span>
                         <strong>${escapeHtml(data.protocol || "12/12")}</strong>
                     </div>
                     <div class="chrono-row">
-                        <span>Fenêtre alimentaire</span>
+                        <span>FenÃªtre alimentaire</span>
                         <strong>${escapeHtml(data.eating_start || "--:--")} - ${escapeHtml(data.eating_end || "--:--")}</strong>
                     </div>
                     <div class="chrono-row">
-                        <span>Durée alimentaire</span>
+                        <span>DurÃ©e alimentaire</span>
                         <strong>${escapeHtml(formatDuration(data.eating_duration_h))}</strong>
                     </div>
                     <div class="chrono-row">
-                        <span>Fenêtre de jeûne</span>
+                        <span>FenÃªtre de jeÃ»ne</span>
                         <strong>${escapeHtml(data.fast_start || "--:--")} - ${escapeHtml(data.fast_end || "--:--")}</strong>
                     </div>
                     <div class="chrono-row">
-                        <span>Durée du jeûne</span>
+                        <span>DurÃ©e du jeÃ»ne</span>
                         <strong>${escapeHtml(formatDuration(data.fast_duration_h))}</strong>
                     </div>
                 </div>
@@ -417,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderEmptyState(blocks.summary, "Resume chrono", message);
         renderEmptyState(blocks.timing, "Horaires recommandes", message);
         renderEmptyState(blocks.personalization, "Personnalisation chrono", message);
-        renderEmptyState(blocks.fasting, "Jeûne intermittent", message);
+        renderEmptyState(blocks.fasting, "JeÃ»ne intermittent", message);
         renderEmptyState(blocks.nutrients, "Nutriments par moment", message);
         renderEmptyState(blocks.sleep, "Synchronisation sommeil", message);
         setDisclaimer("");
@@ -427,7 +427,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderErrorState(blocks.summary, "Resume chrono", message);
         renderErrorState(blocks.timing, "Horaires recommandes", message);
         renderErrorState(blocks.personalization, "Personnalisation chrono", message);
-        renderErrorState(blocks.fasting, "Jeûne intermittent", message);
+        renderErrorState(blocks.fasting, "JeÃ»ne intermittent", message);
         renderErrorState(blocks.nutrients, "Nutriments par moment", message);
         renderErrorState(blocks.sleep, "Synchronisation sommeil", message);
         setDisclaimer("");
@@ -553,19 +553,19 @@ document.addEventListener("DOMContentLoaded", () => {
         const text = await response.text();
 
         if (!response.ok) {
-            throw new Error("Le service chrono-nutrition ne répond pas correctement.");
+            throw new Error("Le service chrono-nutrition ne rÃ©pond pas correctement.");
         }
 
         if (!contentType.includes("application/json")) {
-            console.error("Réponse non JSON reçue:", text);
-            throw new Error("Le serveur a retourné une page HTML au lieu du JSON. Vérifie la session, la route ou une erreur PHP.");
+            console.error("RÃ©ponse non JSON reÃ§ue:", text);
+            throw new Error("Le serveur a retournÃ© une page HTML au lieu du JSON. VÃ©rifie la session, la route ou une erreur PHP.");
         }
 
         try {
             return JSON.parse(text);
         } catch (error) {
-            console.error("JSON invalide reçu:", text);
-            throw new Error("Réponse JSON invalide du service chrono-nutrition.");
+            console.error("JSON invalide reÃ§u:", text);
+            throw new Error("RÃ©ponse JSON invalide du service chrono-nutrition.");
         }
     }
 

@@ -4,11 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-    header('Location: /projet-web-25-26/index.php?action=login');
+    header('Location: /Web/index.php?action=login');
     exit;
 }
 if (!defined('SMART_ADMIN_VIEW')) {
-    header('Location: /projet-web-25-26/index.php?action=admin-community-reports');
+    header('Location: /Web/index.php?action=admin-community-reports');
     exit;
 }
 require_once __DIR__ . '/../../model/Connection.php';
@@ -176,7 +176,7 @@ foreach ($reports as $report) {
                                             <td><?= htmlspecialchars($reporterName) ?></td>
                                             <td><?= htmlspecialchars($report['created_at'] ?? '-') ?></td>
                                             <td>
-                                                <a class="btn btn-outline-secondary btn-sm" href="/projet-web-25-26/index.php?action=admin-community-report-details&id=<?= (int) $report['id'] ?>">
+                                                <a class="btn btn-outline-secondary btn-sm" href="/Web/index.php?action=admin-community-report-details&id=<?= (int) $report['id'] ?>">
                                                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Ouvrir
                                                 </a>
                                             </td>

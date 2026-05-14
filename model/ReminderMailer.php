@@ -32,7 +32,7 @@ class  ReminderMailer  {
 
         $mail->setFrom($config['from_email'], $config['from_name']);
         $mail->addAddress($user['email'], $user['nom']);
-        $baseUrl = getenv('APP_BASE_URL') ?: 'http://localhost/projet-web-25-26';
+        $baseUrl = getenv('APP_BASE_URL') ?: 'http://localhost/Web';
         $trackingUrl = $baseUrl . '/index.php?controller=suivi&action=index';
 
         $mail->isHTML(true);
@@ -59,8 +59,8 @@ class  ReminderMailer  {
   <tr>
     <td style='background:#1e293b; padding:15px; border-radius:10px;'>
       <p>Bonjour {$user['nom']} </p>
-      <p>Vous n'avez pas encore enregistrÃ© votre consommation aujourd'hui.</p>
-      <p>Prenez 1 minute pour complÃ©ter votre suivi ðŸ‘‡</p>
+      <p>Vous n'avez pas encore enregistrÃƒÂ© votre consommation aujourd'hui.</p>
+      <p>Prenez 1 minute pour complÃƒÂ©ter votre suivi Ã°Å¸â€˜â€¡</p>
     </td>
   </tr>
 

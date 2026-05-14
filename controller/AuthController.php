@@ -24,13 +24,13 @@ class AuthController
 
     private function redirect($action)
     {
-        header('Location: /projet-web-25-26/index.php?action=' . $action);
+        header('Location: /Web/index.php?action=' . $action);
         exit;
     }
 
     private function buildActionUrl($action)
     {
-        return '/projet-web-25-26/index.php?action=' . $action;
+        return '/Web/index.php?action=' . $action;
     }
 
     private function respondJson($payload, $statusCode = 200)
@@ -808,7 +808,7 @@ class AuthController
         }
 
         $_SESSION['success'] = 'Un code a ete envoye par e-mail.';
-        header('Location: /projet-web-25-26/index.php?action=reset-password&email=' . urlencode($email));
+        header('Location: /Web/index.php?action=reset-password&email=' . urlencode($email));
         exit;
     }
 
@@ -910,7 +910,7 @@ public function showRegister($errors = [], $old = [])
  
 public function showForgotPassword($errors = [])
 {
-    $pageTitle = 'Mot de passe oubliÃ©';
+    $pageTitle = 'Mot de passe oubliÃƒÂ©';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/forgot.php';
@@ -918,7 +918,7 @@ public function showForgotPassword($errors = [])
 }
 public function showResetForm()
 {
-    $pageTitle = 'RÃ©initialiser mot de passe';
+    $pageTitle = 'RÃƒÂ©initialiser mot de passe';
 
     include __DIR__ . '/../view/layouts/header.php';
     include __DIR__ . '/../view/front/auth/reset.php';

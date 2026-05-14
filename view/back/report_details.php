@@ -4,11 +4,11 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-    header('Location: /projet-web-25-26/index.php?action=login');
+    header('Location: /Web/index.php?action=login');
     exit;
 }
 if (!defined('SMART_ADMIN_VIEW')) {
-    $target = '/projet-web-25-26/index.php?action=admin-community-report-details';
+    $target = '/Web/index.php?action=admin-community-report-details';
     if (isset($_GET['id'])) {
         $target .= '&id=' . urlencode((string) $_GET['id']);
     }
@@ -49,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['resolve_report_id']))
             }
             if ($recipientUserId > 0) {
                 $linkUrl = !empty($reportBeforeResolve['post_user_id'])
-                    ? '/projet-web-25-26/index.php?action=community#post-' . (int) $reportBeforeResolve['post_id']
-                    : '/projet-web-25-26/index.php?action=community';
+                    ? '/Web/index.php?action=community#post-' . (int) $reportBeforeResolve['post_id']
+                    : '/Web/index.php?action=community';
 
                 $notificationModel->create(
                     $recipientUserId,
@@ -78,7 +78,7 @@ function resolvePostImageSrcForReport($image)
         return null;
     }
 
-    if (strpos($image, '/projet-web-25-26/view/post_uploads/posts/') === 0) {
+    if (strpos($image, '/Web/view/post_uploads/posts/') === 0) {
         return $image;
     }
 
@@ -106,8 +106,8 @@ function resolvePostImageSrcForReport($image)
                             </p>
                         </div>
                         <div class="report-action-row">
-                            <a href="/projet-web-25-26/index.php?action=admin-community-reports" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour aux signalements</a>
-                            <a href="/projet-web-25-26/index.php?action=admin-community-review-post&report_id=<?= (int) $report['id'] ?>&post_id=<?= (int) $report['post_id'] ?>" class="btn btn-sm">
+                            <a href="/Web/index.php?action=admin-community-reports" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Retour aux signalements</a>
+                            <a href="/Web/index.php?action=admin-community-review-post&report_id=<?= (int) $report['id'] ?>&post_id=<?= (int) $report['post_id'] ?>" class="btn btn-sm">
                                 <i class="fa-solid fa-eye"></i> Examiner la publication
                             </a>
                         </div>
@@ -151,7 +151,7 @@ function resolvePostImageSrcForReport($image)
                 <div class="card card-primary shadow-sm">
                     <div class="card-body">
                         <p class="text-muted">Signalement introuvable.</p>
-                        <a href="/projet-web-25-26/index.php?action=admin-community-reports" class="btn btn-outline-secondary btn-sm">Retour aux signalements</a>
+                        <a href="/Web/index.php?action=admin-community-reports" class="btn btn-outline-secondary btn-sm">Retour aux signalements</a>
                     </div>
                 </div>
             <?php endif; ?>

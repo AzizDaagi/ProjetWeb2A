@@ -17,7 +17,7 @@ class UserController
 
     private function redirect($action)
     {
-        header('Location: /projet-web-25-26/index.php?action=' . $action);
+        header('Location: /Web/index.php?action=' . $action);
         exit;
     }
 
@@ -1104,7 +1104,7 @@ class UserController
         session_unset();
         session_destroy();
 
-        header('Location: /projet-web-25-26/index.php?action=login');
+        header('Location: /Web/index.php?action=login');
         exit;
     }
 }

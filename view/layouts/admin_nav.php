@@ -15,9 +15,9 @@ $isNewsAction = in_array($currentAction, ['admin-news', 'admin-news-create', 'ad
 $adminObjectifsRouteExists = false;
 $adminNewsRouteExists = false;
 $objectifsHref = $adminObjectifsRouteExists
-    ? '/projet-web-25-26/index.php?action=admin-objectifs'
-    : '/projet-web-25-26/index.php?action=objectif';
-$newsHref = '/projet-web-25-26/index.php?action=admin-news';
+    ? '/Web/index.php?action=admin-objectifs'
+    : '/Web/index.php?action=objectif';
+$newsHref = '/Web/index.php?action=admin-news';
 
 $moduleInfo = [
     'dashboard' => [
@@ -109,9 +109,9 @@ if ($adminInitials === '') {
 <div class="admin-shell">
     <aside class="admin-sidebar">
         <div class="admin-brand">
-            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-brand-link">
+            <a href="/Web/index.php?action=admin-dashboard" class="admin-brand-link">
                 <img
-                    src="/projet-web-25-26/view/assets/images/logo.png"
+                    src="/Web/view/assets/images/logo.png"
                     alt="Smart Nutrition"
                     class="brand-logo"
                     onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';"
@@ -122,12 +122,12 @@ if ($adminInitials === '') {
 
         <div class="admin-menu-section">
             <p class="admin-menu-title admin-side-section-title">Navigation</p>
-            <a href="/projet-web-25-26/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
-                <span>ðŸ§­</span>
+            <a href="/Web/index.php?action=admin-dashboard" class="admin-side-link<?= $isDashboardAction ? ' active' : '' ?>">
+                <span>Ã°Å¸Â§Â­</span>
                 <span>Dashboard</span>
             </a>
-            <a href="/projet-web-25-26/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
-                <span>ðŸ‘¥</span>
+            <a href="/Web/index.php?action=users-list" class="admin-side-link<?= $isUsersAction ? ' active' : '' ?>">
+                <span>Ã°Å¸â€˜Â¥</span>
                 <span>Utilisateurs</span>
             </a>
         </div>
@@ -135,43 +135,43 @@ if ($adminInitials === '') {
         <div class="admin-menu-section admin-modules-section">
             <p class="admin-menu-title admin-side-section-title">Modules</p>
 
-            <a href="/projet-web-25-26/index.php?action=nutrition_dashboard" class="admin-side-link<?= $isTrackingAction ? ' active' : '' ?>">
-                <span>ðŸŽ</span>
+            <a href="/Web/index.php?action=nutrition_dashboard" class="admin-side-link<?= $isTrackingAction ? ' active' : '' ?>">
+                <span>Ã°Å¸ÂÅ½</span>
                 <span>Suivi</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
-                <span>ðŸ“–</span>
+            <a href="/Web/index.php?action=admin-recipes" class="admin-side-link<?= $isRecipesAction ? ' active' : '' ?>">
+                <span>Ã°Å¸â€œâ€“</span>
                 <span>Recettes</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=products-admin" class="admin-side-link<?= $isFoodsAction ? ' active' : '' ?>">
-                <span>ðŸ</span>
+            <a href="/Web/index.php?action=products-admin" class="admin-side-link<?= $isFoodsAction ? ' active' : '' ?>">
+                <span>Ã°Å¸ÂÂ</span>
                 <span>Ecommerce</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
-                <span>ðŸ’™</span>
+            <a href="/Web/index.php?action=admin-recommendations" class="admin-side-link<?= $isRecommendationsAction ? ' active' : '' ?>">
+                <span>Ã°Å¸â€™â„¢</span>
                 <span>Recommandations</span>
             </a>
 
             <a href="<?= htmlspecialchars($objectifsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isObjectivesAction ? ' active' : '' ?>">
-                <span>ðŸŽ¯</span>
+                <span>Ã°Å¸Å½Â¯</span>
                 <span>Objectifs</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
-                <span>ðŸ’¬</span>
+            <a href="/Web/index.php?action=admin-community" class="admin-side-link<?= $isCommunityAction ? ' active' : '' ?>">
+                <span>Ã°Å¸â€™Â¬</span>
                 <span>Community</span>
             </a>
 
-            <a href="/projet-web-25-26/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
-                <span>ðŸš©</span>
+            <a href="/Web/index.php?action=admin-community-reports" class="admin-side-link<?= $isCommunityReportsAction ? ' active' : '' ?>">
+                <span>Ã°Å¸Å¡Â©</span>
                 <span>Reports Community</span>
             </a>
 
             <a href="<?= htmlspecialchars($newsHref, ENT_QUOTES, 'UTF-8') ?>" class="admin-side-link<?= $isNewsAction ? ' active' : '' ?>">
-                <span>ðŸ“°</span>
+                <span>Ã°Å¸â€œÂ°</span>
                 <span>News / Articles</span>
             </a>
             <?php if (!$adminNewsRouteExists): ?>
@@ -187,7 +187,7 @@ if ($adminInitials === '') {
 
     <header class="admin-topbar">
         <div class="admin-top-actions">
-            <div class="notification-center admin-notification-center" data-notification-endpoint="/projet-web-25-26/controller/notificationController.php">
+            <div class="notification-center admin-notification-center" data-notification-endpoint="/Web/controller/notificationController.php">
                 <button type="button" id="notificationToggle" class="admin-icon-btn notification-toggle" aria-label="Notifications" aria-expanded="false">
                     <i class="fa-solid fa-bell"></i>
                     <span id="notificationBadge" class="notification-badge" hidden>0</span>
@@ -216,7 +216,7 @@ if ($adminInitials === '') {
                 </div>
             </div>
 
-            <a href="/projet-web-25-26/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
+            <a href="/Web/index.php?action=logout" class="admin-logout-btn" title="Deconnexion">
                 <i class="fa-solid fa-right-from-bracket"></i>
             </a>
         </div>

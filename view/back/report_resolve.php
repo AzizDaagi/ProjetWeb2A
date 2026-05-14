@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['user_id']) || (($_SESSION['user_role'] ?? 'user') !== 'admin')) {
-    header('Location: /projet-web-25-26/index.php?action=login');
+    header('Location: /Web/index.php?action=login');
     exit;
 }
 require_once __DIR__ . '/../../model/Connection.php';
@@ -52,8 +52,8 @@ if ($success && $report) {
 
     if ($recipientUserId > 0) {
         $linkUrl = !empty($report['post_user_id'])
-            ? '/projet-web-25-26/index.php?action=community#post-' . (int) $report['post_id']
-            : '/projet-web-25-26/index.php?action=community';
+            ? '/Web/index.php?action=community#post-' . (int) $report['post_id']
+            : '/Web/index.php?action=community';
 
         $notificationModel->create(
             $recipientUserId,

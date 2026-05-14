@@ -269,7 +269,7 @@ function initNotifications() {
 }
 
 function triggerModerationJobs() {
-    fetch('/projet-web-25-26/controller/moderationJobController.php', {
+    fetch('/Web/controller/moderationJobController.php', {
         method: 'POST',
         cache: 'no-store'
     })
@@ -472,7 +472,7 @@ function initAnimatedBackground() {
     var height = 0;
     var particles = [];
     var foodParticles = [];
-    var foodIcons = ['ðŸŽ', 'ðŸ¥•', 'ðŸ¥¦', 'ðŸŒ', 'ðŸ¥—', 'ðŸ‡', 'ðŸ¥‘', 'ðŸ“'];
+    var foodIcons = ['Ã°Å¸ÂÅ½', 'Ã°Å¸Â¥â€¢', 'Ã°Å¸Â¥Â¦', 'Ã°Å¸ÂÅ’', 'Ã°Å¸Â¥â€”', 'Ã°Å¸Ââ€¡', 'Ã°Å¸Â¥â€˜', 'Ã°Å¸Ââ€œ'];
     var time = 0;
 
     function resize() {

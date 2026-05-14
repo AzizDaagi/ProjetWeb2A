@@ -4,7 +4,7 @@
             <p class="section-kicker">Suivi</p>
             <h1><i class="fa-solid fa-receipt icon"></i> Mes commandes</h1>
         </div>
-        <a href="/projet-web-25-26/index.php?action=order-create" class="btn section-action">
+        <a href="/Web/index.php?action=order-create" class="btn section-action">
             <i class="fa-solid fa-plus"></i> Nouvelle commande
         </a>
     </div>
@@ -13,7 +13,7 @@
     <?php if (!empty($updated)): ?><div class="alert alert-success">Commande modifiee.</div><?php endif; ?>
     <?php if (!empty($deleted)): ?><div class="alert alert-success">Commande supprimee.</div><?php endif; ?>
 
-    <form method="GET" action="/projet-web-25-26/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+    <form method="GET" action="/Web/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
         <input type="hidden" name="action" value="order-list">
         <div class="field" style="min-width: 220px; flex: 1;">
             <label for="q">Recherche</label>
@@ -58,8 +58,8 @@
                             <td><?= number_format((float) $orderRow['total_price'], 2) ?> DT</td>
                             <td><?= htmlspecialchars((string) $orderRow['created_at']) ?></td>
                             <td class="users-actions">
-                                <a href="/projet-web-25-26/index.php?action=order-edit&id=<?= (int) $orderRow['id'] ?>" class="btn-edit">Modifier</a>
-                                <a href="/projet-web-25-26/index.php?action=order-delete&id=<?= (int) $orderRow['id'] ?>" class="btn-delete-user" onclick="return confirm('Annuler cette commande ?');">Annuler</a>
+                                <a href="/Web/index.php?action=order-edit&id=<?= (int) $orderRow['id'] ?>" class="btn-edit">Modifier</a>
+                                <a href="/Web/index.php?action=order-delete&id=<?= (int) $orderRow['id'] ?>" class="btn-delete-user" onclick="return confirm('Annuler cette commande ?');">Annuler</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

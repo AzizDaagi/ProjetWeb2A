@@ -243,7 +243,7 @@ class CommentController {
         $actorName = $_SESSION['user_name'] ?? 'Quelqu un';
         $postTitle = $post['title'] ?? 'votre publication';
         $messagePreview = $this->shorten($content);
-        $link = '/projet-web-25-26/index.php?action=community#post-' . $postId;
+        $link = '/Web/index.php?action=community#post-' . $postId;
 
         if ($parentCommentId !== null) {
             $parentComment = $this->commentModel->getCommentById((int) $parentCommentId);

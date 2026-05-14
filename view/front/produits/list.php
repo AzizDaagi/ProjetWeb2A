@@ -6,13 +6,13 @@
             <p class="subtitle">Produits disponibles proposes par la communaute.</p>
         </div>
         <div class="section-actions">
-            <a href="/projet-web-25-26/index.php?action=product-submit" class="btn section-action">
+            <a href="/Web/index.php?action=product-submit" class="btn section-action">
                 <i class="fa-solid fa-plus"></i> Proposer un produit
             </a>
-            <a href="/projet-web-25-26/index.php?action=cart-view" class="btn section-action">
+            <a href="/Web/index.php?action=cart-view" class="btn section-action">
                 <i class="fa-solid fa-cart-shopping"></i> Panier
             </a>
-            <a href="/projet-web-25-26/index.php?action=order-list" class="btn section-action">
+            <a href="/Web/index.php?action=order-list" class="btn section-action">
                 <i class="fa-solid fa-receipt"></i> Mes commandes
             </a>
         </div>
@@ -28,7 +28,7 @@
         <div class="alert alert-error"><?= htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?></div>
     <?php endif; ?>
 
-    <form method="GET" action="/projet-web-25-26/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
+    <form method="GET" action="/Web/index.php" class="list-toolbar" style="margin: 18px 0 24px; display: flex; gap: 12px; flex-wrap: wrap; align-items: end;">
         <input type="hidden" name="action" value="foods-management">
         <div class="field" style="min-width: 220px; flex: 1;">
             <label for="q">Recherche</label>
@@ -52,7 +52,7 @@
             </select>
         </div>
         <button type="submit" class="btn section-action">Appliquer</button>
-        <a href="/projet-web-25-26/index.php?action=foods-management" class="btn section-action">Reset</a>
+        <a href="/Web/index.php?action=foods-management" class="btn section-action">Reset</a>
     </form>
 
     <div class="products-grid">
@@ -61,7 +61,7 @@
                 <article class="product-card">
                     <div class="product-image-wrap">
                         <img
-                            src="/projet-web-25-26/uploads/<?= htmlspecialchars($row['image'] ?: 'jus.jpg') ?>"
+                            src="/Web/uploads/<?= htmlspecialchars($row['image'] ?: 'jus.jpg') ?>"
                             alt="<?= htmlspecialchars($row['name']) ?>"
                             class="product-image"
                         >
@@ -77,14 +77,14 @@
                             <span><i class="fa-solid fa-user"></i> <?= htmlspecialchars($row['added_by']) ?></span>
                         </div>
                         <div class="product-card-actions">
-                            <form method="POST" action="/projet-web-25-26/index.php?action=cart-add" style="display: flex; gap: 10px; align-items: center;" novalidate>
+                            <form method="POST" action="/Web/index.php?action=cart-add" style="display: flex; gap: 10px; align-items: center;" novalidate>
                                 <input type="hidden" name="product_id" value="<?= (int) $row['id'] ?>">
                                 <input type="text" name="quantity" value="1" style="width: 56px; padding: 8px; text-align: center;">
                                 <button type="submit" class="btn section-action">
                                     <i class="fa-solid fa-cart-plus"></i> Ajouter
                                 </button>
                             </form>
-                            <a href="/projet-web-25-26/index.php?action=order-create&product_id=<?= (int) $row['id'] ?>" class="btn section-action">
+                            <a href="/Web/index.php?action=order-create&product_id=<?= (int) $row['id'] ?>" class="btn section-action">
                                 <i class="fa-solid fa-bag-shopping"></i> Commander
                             </a>
                         </div>

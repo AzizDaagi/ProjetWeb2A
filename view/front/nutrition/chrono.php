@@ -2,7 +2,7 @@
     <div class="chrono-shell">
         <section class="chrono-hero">
             <div class="chrono-hero__content">
-                <a href="/projet-web-25-26/index.php?action=objectif" class="chrono-back-link">
+                <a href="/Web/index.php?action=objectif" class="chrono-back-link">
                     Retour a mon objectif nutritionnel
                 </a>
                 <span class="chrono-hero-badge">Rythme circadien</span>

@@ -1,7 +1,7 @@
 <?php
 /**
  * Point de test pour deboguer le fil d actualites.
- * Acces : http://localhost/projet-web-25-26/controller/testNewsController.php
+ * Acces : http://localhost/Web/controller/testNewsController.php
  */
 
 require_once '../model/Connection.php';
@@ -64,7 +64,7 @@ try {
         echo "Articles apres synchronisation : <strong>$newCount</strong> (avant : $currentCount)<br>";
 
         if ($newCount > $currentCount) {
-            echo "Succes ! Ouvrez maintenant <a href='/projet-web-25-26/index.php?action=community'>la page communaute</a>";
+            echo "Succes ! Ouvrez maintenant <a href='/Web/index.php?action=community'>la page communaute</a>";
         }
     }
 } catch (Exception $e) {

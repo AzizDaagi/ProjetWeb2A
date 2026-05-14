@@ -7,7 +7,7 @@ if (!is_array($chatWidgetHistory)) {
 
 $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
 ?>
-<link href="/projet-web-25-26/view/front/assets/css/chatbot.css" rel="stylesheet">
+<link href="/Web/view/front/assets/css/chatbot.css" rel="stylesheet">
 
 <button
     type="button"
@@ -36,7 +36,7 @@ $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
         <div class="chat-header-title">
             <span class="chat-status-dot" aria-hidden="true"></span>
             <h2 class="chat-title">Assistant Nutrition &#x1F957;</h2>
-            <span class="mood-badge" id="moodBadge">Ã°Å¸ËœÅ  En forme</span>
+            <span class="mood-badge" id="moodBadge">ÃƒÂ°Ã…Â¸Ã‹Å“Ã…Â  En forme</span>
         </div>
         <div class="chat-header-actions">
             <button type="button" id="clearChat" class="chat-header-button" aria-label="Effacer la conversation" title="Effacer la conversation">
@@ -70,7 +70,7 @@ $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
 
     <div class="quick-replies">
         <button class="qr-btn" data-msg="Quelles sont mes calories aujourd'hui ?">Calories</button>
-        <button class="qr-btn" data-msg="Parle-moi des protÃƒÂ©ines">Proteines</button>
+        <button class="qr-btn" data-msg="Parle-moi des protÃƒÆ’Ã‚Â©ines">Proteines</button>
         <button class="qr-btn" data-msg="Conseils hydratation">Hydratation</button>
         <button class="qr-btn" data-msg="Donne-moi un conseil">Conseil</button>
         <button class="qr-btn" data-msg="Mon statut nutritionnel"> Statut</button>
@@ -131,4 +131,4 @@ $chatWidgetAutoOpen = !empty($openChatbotOnLoad);
     </form>
 </div>
 
-<script src="/projet-web-25-26/view/front/assets/js/chatbot.js" defer></script>
+<script src="/Web/view/front/assets/js/chatbot.js" defer></script>
